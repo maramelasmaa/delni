@@ -266,7 +266,19 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #0b1a34 0%, #1a2f5e 50%, #0f1e3d 100%);
+        background-image: url('/images/herobackground.png');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    .home-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(11, 26, 52, 0.7) 0%, rgba(26, 47, 94, 0.7) 50%, rgba(15, 30, 61, 0.7) 100%);
+        pointer-events: none;
+        z-index: 1;
     }
 
     .hero-decorative-blob {
@@ -275,6 +287,7 @@
         opacity: 0.1;
         filter: blur(80px);
         animation: blob-drift 15s infinite ease-in-out;
+        z-index: 2;
     }
 
     .hero-blob-1 {
@@ -313,6 +326,7 @@
             linear-gradient(rgba(241, 98, 15, 0.2) 1px, transparent 1px),
             linear-gradient(90deg, rgba(241, 98, 15, 0.2) 1px, transparent 1px);
         background-size: 50px 50px;
+        z-index: 2;
     }
 
     .hero-content {

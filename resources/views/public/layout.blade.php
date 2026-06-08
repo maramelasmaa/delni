@@ -30,6 +30,14 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
     @stack('styles')
+
+    <style>
+        .site-navbar {
+            background: #0b1a34 !important;
+            border-bottom: 2px solid #f1620f !important;
+            backdrop-filter: none !important;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg site-navbar sticky-top">
