@@ -36,6 +36,37 @@
             background: #0b1a34 !important;
             border-bottom: 2px solid #f1620f !important;
             backdrop-filter: none !important;
+            padding: 0.5rem 0 !important;
+        }
+
+        .site-navbar .container {
+            max-width: 1200px;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        .site-navbar .brand-logo {
+            width: 40px !important;
+            height: 40px !important;
+        }
+
+        .site-navbar .brand-title {
+            font-size: 1.1rem !important;
+        }
+
+        .site-navbar .navbar-nav {
+            gap: 0.5rem !important;
+        }
+
+        .site-navbar .nav-link {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.9rem !important;
+        }
+
+        .site-navbar .nav-outline,
+        .site-navbar .nav-cta {
+            padding: 0.4rem 0.75rem !important;
+            font-size: 0.85rem !important;
         }
     </style>
 </head>
