@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__search-docs",
+      "mcp__laravel-boost__database-query",
+      "Bash(Get-ChildItem -Path \"c:\\\\laragon\\\\www\\\\delni\\\\app\\\\Filament\" -Recurse -Filter \"*.php\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\laragon\\\\www\\\\delni\\\\app\\\\Providers\" -Filter \"*Panel*.php\")",
+      "Bash(grep -E \"\\\\.\\(png|jpg|svg|webp\\)$\")",
+      "Bash(npm run *)",
+      "PowerShell($logoPath = \"c:\\\\laragon\\\\www\\\\delni\\\\public\\\\images\\\\logo.jpg\"; $icoPath = \"c:\\\\laragon\\\\www\\\\delni\\\\public\\\\favicon.ico\"; if \\(Get-Command magick -ErrorAction SilentlyContinue\\) { magick \"$logoPath\" -define icon:auto-resize=256,128,96,64,48,32,16 \"$icoPath\"; if \\(Test-Path $icoPath\\) { Write-Output \"Favicon created successfully\"; Get-Item $icoPath | Select-Object Name, Length } else { Write-Output \"Failed to create favicon with magick\" } } else { Write-Output \"ImageMagick not found\" })",
+      "mcp__laravel-boost__last-error",
+      "Bash(powershell -Command \"Get-Item 'C:\\\\Users\\\\asile\\\\.claude\\\\projects\\\\c--laragon-www-delni\\\\e710c673-16ce-48d2-8f1b-d0f78be0d125\\\\tool-results\\\\mcp-laravel-boost-read-log-entries-1780777002271.txt' | Select-Object -ExpandProperty Length\")",
+      "Bash(powershell -Command \"Select-String -Pattern '\\\\[2026-06-\\\\d+ \\\\d{2}:\\\\d{2}:\\\\d{2}\\\\] local\\\\.\\(ERROR|CRITICAL\\)' -Path 'C:\\\\Users\\\\asile\\\\.claude\\\\projects\\\\c--laragon-www-delni\\\\e710c673-16ce-48d2-8f1b-d0f78be0d125\\\\tool-results\\\\mcp-laravel-boost-read-log-entries-1780777002271.txt' | Measure-Object | Select-Object -ExpandProperty Count\")",
+      "Bash(powershell -Command \"Select-String -Pattern '\\\\[2026-06-\\\\d+ \\\\d{2}:\\\\d{2}:\\\\d{2}\\\\] local\\\\.\\(ERROR|CRITICAL\\)' -Path 'C:\\\\Users\\\\asile\\\\.claude\\\\projects\\\\c--laragon-www-delni\\\\e710c673-16ce-48d2-8f1b-d0f78be0d125\\\\tool-results\\\\mcp-laravel-boost-read-log-entries-1780777002271.txt' | Select-Object -Last 5\")",
+      "PowerShell(if \\($?\\) { $true } else { \"Directory does not exist\" })",
+      "PowerShell(Get-ChildItem \"c:\\\\laragon\\\\www\\\\delni\\\\resources\\\\views\" -Recurse | Where-Object { $_.Name -match \"auth|login|password|register\" } | Select-Object FullName)",
+      "PowerShell(Get-ChildItem \"c:\\\\laragon\\\\www\\\\delni\\\\resources\\\\views\" -Recurse | Where-Object { $_.Name -match \"^\\\\d{3}\" } | Select-Object FullName)",
+      "Bash(Get-Content \"C:\\\\Users\\\\asile\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-delni\\\\e710c673-16ce-48d2-8f1b-d0f78be0d125\\\\tasks\\\\bqzdzb2pq.output\")",
+      "Bash(timeout 180 bash -c 'until grep -q \"PASSED\\\\|FAILED\" \"C:\\\\Users\\\\asile\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-delni\\\\e710c673-16ce-48d2-8f1b-d0f78be0d125\\\\tasks\\\\bz5zq18ll.output\" 2>/dev/null; do sleep 3; done; tail -150 \"C:\\\\Users\\\\asile\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--laragon-www-delni\\\\e710c673-16ce-48d2-8f1b-d0f78be0d125\\\\tasks\\\\bz5zq18ll.output\"')",
+      "Bash(vendor/bin/pint --format agent app/Http/Controllers/Auth/AuthController.php app/Mail/PasswordResetMail.php)",
+      "Bash(vendor/bin/pint tests/Feature/PasswordResetTest.php --format agent)",
+      "Bash(cd /d \"c:\\\\laragon\\\\www\\\\delni\")",
+      "Bash(findstr /r /s \"DB::table\" app/Console/Commands/ app/Services/ app/Observers/)",
+      "Bash(findstr /r \"update|delete|insert\")",
+      "Bash(cd /d c:\\\\laragon\\\\www\\\\delni)",
+      "Bash(dir /b app\\\\Filament\\\\Resources\\\\*Resource.php)",
+      "Bash(php vendor/bin/pint --format agent)",
+      "Bash(php vendor/bin/pint tests/Feature/ObserverSafetyTest.php --format agent)",
+      "Bash(grep -A 10 'protected.*$fillable\\\\|protected.*$guarded' 'c:\\\\laragon\\\\www\\\\delni\\\\app\\\\Models\\\\User.php')",
+      "Bash(composer dump-autoload *)",
+      "Bash(grep -E \"^\\(FAILED|PASSED|Tests\\\\\\\\|Error\\)\")",
+      "Bash(vendor/bin/pint app/Filament/Resources/MarketplacePlacementResource.php --format agent)",
+      "Bash(curl -s \"http://localhost:8080/onboarding/IOamNDNDevyZyMWl0cyDluGZT5Zq6TZRHa9YrdBWsCKbmy14qyXzJTeer0N8\")",
+      "Bash(curl -s \"http://localhost:8080/onboarding/cgiehD99SnQxzZfMUqMCKJZJlPPNCs3XyyxOB9sSmtW5GHbz5nyLaIGIxKZv1Cmu630i1cTagATPcs0O\")",
+      "PowerShell(cd \"C:\\\\laragon\\\\www\\\\delni\"; php artisan test --compact --filter=test_active_provider_can_access_provider_panel 2>&1 | ConvertFrom-Json | Select-Object -Property @{Name='Test'; Expression={$_.failures[0].test}}, @{Name='Error'; Expression={$_.failures[0].message}} | ConvertTo-Json)",
+      "PowerShell(cd \"C:\\\\laragon\\\\www\\\\delni\"; php artisan test tests/Feature/ProviderPanelSecurityTest.php --compact 2>&1 | ConvertFrom-Json | Select-Object -ExpandProperty failures | Select-Object @{Name='Test';Expression={$_.test.Split\\('::'\\)[2]}}, @{Name='Error';Expression={$_.message.Split\\([Environment]::NewLine\\)[0]}} | Sort-Object Test | ConvertTo-Json)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ]
+}

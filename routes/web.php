@@ -1,0 +1,81 @@
+<?php
+
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\OnboardingController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Public\FrontendController;
+use App\Http\Controllers\Public\ReviewController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', [FrontendController::class, 'home'])->name('home');
+
+// Favicon route
+Route::get('/favicon.ico', fn () => response()->file(public_path('images/logo.jpg'), ['Content-Type' => 'image/jpeg']));
+
+Route::get('/search', [FrontendController::class, 'search'])->name('public.search');
+Route::get('/category/{category:slug}', [FrontendController::class, 'category'])->name('public.category');
+Route::get('/subcategory/{subcategory:slug}', [FrontendController::class, 'subcategory'])->name('public.subcategory');
+Route::get('/city/{city:slug}', [FrontendController::class, 'city'])->name('public.city');
+Route::get('/provider/{profile:slug}', [FrontendController::class, 'provider'])->name('public.provider');
+Route::middleware([
+    'auth',
+    'account.locked',
+    'user.active',
+    'user.not_suspended',
+])->group(function (): void {
+    Route::post('/provider/{profile:slug}/review', [ReviewController::class, 'store'])
+        ->middleware(['review.eligible', 'throttle:reviews.create'])
+        ->name('review.store');
+
+    Route::post('/reviews/{review}/flag', [ReviewController::class, 'flag'])
+        ->middleware('throttle:reviews.flag')
+        ->name('reviews.flag');
+});
+Route::get('/locale/{locale}', [FrontendController::class, 'switchLocale'])->name('locale.switch');
+
+// Legal pages
+Route::view('/privacy', 'public.legal.privacy')->name('privacy');
+Route::view('/terms', 'public.legal.terms')->name('terms');
+Route::view('/disclaimer', 'public.legal.disclaimer')->name('disclaimer');
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+
+    Route::get('/register', [RegisterController::class, 'showRegister'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:register');
+
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])
+        ->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
+        ->middleware('throttle:password.request')
+        ->name('password.email');
+
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])
+        ->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware('throttle:password.reset')
+        ->name('password.update');
+});
+
+Route::get('/onboarding/{token}', [OnboardingController::class, 'showSetPasswordForm'])
+    ->name('onboarding.show');
+Route::post('/onboarding/set-password', [OnboardingController::class, 'setPassword'])
+    ->middleware('throttle:onboarding.set-password')
+    ->name('onboarding.set-password');
+
+// Authenticated routes
+Route::middleware([
+    'auth',
+    'account.locked',
+    'user.active',
+    'user.not_suspended',
+])->group(function (): void {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Account edit for regular users (providers manage account info in Filament)
+    Route::get('/account/edit', [AuthController::class, 'showAccountEditForm'])->name('account.edit');
+    Route::post('/account/update', [AuthController::class, 'updateAccount'])->name('account.update');
+
+    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+});

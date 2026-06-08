@@ -1,0 +1,153 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\ActivityLog;
+use App\Models\Category;
+use App\Models\City;
+use App\Models\PortfolioImage;
+use App\Models\PortfolioItem;
+use App\Models\Profile;
+use App\Models\ProviderCredential;
+use App\Models\ProviderLink;
+use App\Models\Review;
+use App\Models\Subcategory;
+use App\Models\Subscription;
+use App\Models\User;
+use App\Observers\PortfolioImageObserver;
+use App\Observers\ProfileObserver;
+use App\Observers\ProviderAssetLimitObserver;
+use App\Observers\ReviewObserver;
+use App\Observers\SubscriptionObserver;
+use App\Observers\UserObserver;
+use App\Policies\ActivityLogPolicy;
+use App\Policies\CategoryPolicy;
+use App\Policies\CityPolicy;
+use App\Policies\PortfolioImagePolicy;
+use App\Policies\PortfolioItemPolicy;
+use App\Policies\ProfilePolicy;
+use App\Policies\ProviderCredentialPolicy;
+use App\Policies\ProviderLinkPolicy;
+use App\Policies\ReviewPolicy;
+use App\Policies\SubcategoryPolicy;
+use App\Policies\SubscriptionPolicy;
+use App\Policies\UserPolicy;
+use Illuminate\Auth\Events\Attempting;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\ValidationException;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void {}
+
+    public function boot(): void
+    {
+
+        User::observe(UserObserver::class);
+        Profile::observe(ProfileObserver::class);
+        ProviderLink::observe(ProviderAssetLimitObserver::class);
+        PortfolioItem::observe(ProviderAssetLimitObserver::class);
+        PortfolioImage::observe(ProviderAssetLimitObserver::class);
+        PortfolioImage::observe(PortfolioImageObserver::class);
+        Review::observe(ReviewObserver::class);
+        Subscription::observe(SubscriptionObserver::class);
+        Gate::policy(Profile::class, ProfilePolicy::class);
+        Gate::policy(Review::class, ReviewPolicy::class);
+        Gate::policy(Subscription::class, SubscriptionPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Category::class, CategoryPolicy::class);
+        Gate::policy(Subcategory::class, SubcategoryPolicy::class);
+        Gate::policy(City::class, CityPolicy::class);
+        Gate::policy(ActivityLog::class, ActivityLogPolicy::class);
+        Gate::policy(PortfolioItem::class, PortfolioItemPolicy::class);
+        Gate::policy(ProviderLink::class, ProviderLinkPolicy::class);
+        Gate::policy(PortfolioImage::class, PortfolioImagePolicy::class);
+        Gate::policy(ProviderCredential::class, ProviderCredentialPolicy::class);
+
+        Event::listen(Attempting::class, function (Attempting $event) {
+            try {
+                if (DB::connection()->getDatabaseName()) {
+                    $user = User::where('email', $event->credentials['email'] ?? null)->first();
+
+                    if ($user && $user->is_suspended) {
+                        throw ValidationException::withMessages([
+                            'email' => __('auth.account_suspended'),
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Database unavailable, skip check
+            }
+        });
+
+        Event::listen(Login::class, function (Login $event) {
+            try {
+                if (DB::connection()->getDatabaseName() && $event->user->is_suspended) {
+                    Auth::logout();
+                    request()->session()->invalidate();
+                    request()->session()->regenerateToken();
+                }
+            } catch (\Exception $e) {
+                // Database unavailable, skip check
+            }
+        });
+
+        $this->configureRateLimiters();
+    }
+
+    private function configureRateLimiters(): void
+    {
+        RateLimiter::for('login', function (Request $request): Limit {
+            return Limit::perMinutes(15, 10)
+                ->by($request->input('email').'|'.$request->ip());
+        });
+
+        RateLimiter::for('register', function (Request $request): Limit {
+            return Limit::perHour(10)->by($request->ip());
+        });
+
+        RateLimiter::for('forgot-password', function (Request $request): Limit {
+            return Limit::perHour(5)->by($request->ip());
+        });
+
+        RateLimiter::for('password.request', function (Request $request): Limit {
+            return Limit::perHour(5)->by($request->input('email').'|'.$request->ip());
+        });
+
+        RateLimiter::for('password.reset', function (Request $request): Limit {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        RateLimiter::for('onboarding.set-password', function (Request $request): Limit {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        RateLimiter::for('search', function (Request $request): Limit {
+            if ($request->user() !== null) {
+                return Limit::perMinute(60)->by('search|user:'.$request->user()->id);
+            }
+
+            return Limit::perMinute(20)->by('search|ip:'.$request->ip());
+        });
+
+        RateLimiter::for('reviews.create', function (Request $request): Limit {
+            return Limit::perDay(10)->by('reviews.create|user:'.$request->user()?->id);
+        });
+
+        RateLimiter::for('reviews.flag', function (Request $request): Limit {
+            return Limit::perDay(20)->by('reviews.flag|user:'.$request->user()?->id);
+        });
+
+        RateLimiter::for('verification.resend', function (Request $request): Limit {
+            return Limit::perHour(3)->by('verification.resend|user:'.$request->user()?->id);
+        });
+    }
+}

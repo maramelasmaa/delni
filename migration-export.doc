@@ -1,0 +1,3652 @@
+# Migration Export
+Generated: 2026-06-03 13:50:50
+Export path: C:\laragon\www\delni\migration-export.doc
+
+## Migration index
+
+- 0001_01_01_000000_create_users_table.php
+- 0001_01_01_000001_create_cache_table.php
+- 0001_01_01_000002_create_jobs_table.php
+- 2026_06_02_183102_create_cities_table.php
+- 2026_06_02_183225_create_categories_table.php
+- 2026_06_02_183327_create_subcategories_table.php
+- 2026_06_02_183516_create_profiles_table.php
+- 2026_06_02_183621_create_profile_stats_table.php
+- 2026_06_02_183700_create_portfolio_items_table.php
+- 2026_06_02_183701_create_portfolio_images_table.php
+- 2026_06_02_184024_create_subscription_plans_table.php
+- 2026_06_02_184131_create_subscriptions_table.php
+- 2026_06_02_184239_create_reviews_table.php
+- 2026_06_02_184338_create_activity_logs_table.php
+- 2026_06_02_185551_create_permission_tables.php
+- 2026_06_02_190550_update_schema_integrity_indexes_and_security_columns.php
+- 2026_06_02_191000_convert_reviews_to_status_enum.php
+- 2026_06_02_191010_create_profile_subcategory_pivot_table.php
+- 2026_06_03_134733_fix_reviews_status_default.php
+
+================================================================================
+
+## 0001_01_01_000000_create_users_table.php
+Path: database/migrations/0001_01_01_000000_create_users_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->string('phone', 20)->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_suspended')->default(false);
+            $table->text('suspension_reason')->nullable();
+            $table->timestamp('suspended_at')->nullable();
+            $table->foreignId('suspended_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('reinstated_at')->nullable();
+            $table->foreignId('reinstated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('reinstatement_reason')->nullable();
+            $table->boolean('must_change_password')->default(false);
+            $table->timestamp('password_changed_at')->nullable();
+            $table->rememberToken();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('sessions');
+    }
+};
+```
+
+## 0001_01_01_000001_create_cache_table.php
+Path: database/migrations/0001_01_01_000001_create_cache_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('cache', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->mediumText('value');
+            $table->bigInteger('expiration')->index();
+        });
+
+        Schema::create('cache_locks', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->bigInteger('expiration')->index();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('cache');
+        Schema::dropIfExists('cache_locks');
+    }
+};
+```
+
+## 0001_01_01_000002_create_jobs_table.php
+Path: database/migrations/0001_01_01_000002_create_jobs_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('queue')->index();
+            $table->longText('payload');
+            $table->unsignedSmallInteger('attempts');
+            $table->unsignedInteger('reserved_at')->nullable();
+            $table->unsignedInteger('available_at');
+            $table->unsignedInteger('created_at');
+        });
+
+        Schema::create('job_batches', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('name');
+            $table->integer('total_jobs');
+            $table->integer('pending_jobs');
+            $table->integer('failed_jobs');
+            $table->longText('failed_job_ids');
+            $table->mediumText('options')->nullable();
+            $table->integer('cancelled_at')->nullable();
+            $table->integer('created_at');
+            $table->integer('finished_at')->nullable();
+        });
+
+        Schema::create('failed_jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('uuid')->unique();
+            $table->string('connection');
+            $table->string('queue');
+            $table->longText('payload');
+            $table->longText('exception');
+            $table->timestamp('failed_at')->useCurrent();
+
+            $table->index(['connection', 'queue', 'failed_at']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('jobs');
+        Schema::dropIfExists('job_batches');
+        Schema::dropIfExists('failed_jobs');
+    }
+};
+```
+
+## 2026_06_02_183102_create_cities_table.php
+Path: database/migrations/2026_06_02_183102_create_cities_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('cities', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('name_ar');
+            $table->string('slug')->unique();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('cities');
+    }
+};
+```
+
+## 2026_06_02_183225_create_categories_table.php
+Path: database/migrations/2026_06_02_183225_create_categories_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('categories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('name_ar');
+            $table->string('slug')->unique();
+            $table->string('icon')->nullable();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('categories');
+    }
+};
+```
+
+## 2026_06_02_183327_create_subcategories_table.php
+Path: database/migrations/2026_06_02_183327_create_subcategories_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('subcategories', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('name_ar');
+            $table->string('slug')->unique();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('subcategories');
+    }
+};
+```
+
+## 2026_06_02_183516_create_profiles_table.php
+Path: database/migrations/2026_06_02_183516_create_profiles_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('profiles', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->unique();
+            $table->string('business_name')->nullable();
+            $table->enum('type', ['individual', 'business'])->default('individual');
+            $table->text('bio')->nullable();
+            $table->string('slug')->unique()->index();
+            $table->unsignedBigInteger('city_id')->nullable()->index();
+            $table->unsignedBigInteger('category_id')->nullable()->index();
+            $table->string('whatsapp', 20)->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->unsignedSmallInteger('experience_years')->nullable();
+            $table->string('logo')->nullable();
+            $table->string('cover_image')->nullable();
+            $table->boolean('is_complete')->default(false)->index();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        Schema::table('profiles', function (Blueprint $table) {
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('city_id')->references('id')->on('cities')->restrictOnDelete();
+            $table->foreign('category_id')->references('id')->on('categories')->restrictOnDelete();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('profiles');
+    }
+};
+```
+
+## 2026_06_02_183621_create_profile_stats_table.php
+Path: database/migrations/2026_06_02_183621_create_profile_stats_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('profile_stats', function (Blueprint $table) {
+            $table->foreignId('profile_id')->primary()->constrained()->cascadeOnDelete();
+            $table->decimal('rating_avg', 3, 1)->default(0.0);
+            $table->unsignedInteger('reviews_count')->default(0);
+            $table->boolean('is_top_rated')->default(false);
+            $table->boolean('is_featured')->default(false)->index();
+            $table->date('featured_until')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('profile_stats');
+    }
+};
+```
+
+## 2026_06_02_183700_create_portfolio_items_table.php
+Path: database/migrations/2026_06_02_183700_create_portfolio_items_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('portfolio_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('profile_id')->constrained()->cascadeOnDelete();
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
+            $table->string('link')->nullable();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('portfolio_items');
+    }
+};
+```
+
+## 2026_06_02_183701_create_portfolio_images_table.php
+Path: database/migrations/2026_06_02_183701_create_portfolio_images_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('portfolio_images', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('portfolio_item_id')->constrained()->cascadeOnDelete();
+            $table->string('path');
+            $table->string('alt')->nullable();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('portfolio_images');
+    }
+};
+```
+
+## 2026_06_02_184024_create_subscription_plans_table.php
+Path: database/migrations/2026_06_02_184024_create_subscription_plans_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('subscription_plans', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->unsignedTinyInteger('duration_months');
+            $table->decimal('price_lyd', 10, 2);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('subscription_plans');
+    }
+};
+```
+
+## 2026_06_02_184131_create_subscriptions_table.php
+Path: database/migrations/2026_06_02_184131_create_subscriptions_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('subscriptions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('plan_id')->constrained('subscription_plans')->restrictOnDelete();
+            $table->date('starts_at');
+            $table->date('ends_at');
+            $table->boolean('is_active')->default(false);
+            $table->string('payment_method')->nullable();
+            $table->string('payment_reference')->nullable();
+            $table->date('payment_date')->nullable();
+            $table->text('notes')->nullable();
+            $table->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('processed_at')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('approved_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('subscriptions');
+    }
+};
+```
+
+## 2026_06_02_184239_create_reviews_table.php
+Path: database/migrations/2026_06_02_184239_create_reviews_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('reviews', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('profile_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->restrictOnDelete();
+            $table->unsignedTinyInteger('rating');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('approved')->index();
+            $table->boolean('is_flagged')->default(false)->index();
+            $table->text('comment')->nullable();
+            $table->foreignId('flagged_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('flagged_at')->nullable();
+            $table->text('flagged_reason')->nullable();
+            $table->foreignId('moderated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('moderated_at')->nullable();
+            $table->text('moderation_note')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+            $table->unique(['profile_id', 'user_id']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('reviews');
+    }
+};
+```
+
+## 2026_06_02_184338_create_activity_logs_table.php
+Path: database/migrations/2026_06_02_184338_create_activity_logs_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('activity_logs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->nullableMorphs('subject');
+            $table->string('action')->index();
+            $table->text('description')->nullable();
+            $table->json('properties')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('activity_logs');
+    }
+};
+```
+
+## 2026_06_02_185551_create_permission_tables.php
+Path: database/migrations/2026_06_02_185551_create_permission_tables.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        $teams = config('permission.teams');
+        $tableNames = config('permission.table_names');
+        $columnNames = config('permission.column_names');
+        $pivotRole = $columnNames['role_pivot_key'] ?? 'role_id';
+        $pivotPermission = $columnNames['permission_pivot_key'] ?? 'permission_id';
+
+        throw_if(empty($tableNames), 'Error: config/permission.php not loaded. Run [php artisan config:clear] and try again.');
+        throw_if($teams && empty($columnNames['team_foreign_key'] ?? null), 'Error: team_foreign_key on config/permission.php not loaded. Run [php artisan config:clear] and try again.');
+
+        /**
+         * See `docs/prerequisites.md` for suggested lengths on 'name' and 'guard_name' if "1071 Specified key was too long" errors are encountered.
+         */
+        Schema::create($tableNames['permissions'], static function (Blueprint $table) {
+            $table->id(); // permission id
+            $table->string('name');
+            $table->string('guard_name');
+            $table->timestamps();
+
+            $table->unique(['name', 'guard_name']);
+        });
+
+        /**
+         * See `docs/prerequisites.md` for suggested lengths on 'name' and 'guard_name' if "1071 Specified key was too long" errors are encountered.
+         */
+        Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
+            $table->id(); // role id
+            if ($teams || config('permission.testing')) { // permission.testing is a fix for sqlite testing
+                $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
+                $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
+            }
+            $table->string('name');
+            $table->string('guard_name');
+            $table->timestamps();
+            if ($teams || config('permission.testing')) {
+                $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
+            } else {
+                $table->unique(['name', 'guard_name']);
+            }
+        });
+
+        Schema::create($tableNames['model_has_permissions'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {
+            $table->unsignedBigInteger($pivotPermission);
+
+            $table->string('model_type');
+            $table->unsignedBigInteger($columnNames['model_morph_key']);
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
+
+            $table->foreign($pivotPermission)
+                ->references('id') // permission id
+                ->on($tableNames['permissions'])
+                ->cascadeOnDelete();
+            if ($teams) {
+                $table->unsignedBigInteger($columnNames['team_foreign_key']);
+                $table->index($columnNames['team_foreign_key'], 'model_has_permissions_team_foreign_key_index');
+
+                $table->primary([$columnNames['team_foreign_key'], $pivotPermission, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_permissions_permission_model_type_primary');
+            } else {
+                $table->primary([$pivotPermission, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_permissions_permission_model_type_primary');
+            }
+        });
+
+        Schema::create($tableNames['model_has_roles'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotRole, $teams) {
+            $table->unsignedBigInteger($pivotRole);
+
+            $table->string('model_type');
+            $table->unsignedBigInteger($columnNames['model_morph_key']);
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_roles_model_id_model_type_index');
+
+            $table->foreign($pivotRole)
+                ->references('id') // role id
+                ->on($tableNames['roles'])
+                ->cascadeOnDelete();
+            if ($teams) {
+                $table->unsignedBigInteger($columnNames['team_foreign_key']);
+                $table->index($columnNames['team_foreign_key'], 'model_has_roles_team_foreign_key_index');
+
+                $table->primary([$columnNames['team_foreign_key'], $pivotRole, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_roles_role_model_type_primary');
+            } else {
+                $table->primary([$pivotRole, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_roles_role_model_type_primary');
+            }
+        });
+
+        Schema::create($tableNames['role_has_permissions'], static function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
+            $table->unsignedBigInteger($pivotPermission);
+            $table->unsignedBigInteger($pivotRole);
+
+            $table->foreign($pivotPermission)
+                ->references('id') // permission id
+                ->on($tableNames['permissions'])
+                ->cascadeOnDelete();
+
+            $table->foreign($pivotRole)
+                ->references('id') // role id
+                ->on($tableNames['roles'])
+                ->cascadeOnDelete();
+
+            $table->primary([$pivotPermission, $pivotRole], 'role_has_permissions_permission_id_role_id_primary');
+        });
+
+        app('cache')
+            ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
+            ->forget(config('permission.cache.key'));
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        $tableNames = config('permission.table_names');
+
+        throw_if(empty($tableNames), 'Error: config/permission.php not found and defaults could not be merged. Please publish the package configuration before proceeding, or drop the tables manually.');
+
+        Schema::dropIfExists($tableNames['role_has_permissions']);
+        Schema::dropIfExists($tableNames['model_has_roles']);
+        Schema::dropIfExists($tableNames['model_has_permissions']);
+        Schema::dropIfExists($tableNames['roles']);
+        Schema::dropIfExists($tableNames['permissions']);
+    }
+};
+```
+
+## 2026_06_02_190550_update_schema_integrity_indexes_and_security_columns.php
+Path: database/migrations/2026_06_02_190550_update_schema_integrity_indexes_and_security_columns.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->timestamp('email_verified_at')->nullable();
+            $table->unsignedInteger('failed_login_attempts')->default(0);
+            $table->timestamp('last_failed_login_at')->nullable();
+            $table->timestamp('locked_until')->nullable();
+            $table->boolean('security_flagged')->default(false)->index();
+        });
+
+        Schema::table('cities', function (Blueprint $table) {
+            $table->index('is_active');
+            $table->index('sort_order');
+        });
+
+        Schema::table('categories', function (Blueprint $table) {
+            $table->index('is_active');
+            $table->index('sort_order');
+        });
+
+        Schema::table('subcategories', function (Blueprint $table) {
+            $table->index('category_id');
+            $table->index('is_active');
+            $table->index('sort_order');
+        });
+
+        Schema::table('subscription_plans', function (Blueprint $table) {
+            $table->index('is_active');
+        });
+
+        Schema::table('subscriptions', function (Blueprint $table) {
+            $table->index(['user_id', 'is_active']);
+            $table->index(['starts_at', 'ends_at']);
+            $table->index('approved_at');
+        });
+
+        Schema::table('activity_logs', function (Blueprint $table) {
+            $table->index('created_at');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['email_verified_at', 'failed_login_attempts', 'last_failed_login_at', 'locked_until', 'security_flagged']);
+        });
+
+        Schema::table('cities', function (Blueprint $table) {
+            $table->dropIndex(['is_active']);
+            $table->dropIndex(['sort_order']);
+        });
+
+        Schema::table('categories', function (Blueprint $table) {
+            $table->dropIndex(['is_active']);
+            $table->dropIndex(['sort_order']);
+        });
+
+        Schema::table('subcategories', function (Blueprint $table) {
+            $table->dropIndex(['category_id']);
+            $table->dropIndex(['is_active']);
+            $table->dropIndex(['sort_order']);
+        });
+
+        Schema::table('subscription_plans', function (Blueprint $table) {
+            $table->dropIndex(['is_active']);
+        });
+
+        Schema::table('subscriptions', function (Blueprint $table) {
+            $table->dropIndex(['user_id', 'is_active']);
+            $table->dropIndex(['starts_at', 'ends_at']);
+            $table->dropIndex(['approved_at']);
+        });
+
+        Schema::table('activity_logs', function (Blueprint $table) {
+            $table->dropIndex(['created_at']);
+        });
+    }
+};
+```
+
+## 2026_06_02_191000_convert_reviews_to_status_enum.php
+Path: database/migrations/2026_06_02_191000_convert_reviews_to_status_enum.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (! Schema::hasTable('reviews')) {
+            return;
+        }
+
+        // If new schema already exists, skip (likely created by new migrations)
+        if (Schema::hasColumn('reviews', 'status') && Schema::hasColumn('reviews', 'is_flagged')) {
+            return;
+        }
+
+        // If old schema doesn't exist, skip
+        if (! Schema::hasColumn('reviews', 'is_approved') || ! Schema::hasColumn('reviews', 'is_flagged')) {
+            return;
+        }
+
+        // Add new status enum if it doesn't exist
+        if (! Schema::hasColumn('reviews', 'status')) {
+            Schema::table('reviews', function (Blueprint $table) {
+                $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending')->after('user_id')->index();
+            });
+        }
+
+        // Convert old boolean flags to new enum values
+        DB::table('reviews')->where('is_approved', true)->update(['status' => 'approved']);
+        DB::table('reviews')->where('is_approved', false)->update(['status' => 'rejected']);
+
+        // Drop old is_approved column if new status column exists
+        if (Schema::hasColumn('reviews', 'is_approved')) {
+            Schema::table('reviews', function (Blueprint $table) {
+                $table->dropColumn('is_approved');
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        if (! Schema::hasTable('reviews')) {
+            return;
+        }
+
+        if (! Schema::hasColumn('reviews', 'status')) {
+            return;
+        }
+
+        if (Schema::hasColumn('reviews', 'is_approved')) {
+            return;
+        }
+
+        // Restore old schema: add back is_approved, drop status
+        Schema::table('reviews', function (Blueprint $table) {
+            $table->boolean('is_approved')->default(true)->after('rating');
+        });
+
+        DB::table('reviews')->where('status', 'approved')->update(['is_approved' => true]);
+        DB::table('reviews')->whereIn('status', ['rejected', 'pending'])->update(['is_approved' => false]);
+
+        Schema::table('reviews', function (Blueprint $table) {
+            $table->dropIndex(['status']);
+            $table->dropColumn('status');
+        });
+    }
+};
+```
+
+## 2026_06_02_191010_create_profile_subcategory_pivot_table.php
+Path: database/migrations/2026_06_02_191010_create_profile_subcategory_pivot_table.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (! Schema::hasTable('profile_subcategory')) {
+            Schema::create('profile_subcategory', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('profile_id')->constrained()->cascadeOnDelete();
+                $table->foreignId('subcategory_id')->constrained()->cascadeOnDelete();
+                $table->timestamps();
+                $table->unique(['profile_id', 'subcategory_id']);
+            });
+        }
+
+        if (Schema::hasTable('profiles') && Schema::hasColumn('profiles', 'subcategory_id')) {
+            $profiles = DB::table('profiles')->whereNotNull('subcategory_id')->get(['id', 'subcategory_id']);
+
+            foreach ($profiles as $profile) {
+                DB::table('profile_subcategory')->updateOrInsert([
+                    'profile_id' => $profile->id,
+                    'subcategory_id' => $profile->subcategory_id,
+                ], [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $dropColumns = [];
+            if (Schema::hasColumn('profiles', 'subcategory_id')) {
+                $dropColumns[] = 'subcategory_id';
+            }
+
+            if (! empty($dropColumns)) {
+                Schema::table('profiles', function (Blueprint $table) use ($dropColumns) {
+                    $table->dropColumn($dropColumns);
+                });
+            }
+        }
+    }
+
+    public function down(): void
+    {
+        if (! Schema::hasTable('profiles')) {
+            return;
+        }
+
+        if (! Schema::hasColumn('profiles', 'subcategory_id')) {
+            Schema::table('profiles', function (Blueprint $table) {
+                $table->foreignId('subcategory_id')->nullable()->constrained('subcategories')->nullOnDelete()->index()->after('category_id');
+            });
+        }
+
+        if (Schema::hasTable('profile_subcategory')) {
+            $cursor = DB::table('profile_subcategory')->orderBy('profile_id')->cursor();
+            $updated = [];
+
+            foreach ($cursor as $row) {
+                if (isset($updated[$row->profile_id])) {
+                    continue;
+                }
+
+                $categoryId = DB::table('subcategories')->where('id', $row->subcategory_id)->value('category_id');
+                DB::table('profiles')->where('id', $row->profile_id)->update([
+                    'category_id' => $categoryId,
+                    'subcategory_id' => $row->subcategory_id,
+                ]);
+                $updated[$row->profile_id] = true;
+            }
+
+            Schema::dropIfExists('profile_subcategory');
+        }
+    }
+};
+```
+
+## 2026_06_03_134733_fix_reviews_status_default.php
+Path: database/migrations/2026_06_03_134733_fix_reviews_status_default.php
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('reviews', function (Blueprint $table) {
+            // Reviews must start as 'pending' to pass through moderation.
+            // Original create_reviews_table incorrectly defaulted to 'approved',
+            // bypassing the moderation queue for all new submissions.
+            $table->enum('status', ['pending', 'approved', 'rejected'])
+                ->default('pending')
+                ->change();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('reviews', function (Blueprint $table) {
+            $table->enum('status', ['pending', 'approved', 'rejected'])
+                ->default('approved')
+                ->change();
+        });
+    }
+};
+```
+
+================================================================================
+
+# Models Export
+
+## Models index
+
+- ActivityLog.php
+- Category.php
+- City.php
+- PortfolioImage.php
+- PortfolioItem.php
+- Profile.php
+- ProfileStats.php
+- Review.php
+- Subcategory.php
+- Subscription.php
+- SubscriptionPlan.php
+- User.php
+
+================================================================================
+
+## ActivityLog.php
+Path: app/Models/ActivityLog.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+
+class ActivityLog extends Model
+{
+    protected $fillable = [
+        'user_id',
+        'subject_type',
+        'subject_id',
+        'action',
+        'description',
+        'properties',
+    ];
+
+    protected $casts = [
+        'properties' => 'array',
+    ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::updating(fn () => false);
+        static::deleting(fn () => false);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function subject(): MorphTo
+    {
+        return $this->morphTo();
+    }
+}
+```
+
+## Category.php
+Path: app/Models/Category.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Category extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'name',
+        'name_ar',
+        'slug',
+        'icon',
+        'sort_order',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function subcategories(): HasMany
+    {
+        return $this->hasMany(Subcategory::class)->orderBy('sort_order');
+    }
+
+    public function profiles(): HasMany
+    {
+        return $this->hasMany(Profile::class);
+    }
+
+}
+```
+
+## City.php
+Path: app/Models/City.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class City extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'name',
+        'name_ar',
+        'slug',
+        'sort_order',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function profiles(): HasMany
+    {
+        return $this->hasMany(Profile::class);
+    }
+}
+```
+
+## PortfolioImage.php
+Path: app/Models/PortfolioImage.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class PortfolioImage extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'portfolio_item_id',
+        'path',
+        'alt',
+        'sort_order',
+    ];
+
+    public function portfolioItem(): BelongsTo
+    {
+        return $this->belongsTo(PortfolioItem::class);
+    }
+}
+```
+
+## PortfolioItem.php
+Path: app/Models/PortfolioItem.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class PortfolioItem extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'profile_id',
+        'title',
+        'description',
+        'link',
+        'sort_order',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function profile(): BelongsTo
+    {
+        return $this->belongsTo(Profile::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(PortfolioImage::class)->orderBy('sort_order');
+    }
+}
+```
+
+## Profile.php
+Path: app/Models/Profile.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use App\Services\ProfileVisibilityService;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Profile extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'user_id', 'business_name', 'type', 'bio', 'slug',
+        'city_id', 'category_id', 'whatsapp', 'phone',
+        'experience_years', 'logo', 'cover_image', 'is_complete',
+    ];
+
+    protected $with = ['user'];
+
+    protected $casts = [
+        'is_complete' => 'boolean',
+    ];
+
+    // Relationships
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function subcategories(): BelongsToMany
+    {
+        return $this->belongsToMany(Subcategory::class, 'profile_subcategory', 'profile_id', 'subcategory_id')->withTimestamps();
+    }
+
+    public function stats(): HasOne
+    {
+        return $this->hasOne(ProfileStats::class, 'profile_id', 'id');
+    }
+
+    public function portfolioItems(): HasMany
+    {
+        return $this->hasMany(PortfolioItem::class)->orderBy('sort_order');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->where('status', 'approved');
+    }
+
+    public function isDiscoverable(): bool
+    {
+        return app(ProfileVisibilityService::class)->isDiscoverable($this);
+    }
+}
+```
+
+## ProfileStats.php
+Path: app/Models/ProfileStats.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class ProfileStats extends Model
+{
+    protected $table = 'profile_stats';
+
+    protected $primaryKey = 'profile_id';
+    public $incrementing = false;
+
+    protected $fillable = [
+        'profile_id', 'rating_avg', 'reviews_count', 'is_top_rated', 'is_featured', 'featured_until',
+    ];
+
+    protected $casts = [
+        'rating_avg'     => 'decimal:1',
+        'is_top_rated'   => 'boolean',
+        'is_featured'    => 'boolean',
+        'featured_until' => 'date',
+    ];
+
+    public function profile(): BelongsTo
+    {
+        return $this->belongsTo(Profile::class);
+    }
+
+    public function isFeaturedActive(): bool
+    {
+        return $this->is_featured
+            && $this->featured_until !== null
+            && $this->featured_until->isFuture();
+    }
+}
+```
+
+## Review.php
+Path: app/Models/Review.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Profile;
+use App\Models\User;
+use App\ReviewStatus;
+
+class Review extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'profile_id',
+        'user_id',
+        'rating',
+        'status',
+        'is_flagged',
+        'comment',
+        'flagged_by',
+        'flagged_at',
+        'flagged_reason',
+        'moderated_by',
+        'moderated_at',
+        'moderation_note',
+    ];
+
+    protected $casts = [
+        'rating'       => 'integer',
+        'is_flagged'   => 'boolean',
+        'flagged_at'   => 'datetime',
+        'moderated_at' => 'datetime',
+        'status'       => ReviewStatus::class,
+    ];
+
+    public function profile(): BelongsTo
+    {
+        return $this->belongsTo(Profile::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function flaggedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'flagged_by');
+    }
+
+    public function moderatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'moderated_by');
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === ReviewStatus::APPROVED;
+    }
+}
+```
+
+## Subcategory.php
+Path: app/Models/Subcategory.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+class Subcategory extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'category_id', 'name', 'name_ar', 'slug', 'sort_order', 'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function profiles(): BelongsToMany
+    {
+        return $this->belongsToMany(Profile::class, 'profile_subcategory', 'subcategory_id', 'profile_id')->withTimestamps();
+    }
+}
+```
+
+## Subscription.php
+Path: app/Models/Subscription.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Subscription extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'plan_id',
+        'starts_at',
+        'ends_at',
+        'is_active',
+        'payment_method',
+        'payment_reference',
+        'payment_date',
+        'notes',
+        'processed_by',
+        'processed_at',
+        'approved_by',
+        'approved_at',
+    ];
+
+    protected $casts = [
+        'starts_at'    => 'date',
+        'ends_at'      => 'date',
+        'payment_date' => 'date',
+        'is_active'    => 'boolean',
+        'processed_at' => 'datetime',
+        'approved_at'  => 'datetime',
+    ];
+
+    // -------------------------------------------------------------------------
+    // Relationships
+    // -------------------------------------------------------------------------
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'plan_id');
+    }
+
+    public function processedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers — S7
+    // -------------------------------------------------------------------------
+
+    public function isExpired(): bool
+    {
+        return $this->ends_at->isPast();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->is_active
+            && $this->approved_at !== null
+            && $this->ends_at !== null
+            && $this->ends_at->isFuture();
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->approved_at !== null;
+    }
+}
+```
+
+## SubscriptionPlan.php
+Path: app/Models/SubscriptionPlan.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class SubscriptionPlan extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'duration_months',
+        'price_lyd',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active'  => 'boolean',
+        'price_lyd'  => 'decimal:2',
+    ];
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'plan_id');
+    }
+}
+```
+
+## User.php
+Path: app/Models/User.php
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable
+{
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'is_active',
+        'is_suspended',
+        'suspension_reason',
+        'suspended_at',
+        'suspended_by',
+        'reinstated_at',
+        'reinstated_by',
+        'reinstatement_reason',
+        'must_change_password',
+        'password_changed_at',
+        'failed_login_attempts',
+        'last_failed_login_at',
+        'locked_until',
+        'security_flagged',
+        'email_verified_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at'   => 'datetime',
+        'password'            => 'hashed',
+        'is_active'           => 'boolean',
+        'is_suspended'        => 'boolean',
+        'must_change_password'=> 'boolean',
+        'suspended_at'        => 'datetime',
+        'reinstated_at'       => 'datetime',
+        'password_changed_at' => 'datetime',
+        'failed_login_attempts' => 'integer',
+        'last_failed_login_at' => 'datetime',
+        'locked_until'        => 'datetime',
+        'security_flagged'    => 'boolean',
+    ];
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function approvedSubscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class)
+            ->whereNotNull('approved_at');
+    }
+
+    public function activeSubscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('is_active', true)
+            ->whereNotNull('approved_at')
+            ->whereDate('ends_at', '>=', now());
+    }
+
+    public function suspendedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'suspended_by');
+    }
+
+    public function reinstatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reinstated_by');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    public function isProvider(): bool
+    {
+        return $this->hasRole('provider');
+    }
+
+    public function isPublicUser(): bool
+    {
+        return $this->hasRole('user');
+    }
+
+    public function isSuspended(): bool
+    {
+        return (bool) $this->is_suspended;
+    }
+
+    public function requiresPasswordChange(): bool
+    {
+        return (bool) $this->must_change_password;
+    }
+
+    public function updatePassword(string $newPassword, ?string $oldPassword = null): void
+    {
+        if ($oldPassword !== null && ! Hash::check($oldPassword, $this->password)) {
+            throw new \InvalidArgumentException('Current password is incorrect.');
+        }
+        $this->password = Hash::make($newPassword);
+        $this->password_changed_at = now();
+        $this->must_change_password = false;
+        $this->save();
+    }
+}
+```
+
+================================================================================
+
+# Seeders Export
+
+## Seeders index
+
+- AdminUserSeeder.php
+- CategorySeeder.php
+- CitySeeder.php
+- DatabaseSeeder.php
+- RoleSeeder.php
+- SubscriptionPlanSeeder.php
+
+================================================================================
+
+## AdminUserSeeder.php
+Path: database/seeders/AdminUserSeeder.php
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+class AdminUserSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $admin = User::firstOrCreate(
+            ['email' => env('ADMIN_EMAIL', 'admin@delni.ly')],
+            [
+                'name'                 => 'Delni Admin',
+                'password'             => Hash::make(env('ADMIN_PASSWORD', 'ChangeMe123!')),
+                'phone'                => null,
+                'is_active'            => true,
+                'is_suspended'         => false,
+                'must_change_password' => false,
+            ]
+        );
+
+        // Assign role only if not already assigned — U1: exactly one role
+        if (! $admin->hasRole('super_admin')) {
+            $admin->assignRole('super_admin');
+        }
+    }
+}
+```
+
+## CategorySeeder.php
+Path: database/seeders/CategorySeeder.php
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
+use App\Models\Category;
+use App\Models\Subcategory;
+
+class CategorySeeder extends Seeder
+{
+    public function run(): void
+    {
+        $categories = [
+            [
+                'name'    => 'Graphic Design',
+                'name_ar' => 'التصميم الجرافيكي',
+                'icon'    => '🎨',
+                'subs'    => [
+                    ['name' => 'Logo Design',      'name_ar' => 'تصميم شعارات'],
+                    ['name' => 'Social Media',     'name_ar' => 'تصميم سوشيال ميديا'],
+                    ['name' => 'Print Design',     'name_ar' => 'تصميم مطبوعات'],
+                ],
+            ],
+            [
+                'name'    => 'Construction & Contracting',
+                'name_ar' => 'المقاولات والبناء',
+                'icon'    => '🏗️',
+                'subs'    => [
+                    ['name' => 'Building',         'name_ar' => 'بناء'],
+                    ['name' => 'Plumbing',         'name_ar' => 'سباكة'],
+                    ['name' => 'Electrical',       'name_ar' => 'كهرباء'],
+                    ['name' => 'Tiling',           'name_ar' => 'بلاط وتشطيب'],
+                ],
+            ],
+            [
+                'name'    => 'Tech & Software',
+                'name_ar' => 'التقنية والبرمجة',
+                'icon'    => '💻',
+                'subs'    => [
+                    ['name' => 'Web Development',  'name_ar' => 'تطوير مواقع'],
+                    ['name' => 'Mobile Apps',      'name_ar' => 'تطبيقات موبايل'],
+                    ['name' => 'IT Support',       'name_ar' => 'دعم تقني'],
+                    ['name' => 'Networking',       'name_ar' => 'شبكات'],
+                ],
+            ],
+            [
+                'name'    => 'Photography & Video',
+                'name_ar' => 'التصوير والفيديو',
+                'icon'    => '📸',
+                'subs'    => [
+                    ['name' => 'Wedding Photography', 'name_ar' => 'تصوير أعراس'],
+                    ['name' => 'Product Photography', 'name_ar' => 'تصوير منتجات'],
+                    ['name' => 'Video Production',    'name_ar' => 'إنتاج فيديو'],
+                ],
+            ],
+            [
+                'name'    => 'Legal & Accounting',
+                'name_ar' => 'القانون والمحاسبة',
+                'icon'    => '⚖️',
+                'subs'    => [
+                    ['name' => 'Lawyer',           'name_ar' => 'محامي'],
+                    ['name' => 'Accountant',       'name_ar' => 'محاسب'],
+                    ['name' => 'Tax Consultant',   'name_ar' => 'استشارات ضريبية'],
+                ],
+            ],
+            [
+                'name'    => 'Auto & Mechanics',
+                'name_ar' => 'السيارات والميكانيكا',
+                'icon'    => '🚗',
+                'subs'    => [
+                    ['name' => 'Car Mechanic',     'name_ar' => 'ميكانيكي سيارات'],
+                    ['name' => 'Auto Electrician', 'name_ar' => 'كهربائي سيارات'],
+                    ['name' => 'Car Wash',         'name_ar' => 'غسيل سيارات'],
+                    ['name' => 'Tires',            'name_ar' => 'إطارات'],
+                ],
+            ],
+            [
+                'name'    => 'Medical & Health',
+                'name_ar' => 'الصحة والطب',
+                'icon'    => '🏥',
+                'subs'    => [
+                    ['name' => 'Dentist',          'name_ar' => 'طبيب أسنان'],
+                    ['name' => 'General Doctor',   'name_ar' => 'طبيب عام'],
+                    ['name' => 'Surgeon',          'name_ar' => 'جراح'],
+                    ['name' => 'Pharmacy',         'name_ar' => 'صيدلية'],
+                    ['name' => 'Physiotherapy',    'name_ar' => 'علاج طبيعي'],
+                ],
+            ],
+            [
+                'name'    => 'Logistics & Delivery',
+                'name_ar' => 'الشحن والتوصيل',
+                'icon'    => '📦',
+                'subs'    => [
+                    ['name' => 'Courier',          'name_ar' => 'توصيل طرود'],
+                    ['name' => 'Moving Services',  'name_ar' => 'نقل أثاث'],
+                    ['name' => 'Freight',          'name_ar' => 'شحن بضائع'],
+                ],
+            ],
+            [
+                'name'    => 'Catering & Events',
+                'name_ar' => 'الفعاليات والتموين',
+                'icon'    => '🍽️',
+                'subs'    => [
+                    ['name' => 'Catering',         'name_ar' => 'تموين'],
+                    ['name' => 'Event Planning',   'name_ar' => 'تنظيم فعاليات'],
+                    ['name' => 'Decoration',       'name_ar' => 'زينة وديكور'],
+                ],
+            ],
+            [
+                'name'    => 'Maintenance & Repairs',
+                'name_ar' => 'الصيانة والإصلاح',
+                'icon'    => '🔧',
+                'subs'    => [
+                    ['name' => 'AC Maintenance',   'name_ar' => 'صيانة مكيفات'],
+                    ['name' => 'Appliance Repair', 'name_ar' => 'صيانة أجهزة'],
+                    ['name' => 'Painting',         'name_ar' => 'دهانات'],
+                    ['name' => 'Carpentry',        'name_ar' => 'نجارة'],
+                ],
+            ],
+        ];
+
+        foreach ($categories as $order => $data) {
+            $category = Category::firstOrCreate(
+                ['slug' => Str::slug($data['name'])],
+                [
+                    'name'       => $data['name'],
+                    'name_ar'    => $data['name_ar'],
+                    'icon'       => $data['icon'],
+                    'sort_order' => $order,
+                    'is_active'  => true,
+                ]
+            );
+
+            foreach ($data['subs'] as $subOrder => $sub) {
+                Subcategory::firstOrCreate(
+                    [
+                        'category_id' => $category->id,
+                        'slug'        => Str::slug($sub['name']),
+                    ],
+                    [
+                        'name'       => $sub['name'],
+                        'name_ar'    => $sub['name_ar'],
+                        'sort_order' => $subOrder,
+                        'is_active'  => true,
+                    ]
+                );
+            }
+        }
+    }
+}
+```
+
+## CitySeeder.php
+Path: database/seeders/CitySeeder.php
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
+use App\Models\City;
+
+class CitySeeder extends Seeder
+{
+    public function run(): void
+    {
+        $cities = [
+            ['name' => 'Tripoli',      'name_ar' => 'طرابلس'],
+            ['name' => 'Benghazi',     'name_ar' => 'بنغازي'],
+            ['name' => 'Misrata',      'name_ar' => 'مصراتة'],
+            ['name' => 'Zawiya',       'name_ar' => 'الزاوية'],
+            ['name' => 'Zliten',       'name_ar' => 'زليتن'],
+            ['name' => 'Bayda',        'name_ar' => 'البيضاء'],
+            ['name' => 'Tobruk',       'name_ar' => 'طبرق'],
+            ['name' => 'Sabha',        'name_ar' => 'سبها'],
+            ['name' => 'Sirte',        'name_ar' => 'سرت'],
+            ['name' => 'Derna',        'name_ar' => 'درنة'],
+            ['name' => 'Khoms',        'name_ar' => 'الخمس'],
+            ['name' => 'Zintan',       'name_ar' => 'الزنتان'],
+            ['name' => 'Gharyan',      'name_ar' => 'غريان'],
+            ['name' => 'Tarhuna',      'name_ar' => 'ترهونة'],
+            ['name' => 'Bani Walid',   'name_ar' => 'بني وليد'],
+        ];
+
+        foreach ($cities as $order => $city) {
+            City::firstOrCreate(
+                ['slug' => Str::slug($city['name'])],
+                [
+                    'name'       => $city['name'],
+                    'name_ar'    => $city['name_ar'],
+                    'sort_order' => $order,
+                    'is_active'  => true,
+                ]
+            );
+        }
+    }
+}
+```
+
+## DatabaseSeeder.php
+Path: database/seeders/DatabaseSeeder.php
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    use WithoutModelEvents;
+
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
+    {
+        // Seed core app data
+        $this->call([
+            \Database\Seeders\RoleSeeder::class,
+            \Database\Seeders\AdminUserSeeder::class,
+            \Database\Seeders\SubscriptionPlanSeeder::class,
+            \Database\Seeders\CategorySeeder::class,
+            \Database\Seeders\CitySeeder::class,
+        ]);
+    }
+}
+```
+
+## RoleSeeder.php
+Path: database/seeders/RoleSeeder.php
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+
+class RoleSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Idempotent — safe to run multiple times (T3)
+        foreach (['super_admin', 'provider', 'user'] as $role) {
+            Role::firstOrCreate(
+                ['name' => $role, 'guard_name' => 'web']
+            );
+        }
+    }
+}
+```
+
+## SubscriptionPlanSeeder.php
+Path: database/seeders/SubscriptionPlanSeeder.php
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\SubscriptionPlan;
+
+class SubscriptionPlanSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $plans = [
+            [
+                'name'            => 'Monthly',
+                'duration_months' => 1,
+                'price_lyd'       => 50.00,
+                'is_active'       => true,
+            ],
+            [
+                'name'            => 'Yearly',
+                'duration_months' => 12,
+                'price_lyd'       => 500.00,
+                'is_active'       => true,
+            ],
+        ];
+
+        foreach ($plans as $plan) {
+            SubscriptionPlan::firstOrCreate([
+                'name' => $plan['name'],
+            ], $plan);
+        }
+    }
+}
+```
+
+================================================================================
+
+# Jobs Export
+
+## Jobs index
+
+- CreateUserProfileJob.php
+- RecalculateProfileStatsJob.php
+- SoftDeleteUserProfileJob.php
+
+================================================================================
+
+## CreateUserProfileJob.php
+Path: app/Jobs/CreateUserProfileJob.php
+
+```php
+<?php
+
+namespace App\Jobs;
+
+use App\Models\Profile;
+use App\Models\User;
+use App\Services\ActivityLogService;
+use App\Services\ProfileStatsService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+class CreateUserProfileJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public int $tries = 3;
+
+    public array $backoff = [5, 30, 60];
+
+    public function __construct(public readonly int $userId) {}
+
+    public function handle(ProfileStatsService $statsService, ActivityLogService $activityLog): void
+    {
+        $user = User::find($this->userId);
+
+        if (! $user || $user->isAdmin()) {
+            return;
+        }
+
+        // Suppress observer — the job owns creation and logging.
+        // Catch unique violation from concurrent job executions — idempotent.
+        try {
+            $profile = Profile::withoutEvents(function () use ($user) {
+                return Profile::create(['user_id' => $user->id]);
+            });
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] === 1062) {
+                return; // Profile already exists — concurrent execution, safe to exit
+            }
+            throw $e;
+        }
+
+        $statsService->initializeForProfile($profile);
+
+        $activityLog->log(
+            actorId: null,
+            subject: $profile,
+            action: 'profile_created',
+            description: "Profile auto-created for user #{$user->id}",
+            properties: ['user_role' => $user->getRoleNames()->first()],
+        );
+    }
+}
+```
+
+## RecalculateProfileStatsJob.php
+Path: app/Jobs/RecalculateProfileStatsJob.php
+
+```php
+<?php
+
+namespace App\Jobs;
+
+use App\Models\Profile;
+use App\Services\ProfileStatsService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+/**
+ * ShouldBeUnique prevents duplicate recalculations from burst events
+ * (e.g., bulk moderation triggering many review updates in quick succession).
+ */
+class RecalculateProfileStatsJob implements ShouldQueue, ShouldBeUnique
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public int $tries = 3;
+
+    public array $backoff = [5, 15, 30];
+
+    public function __construct(public readonly int $profileId) {}
+
+    public function uniqueId(): int
+    {
+        return $this->profileId;
+    }
+
+    public function handle(ProfileStatsService $statsService): void
+    {
+        $profile = Profile::find($this->profileId);
+
+        if ($profile) {
+            $statsService->recalculate($profile);
+        }
+    }
+}
+```
+
+## SoftDeleteUserProfileJob.php
+Path: app/Jobs/SoftDeleteUserProfileJob.php
+
+```php
+<?php
+
+namespace App\Jobs;
+
+use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+class SoftDeleteUserProfileJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public int $tries = 3;
+
+    public array $backoff = [5, 30, 60];
+
+    public function __construct(public readonly int $userId) {}
+
+    public function handle(): void
+    {
+        // withTrashed because the user is already soft-deleted at this point
+        $user = User::withTrashed()->find($this->userId);
+
+        $user?->profile?->delete();
+    }
+}
+```
+
+================================================================================
+
+# Observers Export
+
+## Observers index
+
+- ProfileObserver.php
+- ReviewObserver.php
+- SubscriptionObserver.php
+- UserObserver.php
+
+================================================================================
+
+## ProfileObserver.php
+Path: app/Observers/ProfileObserver.php
+
+```php
+<?php
+
+namespace App\Observers;
+
+use App\Models\Profile;
+use App\Services\ActivityLogService;
+use App\Services\ProfileCompletenessService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
+
+class ProfileObserver
+{
+    public function __construct(
+        private readonly ActivityLogService $activityLog,
+        private readonly ProfileCompletenessService $completeness,
+    ) {}
+
+    public function created(Profile $profile): void
+    {
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $profile,
+            action: 'profile_created',
+            description: "Profile created for user #{$profile->user_id}",
+            properties: [],
+        );
+    }
+
+    public function updated(Profile $profile): void
+    {
+        if ($profile->wasChanged([
+            'business_name',
+            'bio',
+            'city_id',
+            'category_id',
+            'whatsapp',
+            'phone',
+        ])) {
+            $this->completeness->evaluate($profile);
+        }
+
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $profile,
+            action: 'profile_updated',
+            description: "Profile updated for user #{$profile->user_id}",
+            properties: [
+                'changed_fields' => array_keys($profile->getChanges()),
+            ],
+        );
+    }
+
+    public function deleted(Profile $profile): void
+    {
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $profile,
+            action: 'profile_deleted',
+            description: "Profile soft-deleted for user #{$profile->user_id}",
+            properties: [],
+        );
+    }
+}
+```
+
+## ReviewObserver.php
+Path: app/Observers/ReviewObserver.php
+
+```php
+<?php
+
+namespace App\Observers;
+
+use App\Jobs\RecalculateProfileStatsJob;
+use App\Models\Review;
+use App\Services\ActivityLogService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
+
+class ReviewObserver
+{
+    public function __construct(
+        private readonly ActivityLogService $activityLog,
+    ) {}
+
+    public function created(Review $review): void
+    {
+        RecalculateProfileStatsJob::dispatch($review->profile_id)->afterCommit();
+
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $review,
+            action: 'review_created',
+            description: "Review created on profile #{$review->profile_id} by user #{$review->user_id}",
+            properties: ['rating' => $review->rating, 'status' => $review->status],
+        );
+    }
+
+    public function updated(Review $review): void
+    {
+        if ($review->wasChanged('status')) {
+            RecalculateProfileStatsJob::dispatch($review->profile_id)->afterCommit();
+
+            $this->activityLog->log(
+                actorId: Context::get('actor_id') ?? Auth::id(),
+                subject: $review,
+                action: 'review_moderated',
+                description: "Review #{$review->id} status changed to: {$review->status}",
+                properties: [
+                    'new_status'       => $review->status,
+                    'moderation_note'  => $review->moderation_note,
+                    'moderated_by'     => $review->moderated_by,
+                ],
+            );
+        }
+
+        if ($review->wasChanged('is_flagged') && $review->is_flagged) {
+            $this->activityLog->log(
+                actorId: Context::get('actor_id') ?? Auth::id(),
+                subject: $review,
+                action: 'review_flagged',
+                description: "Review #{$review->id} flagged on profile #{$review->profile_id}",
+                properties: [
+                    'flagged_by'     => $review->flagged_by,
+                    'flagged_reason' => $review->flagged_reason,
+                ],
+            );
+        }
+    }
+
+    public function deleted(Review $review): void
+    {
+        RecalculateProfileStatsJob::dispatch($review->profile_id)->afterCommit();
+
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $review,
+            action: 'review_deleted',
+            description: "Review #{$review->id} soft-deleted from profile #{$review->profile_id}",
+            properties: [],
+        );
+    }
+}
+```
+
+## SubscriptionObserver.php
+Path: app/Observers/SubscriptionObserver.php
+
+```php
+<?php
+
+namespace App\Observers;
+
+use App\Models\Subscription;
+use App\Services\ActivityLogService;
+use App\Services\SubscriptionValidationService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Validation\ValidationException;
+
+class SubscriptionObserver
+{
+    public function __construct(
+        private readonly ActivityLogService $activityLog,
+        private readonly SubscriptionValidationService $validator,
+    ) {}
+
+    /**
+     * Enforce provider-only ownership and date validation.
+     */
+    public function creating(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'user_id' => 'Subscription owner not found.',
+            ]);
+        }
+
+        $this->validator->validateOwnership($user);
+        $this->validator->validateDates($user, $subscription);
+    }
+
+    /**
+     * Financial records are immutable.
+     */
+    public function updating(Subscription $subscription): void
+    {
+        if ($subscription->isDirty([
+            'user_id',
+            'plan_id',
+            'starts_at',
+            'ends_at',
+        ])) {
+            throw ValidationException::withMessages([
+                'subscription' => 'Financial subscription records are immutable.',
+            ]);
+        }
+    }
+
+    public function created(Subscription $subscription): void
+    {
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $subscription,
+            action: 'subscription_created',
+            description: "Subscription created for provider #{$subscription->user_id}",
+            properties: [
+                'plan_id' => $subscription->plan_id,
+                'starts_at' => $subscription->starts_at,
+                'ends_at' => $subscription->ends_at,
+                'is_active' => $subscription->is_active,
+            ],
+        );
+    }
+
+    public function updated(Subscription $subscription): void
+    {
+        if (! $subscription->wasChanged('is_active')) {
+            return;
+        }
+
+        if ($subscription->is_active) {
+            $this->activityLog->log(
+                actorId: Context::get('actor_id') ?? Auth::id(),
+                subject: $subscription,
+                action: 'subscription_activated',
+                description: "Subscription #{$subscription->id} approved for provider #{$subscription->user_id}",
+                properties: [
+                    'approved_by' => $subscription->approved_by,
+                    'approved_at' => $subscription->approved_at,
+                    'ends_at' => $subscription->ends_at,
+                ],
+            );
+        } else {
+            $this->activityLog->log(
+                actorId: Context::get('actor_id') ?? Auth::id(),
+                subject: $subscription,
+                action: 'subscription_deactivated',
+                description: "Subscription #{$subscription->id} deactivated for provider #{$subscription->user_id}",
+                properties: [
+                    'ends_at' => $subscription->ends_at,
+                ],
+            );
+        }
+    }
+}
+```
+
+## UserObserver.php
+Path: app/Observers/UserObserver.php
+
+```php
+<?php
+
+namespace App\Observers;
+
+use App\Jobs\CreateUserProfileJob;
+use App\Jobs\SoftDeleteUserProfileJob;
+use App\Models\User;
+use App\Services\ActivityLogService;
+use App\Services\ProfileCompletenessService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
+
+class UserObserver
+{
+    public function __construct(
+        private readonly ActivityLogService $activityLog,
+        private readonly ProfileCompletenessService $completeness,
+    ) {}
+
+    public function created(User $user): void
+    {
+        CreateUserProfileJob::dispatch($user->id)->afterCommit();
+
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $user,
+            action: 'user_created',
+            description: "User account created: {$user->email}",
+            properties: ['role' => $user->getRoleNames()->first()],
+        );
+    }
+
+    public function updated(User $user): void
+    {
+        if ($user->wasChanged('is_suspended')) {
+            $this->logSuspensionChange($user);
+        }
+
+        if ($user->wasChanged('password')) {
+            $this->activityLog->log(
+                actorId: Context::get('actor_id') ?? Auth::id(),
+                subject: $user,
+                action: 'password_changed',
+                description: "Password changed for user: {$user->email}",
+                properties: [],
+            );
+        }
+
+        if ($user->wasChanged('name')) {
+            $user->profile?->tap(fn ($profile) => $this->completeness->evaluate($profile));
+        }
+    }
+
+    public function deleted(User $user): void
+    {
+        SoftDeleteUserProfileJob::dispatch($user->id)->afterCommit();
+
+        $this->activityLog->log(
+            actorId: Context::get('actor_id') ?? Auth::id(),
+            subject: $user,
+            action: 'user_deleted',
+            description: "User account soft-deleted: {$user->email}",
+            properties: [],
+        );
+    }
+
+    private function logSuspensionChange(User $user): void
+    {
+        if ($user->is_suspended) {
+            $this->activityLog->log(
+                actorId: Context::get('actor_id') ?? Auth::id(),
+                subject: $user,
+                action: 'user_suspended',
+                description: "User suspended: {$user->email}",
+                properties: ['reason' => $user->suspension_reason],
+            );
+        } else {
+            $this->activityLog->log(
+                actorId: Context::get('actor_id') ?? Auth::id(),
+                subject: $user,
+                action: 'user_unsuspended',
+                description: "User reinstated: {$user->email}",
+                properties: ['reason' => $user->reinstatement_reason],
+            );
+        }
+    }
+}
+```
+
+================================================================================
+
+# Services Export
+
+## Services index
+
+- ActivityLogService.php
+- ProfileCompletenessService.php
+- ProfileStatsService.php
+- ProfileVisibilityService.php
+- ReviewModerationService.php
+- SubscriptionApprovalService.php
+- SubscriptionValidationService.php
+- UserSuspensionService.php
+
+================================================================================
+
+## ActivityLogService.php
+Path: app/Services/ActivityLogService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\ActivityLog;
+use Illuminate\Database\Eloquent\Model;
+
+class ActivityLogService
+{
+    /**
+     * Append an immutable audit entry. Never updates or deletes — by design.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    public function log(
+        ?int $actorId,
+        Model $subject,
+        string $action,
+        string $description,
+        array $properties = [],
+    ): void {
+        ActivityLog::create([
+            'user_id'      => $actorId,
+            'subject_type' => $subject->getMorphClass(),
+            'subject_id'   => $subject->getKey(),
+            'action'       => $action,
+            'description'  => $description,
+            'properties'   => $properties,
+        ]);
+    }
+}
+```
+
+## ProfileCompletenessService.php
+Path: app/Services/ProfileCompletenessService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Profile;
+
+class ProfileCompletenessService
+{
+    public function evaluate(Profile $profile): void
+    {
+        $isComplete = $this->meetsAllConditions($profile);
+
+        if ($profile->is_complete !== $isComplete) {
+            $profile->is_complete = $isComplete;
+            $profile->saveQuietly();
+        }
+    }
+
+    private function meetsAllConditions(Profile $profile): bool
+    {
+        return (
+            filled($profile->business_name) ||
+            filled($profile->user?->name)
+        )
+        && filled($profile->bio)
+        && $profile->city_id !== null
+        && $profile->category_id !== null
+        && (
+            filled($profile->whatsapp) ||
+            filled($profile->phone)
+        );
+    }
+}
+```
+
+## ProfileStatsService.php
+Path: app/Services/ProfileStatsService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Profile;
+use App\Models\ProfileStats;
+
+class ProfileStatsService
+{
+    public function initializeForProfile(Profile $profile): void
+    {
+        ProfileStats::create([
+            'profile_id' => $profile->id,
+            'rating_avg' => 0.0,
+            'reviews_count' => 0,
+            'is_top_rated' => false,
+            'is_featured' => false,
+            'featured_until' => null,
+        ]);
+    }
+
+    public function recalculate(Profile $profile): void
+    {
+        $stats = $profile->approvedReviews()
+            ->selectRaw('COUNT(*) as total, COALESCE(AVG(rating), 0) as avg_rating')
+            ->first();
+
+        $count = (int) ($stats->total ?? 0);
+        $avg = round((float) ($stats->avg_rating ?? 0), 1);
+        $topRated = $avg >= 4.5 && $count >= 5;
+
+        $profile->stats()->updateOrCreate([], [
+            'reviews_count' => $count,
+            'rating_avg' => $avg,
+            'is_top_rated' => $topRated,
+        ]);
+    }
+}
+```
+
+## ProfileVisibilityService.php
+Path: app/Services/ProfileVisibilityService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Profile;
+use Carbon\Carbon;
+
+class ProfileVisibilityService
+{
+    public function isDiscoverable(Profile $profile): bool
+    {
+        $user = $profile->user;
+
+        if (! $user) {
+            return false;
+        }
+
+        if (! $user->is_active) {
+            return false;
+        }
+
+        if ($user->is_suspended) {
+            return false;
+        }
+
+        if (! $profile->is_complete) {
+            return false;
+        }
+
+        return $user->subscriptions()
+            ->where('is_active', true)
+            ->whereDate('ends_at', '>=', Carbon::today())
+            ->exists();
+    }
+}
+```
+
+## ReviewModerationService.php
+Path: app/Services/ReviewModerationService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Review;
+use Illuminate\Support\Facades\Auth;
+
+class ReviewModerationService
+{
+    public function approve(
+        Review $review,
+        ?string $note = null
+    ): void {
+        $review->update([
+            'status'          => 'approved',
+            'moderated_by'    => Auth::id(),
+            'moderated_at'    => now(),
+            'moderation_note' => $note,
+        ]);
+    }
+
+    public function reject(
+        Review $review,
+        ?string $note = null
+    ): void {
+        $review->update([
+            'status'          => 'rejected',
+            'moderated_by'    => Auth::id(),
+            'moderated_at'    => now(),
+            'moderation_note' => $note,
+        ]);
+    }
+}
+```
+
+## SubscriptionApprovalService.php
+Path: app/Services/SubscriptionApprovalService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Subscription;
+use Illuminate\Support\Facades\Auth;
+
+class SubscriptionApprovalService
+{
+    public function approve(Subscription $subscription): void
+    {
+        $subscription->update([
+            'is_active'    => true,
+            'approved_by'  => Auth::id(),
+            'approved_at'  => now(),
+            'processed_by' => Auth::id(),
+            'processed_at' => now(),
+        ]);
+    }
+}
+```
+
+## SubscriptionValidationService.php
+Path: app/Services/SubscriptionValidationService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Subscription;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+class SubscriptionValidationService
+{
+    public function validateOwnership(User $user): void
+    {
+        if (! $user->hasRole('provider')) {
+            throw ValidationException::withMessages([
+                'user_id' => 'Only providers may own subscriptions.',
+            ]);
+        }
+    }
+
+    public function validateDates(
+        User $provider,
+        Subscription $subscription
+    ): void {
+        if ($subscription->ends_at <= $subscription->starts_at) {
+            throw ValidationException::withMessages([
+                'ends_at' => 'End date must be later than start date.',
+            ]);
+        }
+
+        // lockForUpdate inside a transaction prevents concurrent inserts from both
+        // passing the overlap check simultaneously (TOCTOU race condition).
+        // MySQL InnoDB supports nested transactions via savepoints, so this is safe
+        // when called from within an outer transaction (e.g., a Filament action).
+        DB::transaction(function () use ($provider, $subscription) {
+            $existingId = $subscription->getKey() ?? 0;
+
+            $overlap = Subscription::query()
+                ->where('user_id', $provider->id)
+                ->where('id', '!=', $existingId)
+                ->where(function ($query) use ($subscription) {
+                    $query
+                        ->whereBetween('starts_at', [
+                            $subscription->starts_at,
+                            $subscription->ends_at,
+                        ])
+                        ->orWhereBetween('ends_at', [
+                            $subscription->starts_at,
+                            $subscription->ends_at,
+                        ])
+                        ->orWhere(function ($q) use ($subscription) {
+                            $q->where('starts_at', '<=', $subscription->starts_at)
+                                ->where('ends_at', '>=', $subscription->ends_at);
+                        });
+                })
+                ->lockForUpdate()
+                ->exists();
+
+            if ($overlap) {
+                throw ValidationException::withMessages([
+                    'starts_at' => 'Subscription dates overlap.',
+                ]);
+            }
+        });
+    }
+}
+```
+
+## UserSuspensionService.php
+Path: app/Services/UserSuspensionService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
+class UserSuspensionService
+{
+    public function suspend(User $user, string $reason): void
+    {
+        $user->update([
+            'is_suspended'      => true,
+            'suspension_reason' => $reason,
+            'suspended_at'      => now(),
+            'suspended_by'      => Auth::id(),
+        ]);
+    }
+
+    public function reinstate(User $user, string $reason): void
+    {
+        $user->update([
+            'is_suspended'        => false,
+            'reinstatement_reason'=> $reason,
+            'reinstated_at'       => now(),
+            'reinstated_by'       => Auth::id(),
+        ]);
+    }
+}
+```
+
+================================================================================
+
+# Policies Export
+
+## Policies index
+
+- CategoryPolicy.php
+- CityPolicy.php
+- ProfilePolicy.php
+- ReviewPolicy.php
+- SubcategoryPolicy.php
+- SubscriptionPolicy.php
+- UserPolicy.php
+
+================================================================================
+
+## CategoryPolicy.php
+Path: app/Policies/CategoryPolicy.php
+
+```php
+<?php
+
+namespace App\Policies;
+
+use App\Models\Category;
+use App\Models\User;
+
+class CategoryPolicy
+{
+    /**
+     * Admin bypasses all category checks.
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Admin can view category listing in Filament.
+     * Admin handled by before().
+     */
+    public function viewAny(User $user): bool
+    {
+        return false;
+    }
+
+    public function create(User $user): bool
+    {
+        return false;
+    }
+
+    public function update(User $user, Category $category): bool
+    {
+        return false;
+    }
+
+    public function delete(User $user, Category $category): bool
+    {
+        return false;
+    }
+}
+```
+
+## CityPolicy.php
+Path: app/Policies/CityPolicy.php
+
+```php
+<?php
+
+namespace App\Policies;
+
+use App\Models\City;
+use App\Models\User;
+
+class CityPolicy
+{
+    /**
+     * Admin bypasses all city checks.
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Admin can view city listing in Filament.
+     * Admin handled by before().
+     */
+    public function viewAny(User $user): bool
+    {
+        return false;
+    }
+
+    public function create(User $user): bool
+    {
+        return false;
+    }
+
+    public function update(User $user, City $city): bool
+    {
+        return false;
+    }
+
+    public function delete(User $user, City $city): bool
+    {
+        return false;
+    }
+}
+```
+
+## ProfilePolicy.php
+Path: app/Policies/ProfilePolicy.php
+
+```php
+<?php
+
+namespace App\Policies;
+
+use App\Models\Profile;
+use App\Models\User;
+use App\Services\ProfileVisibilityService;
+
+class ProfilePolicy
+{
+    public function __construct(
+        private ProfileVisibilityService $visibility,
+    ) {}
+
+    /**
+     * Admin bypasses most profile checks.
+     *
+     * 'create' and 'delete' are EXCLUDED from bypass — documented pattern.
+     * Profiles are never manually created (P1) and never directly deleted.
+     * Even admin must not be able to bypass these via a route.
+     *
+     * Documented: https://laravel.com/docs/11.x/authorization#policy-filters
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin')
+            && ! in_array($ability, ['create', 'delete'])
+        ) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Anyone can hit the profile listing/browse page.
+     * Visibility filtering is handled by the query layer — SD1.
+     * Guest access via nullable ?User.
+     */
+    public function viewAny(?User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Anyone including guests can view a publicly visible provider profile.
+     * Owner can always view their own profile regardless of visibility.
+     *
+     * Invariants: P4, P6, SD1.
+     */
+    public function view(?User $user, Profile $profile): bool
+    {
+        if ($user && $profile->user_id === $user->id) {
+            return true;
+        }
+
+        return $this->visibility->isDiscoverable($profile);
+    }
+
+    /**
+     * Only the profile owner with provider role can update their own profile.
+     * Admin handled by before().
+     * Invariant: provider edits own profile only.
+     */
+    public function update(User $user, Profile $profile): bool
+    {
+        return $profile->user_id === $user->id
+            && $user->hasRole('provider');
+    }
+
+    /**
+     * Profiles are never created manually — auto-created by system only.
+     * Excluded from before() bypass — even admin is denied here.
+     * Any route calling authorize('create', Profile::class) is always denied.
+     * Invariant: P1.
+     */
+    public function create(User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Profiles are only soft-deleted via user deletion cascade — never directly.
+     * Excluded from before() bypass — even admin is denied here.
+     * Profile deletion happens through user deletion, not a profile delete route.
+     */
+    public function delete(User $user, Profile $profile): bool
+    {
+        return false;
+    }
+}
+```
+
+## ReviewPolicy.php
+Path: app/Policies/ReviewPolicy.php
+
+```php
+<?php
+
+namespace App\Policies;
+
+use App\Models\Profile;
+use App\Models\Review;
+use App\Models\User;
+use App\Services\ProfileVisibilityService;
+
+class ReviewPolicy
+{
+    public function __construct(
+        private ProfileVisibilityService $visibility,
+    ) {}
+
+    /**
+     * Admin bypasses all review checks.
+     * No excluded abilities here — admin can soft-delete and edit reviews
+     * through Filament moderation panel per SRS.
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Any user or guest can view the reviews listing.
+     * Actual visibility filtering handled at query level.
+     */
+    public function viewAny(?User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Reviews inherit profile visibility.
+     * Guests can view reviews on visible profiles.
+     * Profile owner always sees their own profile reviews.
+     *
+     * Invariant: reviews not accessible when profile is hidden.
+     */
+    public function view(?User $user, Review $review): bool
+    {
+        $profile = $review->profile;
+
+        if (! $profile) {
+            return false;
+        }
+
+        if ($user && $profile->user_id === $user->id) {
+            return true;
+        }
+
+        return $this->visibility->isDiscoverable($profile);
+    }
+
+    /**
+     * Any logged-in user can create a review IF:
+     * - Not reviewing their own profile — R2
+     * - Target profile is publicly visible — R1
+     *
+     * One review per user per profile enforced at DB + Form Request.
+     *
+     * Controller: $this->authorize('create', [Review::class, $profile])
+     *
+     * Invariants: R1, R2, R5.
+     */
+    public function create(User $user, Profile $profile): bool
+    {
+        if ($profile->user_id === $user->id) {
+            return false;
+        }
+
+        return $this->visibility->isDiscoverable($profile);
+    }
+
+    /**
+     * Nobody can update their own review after submission — ever.
+     * Admin can edit via before() bypass.
+     * Invariant: reviewer cannot edit after submission.
+     */
+    public function update(User $user, Review $review): bool
+    {
+        return false;
+    }
+
+    /**
+     * Nobody can delete reviews directly through a route.
+     * Admin soft-delete handled by before() bypass.
+     * Invariant: soft-delete only, admin only.
+     */
+    public function delete(User $user, Review $review): bool
+    {
+        return false;
+    }
+
+    /**
+     * Flag rules — business rules document section 8:
+     *
+     * - Cannot flag own review — any role
+     * - Review must belong to a visible profile
+     * - Provider: can only flag reviews on their OWN profile
+     * - Public user (role 'user'): can flag any review on any visible profile
+     *   except their own
+     * - Explicit hasRole('user') check — more precise than return true,
+     *   prevents accidental access if new roles are added later
+     *
+     * Admin handled by before() bypass.
+     */
+    public function flag(User $user, Review $review): bool
+    {
+        // Cannot flag own review
+        if ($review->user_id === $user->id) {
+            return false;
+        }
+
+        // Review must belong to a visible, discoverable profile
+        $profile = $review->profile;
+
+        if (! $profile || ! $this->visibility->isDiscoverable($profile)) {
+            return false;
+        }
+
+        if ($user->hasRole('provider')) {
+            $ownProfile = $user->profile;
+
+            return $ownProfile !== null
+                && $review->profile_id === $ownProfile->id;
+        }
+
+        // Explicitly check 'user' role — not just return true
+        // Prevents unintended access if new roles are introduced
+        return $user->hasRole('user');
+    }
+
+    /**
+     * Moderation is admin-only.
+     * Admin handled by before() bypass.
+     */
+    public function moderate(User $user, Review $review): bool
+    {
+        return false;
+    }
+}
+```
+
+## SubcategoryPolicy.php
+Path: app/Policies/SubcategoryPolicy.php
+
+```php
+<?php
+
+namespace App\Policies;
+
+use App\Models\Subcategory;
+use App\Models\User;
+
+class SubcategoryPolicy
+{
+    /**
+     * Admin bypasses all subcategory checks.
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Admin can view subcategory listing in Filament.
+     * Admin handled by before().
+     */
+    public function viewAny(User $user): bool
+    {
+        return false;
+    }
+
+    public function create(User $user): bool
+    {
+        return false;
+    }
+
+    public function update(User $user, Subcategory $subcategory): bool
+    {
+        return false;
+    }
+
+    public function delete(User $user, Subcategory $subcategory): bool
+    {
+        return false;
+    }
+}
+```
+
+## SubscriptionPolicy.php
+Path: app/Policies/SubscriptionPolicy.php
+
+```php
+<?php
+
+namespace App\Policies;
+
+use App\Models\Subscription;
+use App\Models\User;
+
+class SubscriptionPolicy
+{
+    /**
+     * Admin bypasses most subscription checks.
+     *
+     * 'delete' is EXCLUDED from bypass.
+     * Subscriptions are permanent financial records — PAY3.
+     * Even admin cannot delete a subscription through any route.
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin')
+            && $ability !== 'delete'
+        ) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Provider can view their own subscription listing.
+     * Admin handled by before().
+     * Public users cannot list any subscriptions.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->hasRole('provider');
+    }
+
+    /**
+     * Provider can view a specific subscription they own.
+     * Admin handled by before().
+     */
+    public function view(User $user, Subscription $subscription): bool
+    {
+        return $subscription->user_id === $user->id
+            && $user->hasRole('provider');
+    }
+
+    /**
+     * Only admin can create subscriptions.
+     * Admin handled by before().
+     * Invariants: S1, subscription ownership.
+     */
+    public function create(User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Only admin can update subscriptions.
+     * Admin handled by before().
+     */
+    public function update(User $user, Subscription $subscription): bool
+    {
+        return false;
+    }
+
+    /**
+     * Subscriptions are NEVER deleted — permanent financial record.
+     * Excluded from before() bypass — even admin is denied here.
+     * Invariant: PAY3, history preservation.
+     */
+    public function delete(User $user, Subscription $subscription): bool
+    {
+        return false;
+    }
+
+    /**
+     * Only admin can approve subscriptions.
+     * Admin handled by before().
+     * Invariants: S5, S6.
+     */
+    public function approve(User $user, Subscription $subscription): bool
+    {
+        return false;
+    }
+}
+```
+
+## UserPolicy.php
+Path: app/Policies/UserPolicy.php
+
+```php
+<?php
+
+namespace App\Policies;
+
+use App\Models\User;
+
+class UserPolicy
+{
+    /**
+     * Admin bypasses all user checks.
+     * Admin deleting/suspending users is allowed per SRS — A1.
+     */
+    public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Admin can view user listing in Filament.
+     * Admin handled by before().
+     * Non-admins cannot list users.
+     */
+    public function viewAny(User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Users can only view their own account.
+     * Admin handled by before().
+     */
+    public function view(User $user, User $target): bool
+    {
+        return $user->id === $target->id;
+    }
+
+    /**
+     * Only admin can create provider accounts.
+     * Admin handled by before().
+     * Invariant: U2.
+     */
+    public function createProvider(User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Only admin can create admin accounts.
+     * Admin handled by before().
+     * Invariant: U2.
+     */
+    public function createAdmin(User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Users can update their own basic info only.
+     * Admin handled by before().
+     * Role immutability enforced in Form Request — not here.
+     * Invariant: U6.
+     */
+    public function update(User $user, User $target): bool
+    {
+        return $user->id === $target->id;
+    }
+
+    /**
+     * Only admin can soft-delete users.
+     * Admin handled by before().
+     */
+    public function delete(User $user, User $target): bool
+    {
+        return false;
+    }
+
+    /**
+     * Only admin can suspend users.
+     * Admin handled by before().
+     * Invariants: A1, U3.
+     */
+    public function suspend(User $user, User $target): bool
+    {
+        return false;
+    }
+
+    /**
+     * Only admin can reinstate users.
+     * Admin handled by before().
+     * Invariant: A3.
+     */
+    public function reinstate(User $user, User $target): bool
+    {
+        return false;
+    }
+}
+```
+

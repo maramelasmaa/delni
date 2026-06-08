@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php vendor/bin/pint --dirty --format agent)",
+      "mcp__laravel-boost__get-absolute-url",
+      "Bash(xargs grep -l \"image\\\\|file\\\\|size\")",
+      "Bash(git checkout *)",
+      "PowerShell(Get-Content 'C:\\\\laragon\\\\www\\\\delni\\\\storage\\\\logs\\\\laravel.log' -Tail 200 | Where-Object { $_ -match 'ERROR|Exception' } | Select-Object -Last 30)",
+      "Bash(curl -s -H \"Cookie: XSRF-TOKEN=test; laravel_session=test\" http://localhost:8080/cp/provider/my-profile)",
+      "PowerShell(php artisan test --filter=ProviderPanelSecurityTest::test_suspended_provider_cannot_access_provider_panel 2>&1)",
+      "PowerShell(tail -10)",
+      "PowerShell(php artisan test tests/Feature/DiagnosticTest.php)",
+      "PowerShell(php artisan test --filter=\"test_suspended_provider_cannot_access_provider_panel\" tests/Feature/ProviderPanelSecurityTest.php 2>&1)",
+      "PowerShell(tail -3)",
+      "Bash(ls -la resources/lang/ar/)",
+      "Bash(dir resources\\\\lang\\\\ar)",
+      "Bash(mcp__laravel-boost__last-error)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\laragon\\\\www\\\\delni\\\\storage\\\\logs\" -ErrorAction SilentlyContinue | Where-Object {$_.LastWriteTime -gt \\(Get-Date\\).AddMinutes\\(-2\\)} | Select-Object Name, LastWriteTime)",
+      "Bash(grep -A 5 '$attributes\\\\|$casts\\\\|is_active\\\\|is_suspended' 'c:\\\\laragon\\\\www\\\\delni\\\\app\\\\Models\\\\User.php')",
+      "Bash(vendor/bin/pint --format agent)",
+      "Bash(xargs grep -l \"portfolio\\\\|PortfolioItem\" -i)",
+      "PowerShell(head -20)",
+      "Bash(xargs cat)",
+      "Bash(xargs grep -l \"delni:ensure-super-admin\")",
+      "Bash(xargs grep -l \"User\")",
+      "Bash(php -r ' *)",
+      "Bash(xargs grep -l \"Panel\\\\|FilamentPanel\")",
+      "Bash(xargs grep -l \"admin\")",
+      "Edit(/.claude/skills/laravel-debugging-assistant/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\laragon\\www\\delni\\storage"
+    ]
+  }
+}
