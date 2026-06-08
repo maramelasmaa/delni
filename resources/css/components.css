@@ -203,10 +203,11 @@
         display: flex;
         align-items: center;
         min-height: 78px;
-        background: rgba(11, 26, 52, 0.96);
+        background: #0b1a34;
         backdrop-filter: blur(16px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 12px 28px rgba(11, 26, 52, 0.18);
+        z-index: 9999;
     }
 
     .navbar-brand {
