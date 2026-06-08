@@ -22,11 +22,6 @@
 
     <div class="container relative z-10">
         <div class="hero-content">
-            <div class="hero-badge">
-                <span class="badge-icon">✨</span>
-                <span>{{ __('messages.public.best_services_platform') }}</span>
-            </div>
-
             <h1 class="hero-headline">
                 {{ __('messages.public.find_trusted_professionals') }}
                 <span class="hero-highlight">{{ __('messages.public.in_libya') }}</span>
@@ -352,27 +347,6 @@
             opacity: 1;
             transform: translateY(0);
         }
-    }
-
-    .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #f1620f;
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        animation: fade-up 0.8s ease-out 0.1s both;
-    }
-
-    .badge-icon {
-        font-size: 1.125rem;
-        line-height: 1;
     }
 
     .hero-headline {
