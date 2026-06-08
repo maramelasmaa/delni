@@ -14,30 +14,31 @@
     $whatsappNumber = $contact?->whatsapp ? preg_replace('/[^0-9]/', '', $contact->whatsapp) : null;
 @endphp
 
-<!-- Hero Section -->
 <section class="home-hero">
-    <div class="hero-decorative-blob hero-blob-1"></div>
-    <div class="hero-decorative-blob hero-blob-2"></div>
-    <div class="hero-decorative-grid"></div>
+    <div class="hero-bg-glow hero-glow-1"></div>
+    <div class="hero-bg-glow hero-glow-2"></div>
+    <div class="hero-grid"></div>
 
-    <div class="container relative z-10">
-        <div class="hero-content">
-            <h1 class="hero-headline">
+    <div class="container">
+        <div class="hero-inner">
+
+            <div class="hero-badge">
+                <span>✨</span>
+                <span>{{ __('messages.public.best_services_platform') }}</span>
+            </div>
+
+            <h1 class="hero-title">
                 {{ __('messages.public.find_trusted_professionals') }}
-                <span class="hero-highlight">{{ __('messages.public.in_libya') }}</span>
+                <span>{{ __('messages.public.in_libya') }}</span>
             </h1>
 
-            <p class="hero-description">
+            <p class="hero-text">
                 {{ __('messages.public.browse_local_professionals') }}
             </p>
 
-            <form action="{{ route('public.search') }}" method="GET" class="hero-search-form">
-                <div class="search-field search-field-main">
-                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-
+            <form action="{{ route('public.search') }}" method="GET" class="premium-search">
+                <div class="premium-field premium-keyword">
+                    <span class="field-icon">⌕</span>
                     <input
                         type="text"
                         name="keyword"
@@ -48,12 +49,8 @@
                     >
                 </div>
 
-                <div class="search-field">
-                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-
+                <div class="premium-field">
+                    <span class="field-icon">⌖</span>
                     <select name="city_id">
                         <option value="">{{ __('messages.public.all_cities') }}</option>
                         @foreach($cities->take(15) as $city)
@@ -64,11 +61,8 @@
                     </select>
                 </div>
 
-                <div class="search-field">
-                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2v20M2 12h20"></path>
-                    </svg>
-
+                <div class="premium-field">
+                    <span class="field-icon">＋</span>
                     <select name="category_id">
                         <option value="">{{ __('messages.public.all_categories') }}</option>
                         @foreach($categories->take(15) as $category)
@@ -79,34 +73,28 @@
                     </select>
                 </div>
 
-                <button type="submit" class="search-button">
-                    <span>{{ __('messages.public.search') }}</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"></path>
-                    </svg>
+                <button type="submit" class="premium-search-btn">
+                    {{ __('messages.public.search') }}
                 </button>
             </form>
 
-            <div class="hero-trust">
-                <div class="trust-item">
-                    <span class="trust-number">{{ $professionalsCount }}+</span>
-                    <span class="trust-label">{{ __('messages.public.professionals') }}</span>
+            <div class="hero-stats">
+                <div>
+                    <strong>{{ $professionalsCount ?? 0 }}+</strong>
+                    <span>{{ __('messages.public.professionals') }}</span>
                 </div>
 
-                <div class="trust-divider"></div>
-
-                <div class="trust-item">
-                    <span class="trust-number">{{ $cities->count() }}+</span>
-                    <span class="trust-label">{{ __('messages.public.cities') }}</span>
+                <div>
+                    <strong>{{ $cities->count() }}+</strong>
+                    <span>{{ __('messages.public.cities') }}</span>
                 </div>
 
-                <div class="trust-divider"></div>
-
-                <div class="trust-item">
-                    <span class="trust-number">{{ $categories->count() }}+</span>
-                    <span class="trust-label">{{ __('messages.public.categories') }}</span>
+                <div>
+                    <strong>{{ $categories->count() }}+</strong>
+                    <span>{{ __('messages.public.categories') }}</span>
                 </div>
             </div>
+
         </div>
     </div>
 </section>
@@ -255,255 +243,185 @@
 <style>
     .home-hero {
         position: relative;
+        min-height: calc(100vh - 72px);
         overflow: hidden;
-        min-height: calc(100vh - 90px);
-        padding-top: 2rem;
         display: flex;
         align-items: center;
-        justify-content: center;
-        background-image: url('/images/herobackground.png');
-        background-size: cover;
-        background-position: center;
-        background-attachment: scroll;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(241, 98, 15, 0.18), transparent 28%),
+            radial-gradient(circle at 80% 35%, rgba(56, 94, 170, 0.32), transparent 34%),
+            linear-gradient(135deg, #07142b 0%, #10244a 48%, #090f22 100%);
     }
 
-    .home-hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, rgba(11, 26, 52, 0.7) 0%, rgba(26, 47, 94, 0.7) 50%, rgba(15, 30, 61, 0.7) 100%);
-        pointer-events: none;
-        z-index: 1;
-    }
-
-    .hero-decorative-blob {
-        position: absolute;
-        border-radius: 9999px;
-        opacity: 0.1;
-        filter: blur(80px);
-        animation: blob-drift 15s infinite ease-in-out;
-        z-index: 2;
-    }
-
-    .hero-blob-1 {
-        width: 24rem;
-        height: 24rem;
-        background: #f1620f;
-        top: -50px;
-        right: -100px;
-    }
-
-    .hero-blob-2 {
-        width: 24rem;
-        height: 24rem;
-        background: #ff8533;
-        bottom: -50px;
-        left: -100px;
-        animation-delay: 7.5s;
-        animation-direction: reverse;
-    }
-
-    @keyframes blob-drift {
-        0%, 100% {
-            transform: translate(0, 0);
-        }
-
-        50% {
-            transform: translate(30px, -30px);
-        }
-    }
-
-    .hero-decorative-grid {
-        position: absolute;
-        inset: 0;
-        opacity: 0.05;
-        background-image:
-            linear-gradient(rgba(241, 98, 15, 0.2) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(241, 98, 15, 0.2) 1px, transparent 1px);
-        background-size: 50px 50px;
-        z-index: 2;
-    }
-
-    .hero-content {
-        text-align: center;
-        color: #fff;
-        max-width: 56rem;
-        margin-left: auto;
-        margin-right: auto;
-        padding-left: 1rem;
-        padding-right: 1rem;
+    .hero-inner {
         position: relative;
-        z-index: 10;
-        animation: fade-up 0.8s ease-out;
-    }
-
-    @keyframes fade-up {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .hero-headline {
-        font-size: 3rem;
-        line-height: 1.1;
-        font-weight: 900;
-        margin-bottom: 1.5rem;
-        animation: fade-up 0.8s ease-out 0.2s both;
-    }
-
-    .hero-highlight {
-        display: block;
-        color: #f1620f;
-        background: linear-gradient(135deg, #f1620f, #ff8533);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .hero-description {
-        font-size: 1.125rem;
-        color: rgba(255, 255, 255, 0.7);
-        max-width: 42rem;
-        margin: 0 auto 2.5rem;
-        animation: fade-up 0.8s ease-out 0.3s both;
-    }
-
-    .hero-search-form {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin: 0 auto 3rem;
-        max-width: 56rem;
-        animation: fade-up 0.8s ease-out 0.4s both;
-    }
-
-    .search-field {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem 1rem;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 0.75rem;
-        backdrop-filter: blur(8px);
-        transition: all 0.3s ease;
-        flex: 1;
-    }
-
-    .search-field-main {
-        flex: 1.5;
-    }
-
-    .search-field:focus-within {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        outline: 2px solid #f1620f;
-        outline-offset: 0;
-        transform: translateY(-2px);
-    }
-
-    .search-icon {
-        width: 1.25rem;
-        height: 1.25rem;
-        color: #9ca3af;
-        flex-shrink: 0;
-    }
-
-    .search-field input,
-    .search-field select {
-        flex: 1;
-        background: transparent;
-        border: 0;
-        outline: none;
-        color: #1f2937;
-        font-size: 0.875rem;
-        font-family: inherit;
-        min-width: 0;
-    }
-
-    .search-field input::placeholder {
-        color: #9ca3af;
-    }
-
-    .search-field select {
-        appearance: none;
-        cursor: pointer;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 0.5rem center;
-        padding-right: 1.75rem;
-    }
-
-    [dir="rtl"] .search-field select {
-        background-position: left 0.5rem center;
-        padding-right: 0;
-        padding-left: 1.75rem;
-    }
-
-    .search-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.75rem 2rem;
-        background: linear-gradient(to right, #f1620f, #d9540d);
-        color: #fff;
-        font-weight: 700;
-        border-radius: 0.75rem;
-        white-space: nowrap;
-        border: 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 10px 25px rgba(241, 98, 15, 0.3);
-    }
-
-    .search-button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 35px rgba(241, 98, 15, 0.4);
-    }
-
-    .search-button svg {
-        width: 1rem;
-        height: 1rem;
-    }
-
-    .hero-trust {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 2rem;
-        flex-wrap: wrap;
-        animation: fade-up 0.8s ease-out 0.5s both;
-    }
-
-    .trust-item {
+        z-index: 5;
+        max-width: 1050px;
+        margin: 0 auto;
         text-align: center;
+        padding: 6rem 1rem;
     }
 
-    .trust-number {
-        display: block;
-        font-size: 2rem;
-        line-height: 1;
+    .hero-bg-glow {
+        position: absolute;
+        width: 420px;
+        height: 420px;
+        border-radius: 999px;
+        filter: blur(90px);
+        opacity: 0.35;
+    }
+
+    .hero-glow-1 {
+        background: #f1620f;
+        top: -120px;
+        right: 8%;
+    }
+
+    .hero-glow-2 {
+        background: #3459b8;
+        bottom: -140px;
+        left: 8%;
+    }
+
+    .hero-grid {
+        position: absolute;
+        inset: 0;
+        opacity: 0.06;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px);
+        background-size: 64px 64px;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0.65rem 1.1rem;
+        border-radius: 999px;
+        color: #ff7a2a;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        backdrop-filter: blur(14px);
+        font-weight: 700;
+    }
+
+    .hero-title {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(3rem, 7vw, 6.8rem);
         font-weight: 900;
-        color: #f1620f;
-        margin-bottom: 0.25rem;
+        line-height: 1.08;
+        letter-spacing: -0.04em;
     }
 
-    .trust-label {
+    .hero-title span {
         display: block;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.875rem;
+        color: #ff6b1a;
+    }
+
+    .hero-text {
+        margin: 1.5rem auto 2.6rem;
+        max-width: 620px;
+        color: rgba(255,255,255,0.68);
+        font-size: 1.25rem;
         font-weight: 600;
     }
 
-    .trust-divider {
-        width: 1px;
-        height: 3rem;
-        background: rgba(255, 255, 255, 0.2);
+    .premium-search {
+        display: grid;
+        grid-template-columns: 1.4fr 0.9fr 0.9fr auto;
+        gap: 0.75rem;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 0.75rem;
+        border-radius: 26px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.16);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+    }
+
+    .premium-field {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0 1rem;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.94);
+    }
+
+    .field-icon {
+        color: #9aa3b2;
+        font-size: 1.4rem;
+        line-height: 1;
+    }
+
+    .premium-field input,
+    .premium-field select {
+        width: 100%;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: #152033;
+        font-family: inherit;
+        font-size: 0.98rem;
+        font-weight: 700;
+    }
+
+    .premium-field input::placeholder {
+        color: #9aa3b2;
+    }
+
+    .premium-field select {
+        appearance: none;
+        cursor: pointer;
+    }
+
+    .premium-search-btn {
+        height: 64px;
+        padding: 0 2rem;
+        border: 0;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #ff7a1a, #f1620f);
+        color: #fff;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 18px 38px rgba(241, 98, 15, 0.34);
+        transition: 0.25s ease;
+    }
+
+    .premium-search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 48px rgba(241, 98, 15, 0.44);
+    }
+
+    .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        margin-top: 2.5rem;
+        color: #fff;
+    }
+
+    .hero-stats div {
+        min-width: 120px;
+    }
+
+    .hero-stats strong {
+        display: block;
+        color: #ff7a1a;
+        font-size: 2.1rem;
+        font-weight: 900;
+    }
+
+    .hero-stats span {
+        color: rgba(255,255,255,0.64);
+        font-weight: 700;
     }
 
     .home-cta-box {
@@ -520,40 +438,41 @@
         box-shadow: 0 20px 48px rgba(11, 26, 52, 0.18);
     }
 
-    .home-stats strong {
-        display: block;
-        font-weight: 900;
-    }
-
-    .home-stats span {
-        font-weight: 700;
-    }
-
-    @media (min-width: 1024px) {
-        .hero-search-form {
-            flex-direction: row;
+    @media (max-width: 991px) {
+        .premium-search {
+            grid-template-columns: 1fr;
         }
 
-        .hero-headline {
-            font-size: 3.75rem;
-        }
-
-        .trust-number {
-            font-size: 2.25rem;
-        }
-    }
-
-    @media (max-width: 1024px) {
-        .home-hero {
-            min-height: 60vh;
-        }
-
-        .hero-headline {
-            font-size: 2.25rem;
-        }
-
-        .search-button {
+        .premium-search-btn {
             width: 100%;
+        }
+
+        .hero-stats {
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .home-hero {
+            min-height: auto;
+        }
+
+        .hero-inner {
+            padding: 4rem 1rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+        }
+
+        .hero-text {
+            font-size: 1rem;
+        }
+
+        .premium-field,
+        .premium-search-btn {
+            height: 58px;
         }
     }
 
@@ -563,54 +482,6 @@
         .home-cta-box {
             flex-direction: column;
             align-items: stretch;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .home-hero {
-            min-height: 50vh;
-            padding: 2rem 0;
-        }
-
-        .hero-headline {
-            font-size: 1.875rem;
-        }
-
-        .hero-description {
-            font-size: 1rem;
-        }
-
-        .hero-badge {
-            font-size: 0.75rem;
-        }
-
-        .search-field {
-            padding: 0.625rem 0.75rem;
-        }
-
-        .search-icon {
-            width: 1rem;
-            height: 1rem;
-        }
-
-        .trust-divider {
-            display: none;
-        }
-
-        .hero-trust {
-            gap: 1rem;
-        }
-
-        .trust-number {
-            font-size: 1.5rem;
-        }
-
-        .trust-label {
-            font-size: 0.75rem;
-        }
-
-        .home-cta-box {
-            padding: 1.5rem;
         }
     }
 </style>
