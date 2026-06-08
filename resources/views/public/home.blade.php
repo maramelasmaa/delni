@@ -21,11 +21,6 @@
 
     <div class="container">
         <div class="hero-inner">
-            <div class="hero-badge">
-                <span>✨</span>
-                <span>{{ __('messages.public.best_services_platform') }}</span>
-            </div>
-
             <h1 class="hero-title">
                 {{ __('messages.public.find_trusted_professionals') }}
 
@@ -158,224 +153,175 @@
 </section>
 
 <style>
+/* ===== PREMIUM HERO SECTION ===== */
 
 .home-hero {
     position: relative;
     overflow: hidden;
-
     min-height: 92vh;
-
     display: flex;
     align-items: center;
+    background-image: url('/images/herobackground.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 4rem 0;
+}
 
+.home-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background:
-        radial-gradient(circle at top right, rgba(241,98,15,0.18), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(67,97,238,0.16), transparent 32%),
-        linear-gradient(
-            135deg,
-            #07142b 0%,
-            #0d2248 48%,
-            #050b18 100%
-        );
-
-    padding: 3rem 0;
+        linear-gradient(135deg, rgba(7,20,43,0.6) 0%, rgba(13,34,72,0.5) 50%, rgba(5,11,24,0.6) 100%);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .hero-gradient {
     position: absolute;
     border-radius: 999px;
-    filter: blur(100px);
-    opacity: 0.08;
+    filter: blur(120px);
+    opacity: 0.06;
+    z-index: 2;
 }
 
 .hero-gradient-1 {
-    width: 420px;
-    height: 420px;
-
-    background: #f1620f;
-
-    top: -180px;
-    right: -80px;
+    width: 500px;
+    height: 500px;
+    background: #ff8533;
+    top: -200px;
+    right: -100px;
 }
 
 .hero-gradient-2 {
-    width: 380px;
-    height: 380px;
-
-    background: #3459b8;
-
-    bottom: -180px;
-    left: -120px;
+    width: 450px;
+    height: 450px;
+    background: #2f5abb;
+    bottom: -200px;
+    left: -150px;
 }
 
 .hero-grid {
     position: absolute;
     inset: 0;
-
-    opacity: 0.05;
-
+    opacity: 0.03;
+    z-index: 3;
     background-image:
-        linear-gradient(rgba(255,255,255,0.14) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.14) 1px, transparent 1px);
-
-    background-size: 64px 64px;
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 80px 80px;
 }
 
 .hero-inner {
     position: relative;
-    z-index: 5;
-
-    max-width: 1300px;
-
+    z-index: 10;
+    max-width: 1320px;
     margin: 0 auto;
-
     text-align: center;
-
-    padding: 7rem 1rem 3rem;
+    padding: 6rem 2rem 4rem;
 }
 
-.hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-
-    padding: 0.7rem 1.2rem;
-
-    border-radius: 999px;
-
-    background: rgba(255,255,255,0.08);
-
-    border: 1px solid rgba(255,255,255,0.12);
-
-    color: #ff7a1a;
-
-    backdrop-filter: blur(16px);
-
-    margin-bottom: 1rem;
-
-    font-size: 0.95rem;
-    font-weight: 800;
-}
-
+/* === TYPOGRAPHY === */
 .hero-title {
-    margin: 0;
-
+    margin: 0 auto;
+    max-width: 95%;
     color: #ffffff;
-
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
-
+    font-size: clamp(2.8rem, 6vw, 5rem);
     font-weight: 900;
-
-    line-height: 0.95;
-
-    letter-spacing: -0.04em;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    text-align: center;
 }
 
 .hero-title span {
     display: block;
-
-    color: #ff6b1a;
-
-    font-size: 0.62em;
-
-    margin-top: 0.1rem;
+    color: #ff7a1a;
+    font-size: 0.58em;
+    margin-top: 0.6rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
 }
 
 .hero-text {
-    margin:
-        1rem auto
-        1.5rem;
-
-    max-width: 700px;
-
-    color: rgba(255,255,255,0.72);
-
-    font-size: 1.25rem;
-    font-weight: 600;
-
-    line-height: 1.8;
+    margin: 1.2rem auto 2.5rem;
+    max-width: 720px;
+    color: rgba(255,255,255,0.75);
+    font-size: clamp(1rem, 2.2vw, 1.3rem);
+    font-weight: 500;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
 }
 
+/* === SEARCH BAR (HERO CENTERPIECE) === */
 .premium-search {
     display: grid;
-
-    grid-template-columns:
-        1.4fr
-        0.9fr
-        0.9fr
-        auto;
-
-    gap: 0.85rem;
-
-    max-width: 1000px;
-
+    grid-template-columns: 1.5fr 0.95fr 0.95fr 0.85fr;
+    gap: 0.75rem;
+    max-width: 1050px;
     margin: 0 auto;
-
-    padding: 0.85rem;
-
-    border-radius: 22px;
-
-    background: rgba(255,255,255,0.10);
-
-    border: 1px solid rgba(255,255,255,0.12);
-
-    backdrop-filter: blur(20px);
-
+    padding: 0.9rem;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(24px);
     box-shadow:
-        0 28px 80px rgba(0,0,0,0.25);
+        0 32px 96px rgba(0,0,0,0.35),
+        inset 0 1px 2px rgba(255,255,255,0.08);
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.premium-search:focus-within {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.25);
+    box-shadow:
+        0 40px 120px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.12);
 }
 
 .premium-field {
-    height: 68px;
-
+    height: 72px;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-
-    padding: 0 1.1rem;
-
-    border-radius: 20px;
-
-    background: rgba(255,255,255,0.96);
-
+    gap: 0.8rem;
+    padding: 0 1.2rem;
+    border-radius: 18px;
+    background: #ffffff;
     transition: 0.2s ease;
 }
 
 .premium-field:focus-within {
     transform: translateY(-1px);
-
-    box-shadow:
-        0 14px 32px rgba(241,98,15,0.12);
+    box-shadow: 0 12px 28px rgba(241,98,15,0.18);
 }
 
 .field-svg {
-    width: 20px;
-    height: 20px;
-
-    color: #9aa3b2;
-
+    width: 22px;
+    height: 22px;
+    color: #94a3b8;
     flex-shrink: 0;
+    transition: 0.2s ease;
+}
+
+.premium-field:focus-within .field-svg {
+    color: #ff7a1a;
 }
 
 .premium-field input,
 .premium-field select {
     width: 100%;
-
     border: 0;
     outline: none;
-
     background: transparent;
-
-    color: #142033;
-
+    color: #0f172a;
     font-family: inherit;
-
     font-size: 1rem;
     font-weight: 700;
 }
 
 .premium-field input::placeholder {
-    color: #9aa3b2;
+    color: #cbd5e1;
+    font-weight: 500;
 }
 
 .premium-field select {
@@ -384,125 +330,143 @@
 }
 
 .premium-search-btn {
-    height: 68px;
-
-    padding: 0 2.2rem;
-
+    height: 72px;
+    padding: 0 2.4rem;
     border: 0;
-
-    border-radius: 20px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ff7a1a,
-            #f1620f
-        );
-
+    border-radius: 18px;
+    background: linear-gradient(135deg, #ff8533 0%, #ff6b1a 100%);
     color: #ffffff;
-
     font-family: inherit;
-
     font-size: 1rem;
     font-weight: 900;
-
     cursor: pointer;
-
-    transition: 0.25s ease;
-
-    box-shadow:
-        0 18px 40px rgba(241,98,15,0.28);
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 48px rgba(255,107,26,0.32);
 }
 
 .premium-search-btn:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 24px 48px rgba(241,98,15,0.42);
+    transform: translateY(-3px);
+    box-shadow: 0 28px 64px rgba(255,107,26,0.42);
 }
 
+.premium-search-btn:active {
+    transform: translateY(-1px);
+}
+
+/* === STATS SECTION === */
 .hero-stats {
     display: flex;
     justify-content: center;
-    gap: 3rem;
-
-    margin-top: 2rem;
+    gap: 4rem;
+    margin-top: 3rem;
+    padding-top: 3rem;
+    border-top: 1px solid rgba(255,255,255,0.12);
 }
 
 .hero-stat {
-    min-width: 140px;
+    min-width: 160px;
 }
 
 .hero-stat strong {
     display: block;
-
-    color: #ff7a1a;
-
-    font-size: 2.4rem;
+    color: #ff8533;
+    font-size: 2.8rem;
     font-weight: 900;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.02em;
 }
 
 .hero-stat span {
-    color: rgba(255,255,255,0.66);
-
-    font-weight: 700;
+    color: rgba(255,255,255,0.64);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
 }
 
-@media (max-width: 992px) {
-
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
     .premium-search {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1.2fr 0.9fr 0.9fr 0.8fr;
+        max-width: 90%;
+        gap: 0.6rem;
+        padding: 0.75rem;
     }
 
-    .premium-search-btn {
-        width: 100%;
+    .hero-inner {
+        padding: 5rem 1.5rem 3rem;
     }
 
     .hero-stats {
+        gap: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .premium-search {
+        grid-template-columns: 1fr 0.9fr;
+        gap: 0.5rem;
+    }
+
+    .premium-search-btn {
+        grid-column: 1 / -1;
+    }
+
+    .hero-stats {
+        gap: 2rem;
         flex-wrap: wrap;
-        gap: 1.5rem;
     }
 
-    .hero-logo {
-        top: 1rem;
-        right: 1rem;
-    }
-
-    .hero-logo img {
-        width: 58px;
-        height: 58px;
+    .hero-text {
+        margin: 1rem auto 2rem;
     }
 }
 
 @media (max-width: 640px) {
-
     .home-hero {
         min-height: auto;
+        padding: 3rem 0;
     }
 
     .hero-inner {
-        padding:
-            5rem 1rem
-            3rem;
+        padding: 4rem 1rem 2.5rem;
     }
 
     .hero-title {
-        font-size: 3rem;
-        line-height: 1.15;
+        font-size: 2.2rem;
+        line-height: 1;
+    }
+
+    .hero-title span {
+        font-size: 1.3rem;
+        margin-top: 0.4rem;
     }
 
     .hero-text {
         font-size: 1rem;
+        margin: 0.8rem auto 1.5rem;
     }
 
     .premium-search {
-        padding: 0.75rem;
-        border-radius: 24px;
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+        padding: 0.6rem;
+        max-width: 100%;
     }
 
     .premium-field,
     .premium-search-btn {
-        height: 60px;
+        height: 64px;
+    }
+
+    .premium-field {
+        padding: 0 1rem;
+    }
+
+    .hero-stats {
+        gap: 1.5rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
     }
 
     .hero-stat strong {

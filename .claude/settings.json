@@ -31,5 +31,8 @@
     "additionalDirectories": [
       "c:\\laragon\\www\\delni\\storage"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
   }
 }
