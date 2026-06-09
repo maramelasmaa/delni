@@ -149,7 +149,7 @@ class ProfileResource extends Resource
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('github')
-                        ->label('GitHub')
+                        ->label('جيتهاب')
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('map_url')
