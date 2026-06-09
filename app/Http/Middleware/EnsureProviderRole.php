@@ -27,7 +27,7 @@ class EnsureProviderRole
         $user = $request->user();
 
         if ($user === null || ! $user->hasRole('provider')) {
-            throw new AuthorizationException('User is not authorized to access this panel.');
+            throw new AuthorizationException(__('messages.provider_access_denied'));
         }
 
         return $next($request);

@@ -29,7 +29,7 @@ class EnsureUserIsActive
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            abort(403, __('auth.account_deactivated'));
+            abort(403, __('messages.account_deactivated'));
         }
 
         return $next($request);

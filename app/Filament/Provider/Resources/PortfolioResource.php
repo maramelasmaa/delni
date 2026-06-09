@@ -36,38 +36,50 @@ class PortfolioResource extends Resource
     {
         return $schema->schema([
             Section::make('تفاصيل المشروع')
+                ->description('اعرض نماذج من أعمالك لزيادة ثقة العملاء')
                 ->schema([
                     Forms\Components\TextInput::make('title')
-                        ->label('عنوان المشروع')
+                        ->label('اسم المشروع')
+                        ->placeholder('مثال: تصميم وتنفيذ فيلا سكنية')
+                        ->helperText('اختر عنواناً واضحاً يعكس طبيعة المشروع.')
                         ->required()
                         ->maxLength(255),
                     Forms\Components\Textarea::make('short_description')
                         ->label('وصف قصير')
+                        ->placeholder('اكتب سطراً أو اثنين يلخصان المشروع...')
+                        ->helperText('سيظهر هذا الوصف في قائمة الأعمال.')
                         ->rows(2)
                         ->maxLength(255)
                         ->columnSpanFull(),
                     Forms\Components\Textarea::make('description')
                         ->label('الوصف التفصيلي')
+                        ->placeholder('اشرح تفاصيل المشروع والخدمات التي قدمتها...')
+                        ->helperText('وضح تفاصيل المشروع والتحديات وكيفية حلك لها.')
                         ->rows(3)
                         ->maxLength(1000)
                         ->columnSpanFull(),
                     Forms\Components\TextInput::make('main_url')
-                        ->label('رابط المشروع (اختياري)')
+                        ->label('رابط المشروع')
+                        ->placeholder('https://...')
+                        ->helperText('رابط موقع المشروع أو النتيجة النهائية (اختياري)')
                         ->url()
                         ->maxLength(500),
                     Forms\Components\TextInput::make('link')
-                        ->label('رابط إضافي (اختياري)')
+                        ->label('رابط إضافي')
+                        ->placeholder('https://...')
+                        ->helperText('رابط إضافي مثل معرض الصور أو الفيديو (اختياري)')
                         ->url()
                         ->maxLength(500),
                     Forms\Components\Toggle::make('is_active')
-                        ->label('نشط')
+                        ->label('نشط (مرئي للعملاء)')
+                        ->helperText('إذا أوقفت المشروع، لن يراه العملاء في ملفك.')
                         ->default(true)
                         ->inline(false),
                 ])
                 ->columns(2),
 
             Section::make('صور المشروع')
-                ->description('أضف ما يصل إلى 4 صور لكل مشروع (8 صور كحد أقصى في جميع المشاريع)')
+                ->description('أضف صوراً عالية الجودة لعرض أفضل للعملاء')
                 ->schema([
                     Repeater::make('images')
                         ->relationship()
@@ -75,6 +87,7 @@ class PortfolioResource extends Resource
                         ->schema([
                             Forms\Components\FileUpload::make('path')
                                 ->label('الصورة')
+                                ->helperText('صورة واضحة وعالية الجودة. (الحد الأقصى 5 MB)')
                                 ->image()
                                 ->maxSize(5120)
                                 ->directory('portfolio')
@@ -83,6 +96,8 @@ class PortfolioResource extends Resource
                                 ->required(),
                             Forms\Components\TextInput::make('alt')
                                 ->label('النص البديل')
+                                ->placeholder('وصف مختصر للصورة')
+                                ->helperText('نص يظهر إذا لم تحمل الصورة (اختياري)')
                                 ->maxLength(255),
                         ])
                         ->columns(1)
@@ -91,7 +106,7 @@ class PortfolioResource extends Resource
                         ->deleteAction(
                             fn (Action $action) => $action->label('حذف'),
                         )
-                        ->helperText('الحد الأقصى 4 صور لهذا المشروع'),
+                        ->helperText('يمكنك إضافة حتى 4 صور لهذا المشروع. (8 صور كحد أقصى في جميع مشاريعك)'),
                 ])
                 ->columnSpanFull(),
         ]);

@@ -27,7 +27,7 @@ class EnsureAccountNotLocked
 
         if ($user->locked_until !== null && Carbon::parse($user->locked_until)->isFuture()) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Your account is temporarily locked.'], 401);
+                return response()->json(['message' => __('messages.account_locked')], 401);
             }
 
             Auth::logout();
@@ -35,7 +35,7 @@ class EnsureAccountNotLocked
             $request->session()->regenerateToken();
 
             return redirect()->route('filament.provider.auth.login')
-                ->with('error', 'Your account is temporarily locked. Please try again later.');
+                ->with('error', __('messages.account_locked'));
         }
 
         return $next($request);

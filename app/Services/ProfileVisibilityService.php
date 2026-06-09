@@ -140,6 +140,10 @@ class ProfileVisibilityService
             $missing[] = 'category';
         }
 
+        if (! $profile->subcategories()->exists()) {
+            $missing[] = 'subcategories';
+        }
+
         if (! filled($profile->phone)) {
             $missing[] = 'phone';
         }

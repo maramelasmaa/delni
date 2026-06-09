@@ -18,6 +18,8 @@ class ProfileCompletenessService
 
     private function meetsAllConditions(Profile $profile): bool
     {
+        $hasSubcategories = $profile->subcategories()->exists();
+
         return (
             filled($profile->business_name) ||
             filled($profile->user?->name)
@@ -25,6 +27,7 @@ class ProfileCompletenessService
         && $profile->city_id !== null
         && $profile->category_id !== null
         && filled($profile->whatsapp)
-        && filled($profile->phone);
+        && filled($profile->phone)
+        && $hasSubcategories;
     }
 }

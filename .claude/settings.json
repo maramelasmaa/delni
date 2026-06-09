@@ -28,7 +28,8 @@
       "Bash(xargs grep -l \"admin\")",
       "Edit(/.claude/skills/laravel-debugging-assistant/**)",
       "Bash(Remove-Item \"c:\\\\laragon\\\\www\\\\delni\\\\resources\\\\views\\\\filament\\\\provider\\\\pages\\\\dashboard.blade.php\" -ErrorAction SilentlyContinue)",
-      "Bash(Write-Output \"Custom view removed\")"
+      "Bash(Write-Output \"Custom view removed\")",
+      "Bash(vendor\\\\bin\\\\pint --dirty --format agent)"
     ],
     "additionalDirectories": [
       "c:\\laragon\\www\\delni\\storage"

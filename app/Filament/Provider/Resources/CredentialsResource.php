@@ -40,25 +40,35 @@ class CredentialsResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('بيانات الاعتماد')
+            Section::make('الشهادات والخبرات')
+                ->description('أضف شهاداتك وخبراتك لزيادة ثقة العملاء')
                 ->schema([
                     Forms\Components\TextInput::make('title')
-                        ->label('اسم بيانات الاعتماد')
+                        ->label('اسم الشهادة أو الخبرة')
+                        ->placeholder('مثال: شهادة معتمدة في التمديدات الكهربائية')
+                        ->helperText('اسم واضح للشهادة أو المؤهل.')
                         ->required()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('issuer')
                         ->label('جهة الإصدار')
+                        ->placeholder('مثال: شركة الكهرباء الليبية')
+                        ->helperText('اسم المؤسسة أو الشركة التي أصدرت الشهادة.')
                         ->required()
                         ->maxLength(255),
                     Forms\Components\DatePicker::make('issue_date')
                         ->label('تاريخ الإصدار')
+                        ->helperText('تاريخ حصولك على الشهادة.')
                         ->required(),
                     Forms\Components\TextInput::make('verification_url')
-                        ->label('رابط التحقق (اختياري)')
+                        ->label('رابط التحقق')
+                        ->placeholder('https://...')
+                        ->helperText('رابط اختياري يمكن للعملاء من خلاله التحقق من صحة شهادتك.')
                         ->url()
                         ->maxLength(500),
                     Forms\Components\Textarea::make('notes')
                         ->label('ملاحظات إضافية')
+                        ->placeholder('أي تفاصيل إضافية ترغب بإظهارها للعملاء...')
+                        ->helperText('معلومات إضافية مثل التخصص أو المستوى (اختياري)')
                         ->rows(3)
                         ->maxLength(500)
                         ->columnSpanFull(),

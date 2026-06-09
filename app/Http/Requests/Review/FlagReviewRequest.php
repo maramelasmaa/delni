@@ -44,7 +44,7 @@ class FlagReviewRequest extends FormRequest
             $user = $this->user();
 
             if ($user && $user->is_suspended) {
-                $v->errors()->add('reason', 'Your account is not eligible to flag reviews.');
+                $v->errors()->add('reason', __('messages.account_not_eligible_flag'));
             }
         });
     }

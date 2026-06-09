@@ -62,16 +62,22 @@ class ProfileResource extends Resource
                 ->description('معلومات مقدم الخدمة الأساسية')
                 ->schema([
                     Forms\Components\TextInput::make('business_name')
-                        ->label('اسم العمل')
+                        ->label('اسم النشاط التجاري')
+                        ->placeholder('مثال: شركة الأمان للصيانة والتكييف')
+                        ->helperText('الاسم الذي سيظهر للعملاء في الموقع ونتائج البحث.')
                         ->required()
                         ->maxLength(255),
                     Forms\Components\Select::make('provider_type')
-                        ->label('نوع العمل')
+                        ->label('نوع النشاط')
+                        ->placeholder('اختر نوع النشاط')
+                        ->helperText('ساعد العملاء في إيجادك بسهولة بتحديد نوع نشاطك.')
                         ->options(fn () => ProviderType::options(activeOnly: true))
                         ->searchable()
                         ->required(),
                     Forms\Components\Select::make('category_id')
                         ->label('التصنيف الرئيسي')
+                        ->placeholder('اختر التصنيف الأنسب لنشاطك')
+                        ->helperText('اختر التصنيف الأساسي الذي يعكس طبيعة عملك.')
                         ->relationship('category', 'name', fn (Builder $query) => $query->where('is_active', true))
                         ->searchable()
                         ->required()
@@ -81,6 +87,8 @@ class ProfileResource extends Resource
                         }),
                     Forms\Components\Select::make('subcategories')
                         ->label('التصنيفات الفرعية')
+                        ->placeholder('اختر التصنيفات التي تصف خدماتك بدقة')
+                        ->helperText('يمكنك اختيار عدة تصنيفات فرعية لتوضيح تخصصاتك.')
                         ->relationship('subcategories', 'name')
                         ->multiple()
                         ->options(function ($get) {
@@ -96,66 +104,89 @@ class ProfileResource extends Resource
                         ->searchable(),
                     Forms\Components\Select::make('city_id')
                         ->label('المدينة')
+                        ->placeholder('اختر المدينة')
+                        ->helperText('حدد المدينة الرئيسية لعملك ليسهل على العملاء البحث عنك.')
                         ->options(fn () => City::where('is_active', true)->pluck('name_ar', 'id'))
                         ->searchable()
                         ->required(),
                 ])
                 ->columns(2),
 
-            Section::make('عن العمل')
+            Section::make('عن النشاط')
                 ->description('تفاصيل العمل والخدمات')
                 ->schema([
                     Forms\Components\Textarea::make('bio')
-                        ->label('الوصف')
+                        ->label('نبذة عن النشاط')
+                        ->placeholder('اكتب نبذة مختصرة توضح خدماتك وخبرتك وما يميز نشاطك...')
+                        ->helperText('كلما كانت النبذة واضحة زادت ثقة العملاء بك. (الحد الأقصى 500 حرف)')
                         ->rows(3)
                         ->columnSpanFull()
                         ->maxLength(500),
                     Forms\Components\Toggle::make('offers_remote_work')
-                        ->label('نقدم خدمات العمل من المنزل')
+                        ->label('تقديم خدمات عن بعد')
+                        ->helperText('فعّل هذا الخيار إذا كنت تقدم خدمات أونلاين أو عن بعد.')
                         ->inline(false),
                     Forms\Components\Textarea::make('service_area_note')
-                        ->label('ملاحظات نطاق الخدمة')
+                        ->label('مناطق تقديم الخدمة')
+                        ->placeholder('مثال: نقدم خدماتنا داخل بنغازي وضواحيها')
+                        ->helperText('وضح المناطق التي تخدمها حتى لا يطلب منك العملاء في مناطق لا تخدمها.')
                         ->rows(2)
                         ->columnSpanFull()
                         ->maxLength(500),
                 ])
                 ->columns(2),
 
-            Section::make('وسائل التواصل والمواقع')
-                ->description('روابط مواقعك والمنصات الإجتماعية')
+            Section::make('وسائل التواصل')
+                ->description('روابط مواقعك والمنصات الاجتماعية')
                 ->schema([
                     Forms\Components\TextInput::make('phone')
-                        ->label('الهاتف')
+                        ->label('رقم الهاتف')
+                        ->placeholder('2180912345678')
+                        ->helperText('يفضل استخدام رقم متاح للعملاء بشكل دائم.')
                         ->tel()
                         ->required()
                         ->maxLength(20),
                     Forms\Components\TextInput::make('whatsapp')
                         ->label('واتساب')
+                        ->placeholder('2180912345678')
+                        ->helperText('أدخل الرقم مع مفتاح ليبيا حتى يتمكن العملاء من التواصل معك مباشرة عبر واتساب.')
                         ->tel()
                         ->required()
                         ->maxLength(20),
                     Forms\Components\TextInput::make('website')
                         ->label('الموقع الإلكتروني')
+                        ->placeholder('https://example.com')
+                        ->helperText('اتركه فارغاً إذا لم يكن لديك موقع إلكتروني.')
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('instagram')
                         ->label('إنستاجرام')
+                        ->placeholder('https://instagram.com/...')
+                        ->helperText('رابط صفحتك على إنستاجرام (اختياري)')
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('facebook')
                         ->label('فيسبوك')
+                        ->placeholder('https://facebook.com/...')
+                        ->helperText('رابط صفحتك على فيسبوك (اختياري)')
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('linkedin')
                         ->label('لينكد إن')
+                        ->placeholder('https://linkedin.com/...')
+                        ->helperText('رابط ملفك على لينكد إن (اختياري)')
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('github')
                         ->label('جيتهاب')
+                        ->placeholder('https://github.com/...')
+                        ->helperText('رابط حسابك على جيتهاب (اختياري)')
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('map_url')
-                        ->label('رابط الخريطة')
+                        ->label('رابط موقعك على الخريطة')
+                        ->placeholder('https://maps.google.com/...')
+                        ->helperText('يساعد العملاء في الوصول إلى موقعك بسهولة.')
                         ->url()
                         ->maxLength(500),
                 ])
@@ -165,7 +196,8 @@ class ProfileResource extends Resource
                 ->description('شعارك وصورة الغلاف')
                 ->schema([
                     Forms\Components\FileUpload::make('logo')
-                        ->label('الشعار')
+                        ->label('شعار النشاط')
+                        ->helperText('يفضل استخدام صورة واضحة ومربعة لظهور أفضل. (الحد الأقصى 5 MB)')
                         ->image()
                         ->maxSize(5120)
                         ->directory('profiles/logos')
@@ -173,6 +205,7 @@ class ProfileResource extends Resource
                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
                     Forms\Components\FileUpload::make('cover_image')
                         ->label('صورة الغلاف')
+                        ->helperText('صورة الغلاف تساعد في إبراز نشاطك للعملاء. (الحد الأقصى 5 MB)')
                         ->image()
                         ->maxSize(5120)
                         ->directory('profiles/covers')

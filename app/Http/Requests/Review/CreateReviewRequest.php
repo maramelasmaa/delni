@@ -56,7 +56,7 @@ class CreateReviewRequest extends FormRequest
             $profile = $this->route('profile');
 
             if (! $profile instanceof Profile) {
-                $v->errors()->add('profile', 'Profile not found.');
+                $v->errors()->add('profile', __('messages.profile_not_found'));
 
                 return;
             }
@@ -64,7 +64,7 @@ class CreateReviewRequest extends FormRequest
             $user = $this->user();
 
             if ($user === null || ! $user->is_active || $user->is_suspended) {
-                $v->errors()->add('profile', 'Your account is not eligible to submit reviews.');
+                $v->errors()->add('profile', __('messages.account_not_eligible_review'));
 
                 return;
             }

@@ -13,9 +13,10 @@ return [
     'terms_of_service' => 'Terms of Service',
     'all_rights_reserved' => 'All rights reserved.',
     'credentials_no_match' => 'These credentials do not match our records.',
-    'account_locked' => 'Your account has been temporarily locked due to multiple failed login attempts. Please try again later.',
+    'account_locked' => 'Your account has been temporarily locked. Please try again later.',
     'account_deactivated' => 'Your account has been deactivated. Please contact support.',
     'account_suspended' => 'Your account has been suspended. Please contact support for more information.',
+    'provider_access_denied' => 'You do not have permission to access the provider panel.',
     'account_updated' => 'Your account has been updated successfully.',
     'set_password_message' => 'Welcome to Delni! You have been invited to become a provider. Click the button below to set your password and activate your account.',
     'set_password_link_expires' => 'This activation link will expire in 24 hours.',
@@ -28,6 +29,9 @@ return [
     'register' => 'Register',
     'subscription_providers_only' => 'Subscriptions are only available for providers',
     'subscription_end_after_start' => 'Subscription end date must be after start date',
+    'profile_not_found' => 'Profile not found.',
+    'account_not_eligible_review' => 'Your account is not eligible to submit reviews.',
+    'account_not_eligible_flag' => 'Your account is not eligible to flag reviews.',
 
     'public' => [
         'all_categories' => 'All Categories',
