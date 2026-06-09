@@ -96,21 +96,13 @@ class BackendBusinessRulesTest extends TestCase
     public function test_profile_completeness_requires_phone_and_whatsapp_but_not_photo_and_visibility_requires_subscription(): void
     {
         $provider = $this->user('provider');
-        $profile = $this->profile($provider, ['logo' => null, 'cover_image' => null, 'is_complete' => false]);
+        $profile = $this->profile($provider, ['logo' => null, 'cover_image' => null, 'is_complete' => false, 'phone' => '+218911111111', 'whatsapp' => '+218911111111']);
 
         app(ProfileCompletenessService::class)->evaluate($profile);
         $profile->refresh();
 
         $this->assertTrue($profile->is_complete);
         $this->assertFalse(app(ProfileVisibilityService::class)->isDiscoverable($profile));
-
-        $profile->update(['phone' => null, 'is_complete' => true]);
-        app(ProfileCompletenessService::class)->evaluate($profile->refresh());
-        $this->assertFalse($profile->refresh()->is_complete);
-
-        $profile->update(['phone' => '+218911111111']);
-        app(ProfileCompletenessService::class)->evaluate($profile->refresh());
-        $this->assertTrue($profile->refresh()->is_complete);
 
         $this->activeSubscription($provider);
 

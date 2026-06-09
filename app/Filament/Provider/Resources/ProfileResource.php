@@ -127,10 +127,12 @@ class ProfileResource extends Resource
                     Forms\Components\TextInput::make('phone')
                         ->label('الهاتف')
                         ->tel()
+                        ->required()
                         ->maxLength(20),
                     Forms\Components\TextInput::make('whatsapp')
                         ->label('واتساب')
                         ->tel()
+                        ->required()
                         ->maxLength(20),
                     Forms\Components\TextInput::make('website')
                         ->label('الموقع الإلكتروني')

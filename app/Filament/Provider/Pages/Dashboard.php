@@ -19,8 +19,6 @@ class Dashboard extends Page
 
     protected static bool $shouldRegisterNavigation = true;
 
-    protected string $view = 'filament.provider.pages.dashboard';
-
     public function getTitle(): string
     {
         return 'لوحة التحكم';
@@ -33,10 +31,10 @@ class Dashboard extends Page
 
     public function getSubheading(): ?string
     {
-        return null;
+        return 'مركز التحكم الخاص بك';
     }
 
-    public function getWidgets(): array
+    protected function getHeaderWidgets(): array
     {
         return [
             StatsOverviewWidget::class,

@@ -68,6 +68,8 @@ class ProviderCreationService
                 [
                     'slug' => $this->generateUniqueSlug($user),
                     'is_complete' => false,
+                    'phone' => '',
+                    'whatsapp' => '',
                 ]
             );
 

@@ -379,11 +379,11 @@ class VisibilityTest extends TestCase
         $user = User::factory()->create(['is_active' => true, 'is_suspended' => false]);
         $user->assignRole('provider');
 
-        // Create incomplete profile
+        // Create incomplete profile (phone is now required, use empty string)
         $profile = Profile::factory()->create([
             'user_id' => $user->id,
             'is_complete' => false,
-            'phone' => null,
+            'phone' => '',
         ]);
         ProfileStats::create(['profile_id' => $profile->id]);
 
