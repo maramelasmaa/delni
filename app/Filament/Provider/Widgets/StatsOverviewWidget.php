@@ -37,9 +37,11 @@ class StatsOverviewWidget extends BaseWidget
 
         $activeSubscription = $user->activeSubscription;
         if ($activeSubscription) {
-            $daysLeft = now()->diffInDays($activeSubscription->expires_at);
+            $daysLeft = (int) now()->diffInDays($activeSubscription->expires_at);
+            $daysLeft = max(0, $daysLeft);
+            $dayLabel = $daysLeft === 1 ? 'يوم' : 'أيام';
             $stats[] = Stat::make('حالة الاشتراك', 'نشط ✓')
-                ->description('ينتهي في '.$daysLeft.' يوم')
+                ->description('ينتهي في '.$daysLeft.' '.$dayLabel)
                 ->color($daysLeft > 7 ? 'success' : 'warning');
         } else {
             $stats[] = Stat::make('حالة الاشتراك', 'غير نشط')
