@@ -165,7 +165,8 @@ class ProviderPanelIntegrationTest extends TestCase
         $provider->is_suspended = true;
         $provider->save();
 
-        // Check visibility
+        // Check visibility (need fresh profile instance for user relationship)
+        $profile->refresh();
         $visibilityService = app(ProfileVisibilityService::class);
         $this->assertFalse($visibilityService->isDiscoverable($profile), 'Suspended provider should not be discoverable');
     }

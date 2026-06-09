@@ -9,6 +9,7 @@ use App\Models\Profile;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\ProfileCompletenessService;
 use App\Services\ProfileSearchService;
 use App\Services\ProfileVisibilityService;
 use App\Services\PublicFrontendService;
@@ -105,7 +106,12 @@ class ProfileVisibilityConsolidationTest extends TestCase
         $profile = $provider->profile;
         $this->createActiveSubscription($provider);
 
-        // Profile is incomplete
+        // Make profile incomplete by clearing a required field
+        $profile->update(['phone' => '']);
+        app(ProfileCompletenessService::class)->evaluate($profile);
+        $profile->refresh();
+
+        // Profile is now incomplete
         $this->assertFalse($profile->is_complete);
 
         // Hidden by all methods

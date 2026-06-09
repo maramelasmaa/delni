@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -78,40 +79,42 @@ class ProviderCreationService
             return $existing;
         }
 
-        // Create profile within transaction context (caller manages transaction)
-        // Use createOrFirst to handle rare race condition where concurrent request
-        // creates same profile between our check and creation
-        try {
-            $profile = Profile::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'slug' => $this->generateUniqueSlug($user),
-                    'is_complete' => false,
-                    'phone' => '',
-                    'whatsapp' => '',
-                ]
-            );
+        // Use database transaction to guarantee atomicity:
+        // Either BOTH profile AND stats are created, or NEITHER
+        // This prevents partial state where profile exists but stats are missing
+        return DB::transaction(function () use ($user): Profile {
+            try {
+                $profile = Profile::firstOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'slug' => $this->generateUniqueSlug($user),
+                        'is_complete' => false,
+                        'phone' => '',
+                        'whatsapp' => '',
+                    ]
+                );
 
-            // If we got an existing profile (firstOrCreate found it), check stats
-            if (! $profile->wasRecentlyCreated && ! $profile->stats()->exists()) {
-                $this->statsService->initializeForProfile($profile);
+                // If we got an existing profile (firstOrCreate found it), check stats
+                if (! $profile->wasRecentlyCreated && ! $profile->stats()->exists()) {
+                    $this->statsService->initializeForProfile($profile);
+                }
+
+                // If this is a newly created profile, initialize stats
+                if ($profile->wasRecentlyCreated) {
+                    $this->statsService->initializeForProfile($profile);
+                }
+
+                return $profile;
+            } catch (QueryException $e) {
+                // If slug collision (rare), regenerate and retry once
+                if ($e->errorInfo[1] === 1062 && str_contains($e->getMessage(), 'slug')) {
+                    return $this->createProfileForUser($user);
+                }
+
+                // For any other database error, propagate
+                throw $e;
             }
-
-            // If this is a newly created profile, initialize stats
-            if ($profile->wasRecentlyCreated) {
-                $this->statsService->initializeForProfile($profile);
-            }
-
-            return $profile;
-        } catch (QueryException $e) {
-            // If slug collision (rare), regenerate and retry once
-            if ($e->errorInfo[1] === 1062 && str_contains($e->getMessage(), 'slug')) {
-                return $this->createProfileForUser($user);
-            }
-
-            // For any other database error, propagate
-            throw $e;
-        }
+        });
     }
 
     /**
