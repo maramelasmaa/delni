@@ -59,7 +59,7 @@ class ProfileResource extends Resource
                             ->required(),
                         Forms\Components\Select::make('provider_type')
                             ->label(__('filament.fields.provider_type'))
-                            ->options(fn () => ProviderType::where('is_active', true)->pluck('localized_name', 'code'))
+                            ->options(fn () => ProviderType::options(activeOnly: true))
                             ->searchable()
                             ->required(),
                         Forms\Components\Select::make('category_id')
