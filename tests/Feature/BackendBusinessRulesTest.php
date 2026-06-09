@@ -152,7 +152,7 @@ class BackendBusinessRulesTest extends TestCase
         $this->assertSame($featured['profile']->id, $results->first()->id);
         $this->assertTrue($results->contains('id', $normal['profile']->id));
 
-        $this->get('/provider/'.$normal['profile']->slug)
+        $this->get('/providers/'.$normal['profile']->slug)
             ->assertOk()
             ->assertSee('Website')
             ->assertSee('Certified Provider')
@@ -318,7 +318,7 @@ class BackendBusinessRulesTest extends TestCase
             '/category/'.$this->category->slug.'?per_page=5',
             '/subcategory/'.$this->subcategory->slug.'?per_page=5',
             '/city/'.$this->city->slug.'?per_page=5',
-            '/provider/'.$profile->slug,
+            '/providers/'.$profile->slug,
         ] as $uri) {
             $this->get($uri)
                 ->assertOk()
@@ -520,7 +520,7 @@ class BackendBusinessRulesTest extends TestCase
             'notes' => 'Visible credential',
         ]);
 
-        $this->get('/provider/'.$profile->slug)
+        $this->get('/providers/'.$profile->slug)
             ->assertOk()
             ->assertSee('Certified Specialist')
             ->assertSee('Delni Academy');
@@ -554,7 +554,7 @@ class BackendBusinessRulesTest extends TestCase
             ->get('/cp/admin/marketplace-placements')
             ->assertOk();
 
-        $this->get('/provider/'.$profile->slug)
+        $this->get('/providers/'.$profile->slug)
             ->assertOk()
             ->assertDontSee('is_homepage_featured')
             ->assertDontSee('top_search_until')

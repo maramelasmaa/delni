@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
+use App\Models\City;
 use App\Models\Profile;
 use App\Models\ProfileStats;
 use App\Models\Review;
@@ -22,6 +24,20 @@ class DemoDataSeeder extends Seeder
         $adminId = User::where('email', env('SUPER_ADMIN_EMAIL', 'admin@delni.ly'))->value('id');
         $now = now();
 
+        // ── GET ACTUAL CITY IDS ───────────────────────────────────────────────
+        $tripoli = City::where('slug', 'tripoli')->first()?->id;
+        $benghazi = City::where('slug', 'benghazi')->first()?->id;
+        $misrata = City::where('slug', 'misrata')->first()?->id;
+        $zawiya = City::where('slug', 'zawiya')->first()?->id;
+
+        // ── GET ACTUAL CATEGORY IDS ────────────────────────────────────────────
+        $categoryGraphic = Category::where('name', 'Graphic Design')->first()?->id;
+        $categoryConstruction = Category::where('name', 'Construction & Contracting')->first()?->id;
+        $categoryTech = Category::where('name', 'Tech & Software')->first()?->id;
+        $categoryPhotography = Category::where('name', 'Photography & Video')->first()?->id;
+        $categoryLegal = Category::where('name', 'Legal & Accounting')->first()?->id;
+        $categoryAuto = Category::where('name', 'Auto & Mechanics')->first()?->id;
+
         // ── PROVIDERS ─────────────────────────────────────────────────────────
         $providers = [
             [
@@ -29,8 +45,8 @@ class DemoDataSeeder extends Seeder
                 'profile' => [
                     'business_name' => 'Al-Mansouri Design Studio',
                     'bio' => 'Professional graphic design studio based in Tripoli. We specialize in brand identity, logo design, and social media content for Libyan businesses.',
-                    'city_id' => 1,  // Tripoli
-                    'category_id' => 1,  // Graphic Design
+                    'city_id' => $tripoli,
+                    'category_id' => $categoryGraphic,
                     'subcategory_ids' => [1, 2], // Logo Design, Social Media
                     'whatsapp' => '+218912001001',
                     'experience_years' => 7,
@@ -45,8 +61,8 @@ class DemoDataSeeder extends Seeder
                 'profile' => [
                     'business_name' => 'TechLibya Solutions',
                     'bio' => 'Full-stack web and mobile development company in Benghazi. We build modern, scalable applications for startups and enterprises across Libya.',
-                    'city_id' => 2,  // Benghazi
-                    'category_id' => 3,  // Tech & Software
+                    'city_id' => $benghazi,
+                    'category_id' => $categoryTech,
                     'subcategory_ids' => [8, 9], // Web Dev, Mobile Apps
                     'whatsapp' => '+218922002002',
                     'experience_years' => 5,
@@ -61,8 +77,8 @@ class DemoDataSeeder extends Seeder
                 'profile' => [
                     'business_name' => 'Zwai Legal Consultancy',
                     'bio' => 'Licensed lawyer with 10 years of experience in commercial law, contracts, and business registration in Libya.',
-                    'city_id' => 1,  // Tripoli
-                    'category_id' => 5,  // Legal & Accounting
+                    'city_id' => $tripoli,
+                    'category_id' => $categoryLegal,
                     'subcategory_ids' => [15, 16], // Lawyer, Accountant
                     'whatsapp' => '+218913003003',
                     'experience_years' => 10,
@@ -77,8 +93,8 @@ class DemoDataSeeder extends Seeder
                 'profile' => [
                     'business_name' => 'Warfalli Photography',
                     'bio' => 'Award-winning photographer covering weddings, corporate events, and product shoots across Libya. Over 500 weddings photographed.',
-                    'city_id' => 3,  // Misrata
-                    'category_id' => 4,  // Photography & Video
+                    'city_id' => $misrata,
+                    'category_id' => $categoryPhotography,
                     'subcategory_ids' => [12, 14], // Wedding, Video
                     'whatsapp' => '+218924004004',
                     'experience_years' => 8,
@@ -93,8 +109,8 @@ class DemoDataSeeder extends Seeder
                 'profile' => [
                     'business_name' => 'Benali Auto Workshop',
                     'bio' => 'Certified car mechanic and auto electrician in Zawiya. Specializing in European and Japanese cars. Fast, reliable service at honest prices.',
-                    'city_id' => 4,  // Zawiya
-                    'category_id' => 6,  // Auto & Mechanics
+                    'city_id' => $zawiya,
+                    'category_id' => $categoryAuto,
                     'subcategory_ids' => [18, 19], // Car Mechanic, Auto Electrician
                     'whatsapp' => '+218915005005',
                     'experience_years' => 12,
@@ -109,8 +125,8 @@ class DemoDataSeeder extends Seeder
                 'profile' => [
                     'business_name' => 'Al-Senussi Contracting',
                     'bio' => 'Licensed construction contractor in Benghazi. We build residential and commercial properties with quality materials and on-time delivery.',
-                    'city_id' => 2,  // Benghazi
-                    'category_id' => 2,  // Construction
+                    'city_id' => $benghazi,
+                    'category_id' => $categoryConstruction,
                     'subcategory_ids' => [4, 6], // Building, Electrical
                     'whatsapp' => '+218926006006',
                     'experience_years' => 15,

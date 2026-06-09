@@ -220,18 +220,23 @@
     margin: 0 auto;
     text-align: center;
     padding: 6rem 2rem 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* === TYPOGRAPHY === */
 .hero-title {
     margin: 0 auto;
-    max-width: 95%;
+    max-width: 90%;
     color: #ffffff;
     font-size: clamp(2.8rem, 6vw, 5rem);
     font-weight: 900;
-    line-height: 0.92;
+    line-height: 1.1;
     letter-spacing: -0.03em;
     text-align: center;
+    display: block;
+    word-break: break-word;
 }
 
 .hero-title span {
@@ -249,8 +254,9 @@
     color: rgba(255,255,255,0.75);
     font-size: clamp(1rem, 2.2vw, 1.3rem);
     font-weight: 500;
-    line-height: 1.7;
+    line-height: 1.8;
     letter-spacing: -0.01em;
+    text-align: center;
 }
 
 /* === SEARCH BAR (HERO CENTERPIECE) === */
@@ -298,7 +304,7 @@
 .field-svg {
     width: 22px;
     height: 22px;
-    color: #94a3b8;
+    color: #ff7a1a;
     flex-shrink: 0;
     transition: 0.2s ease;
 }
@@ -474,6 +480,59 @@
     }
 }
 
+</style>
+
+<!-- Featured Providers -->
+@if($featuredProviders->count() > 0)
+    <section class="home-section">
+        <div class="container">
+            <x-provider-grid
+                :providers="$featuredProviders"
+                :columns="3"
+                title="{{ __('messages.public.featured_professionals') }}"
+                subtitle="{{ __('messages.public.top_professionals_in_your_area') }}"
+            />
+        </div>
+    </section>
+@endif
+
+<!-- Top Rated Providers -->
+@if($topRatedProviders->count() > 0)
+    <section class="home-section">
+        <div class="container">
+            <x-provider-grid
+                :providers="$topRatedProviders"
+                :columns="3"
+                title="{{ __('messages.public.highest_rated') }}"
+                subtitle="{{ __('messages.public.trusted_professionals') }}"
+            />
+        </div>
+    </section>
+@endif
+
+<!-- Latest Providers -->
+@if($latestProviders->count() > 0)
+    <section class="home-section">
+        <div class="container">
+            <x-provider-grid
+                :providers="$latestProviders"
+                :columns="3"
+                title="{{ __('messages.public.newest_professionals') }}"
+                subtitle="{{ __('messages.public.recently_joined') }}"
+            />
+        </div>
+    </section>
+@endif
+
+<style>
+    .home-section {
+        padding: 3rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .home-section:last-of-type {
+        border-bottom: none;
+    }
 </style>
 
 @endsection

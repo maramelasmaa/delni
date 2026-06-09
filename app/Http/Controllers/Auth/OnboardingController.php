@@ -52,6 +52,7 @@ class OnboardingController extends Controller
         $user->updatePassword((string) $request->string('password'));
         $onboardingToken->markAsUsed();
 
+        // Redirect to login page (not authenticated yet)
         return redirect()->route('filament.provider.auth.login')
             ->with('status', __('auth.password_set_success'));
     }

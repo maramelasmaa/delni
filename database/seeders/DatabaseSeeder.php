@@ -22,5 +22,10 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             CitySeeder::class,
         ]);
+
+        // Optional: Seed marketplace test data with diverse providers and placements
+        if ($this->command->confirm('Seed marketplace placement test data? (for testing ranking system)', true)) {
+            $this->call(MarketplacePlacementSeeder::class);
+        }
     }
 }

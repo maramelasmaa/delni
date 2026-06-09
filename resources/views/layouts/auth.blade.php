@@ -1,100 +1,347 @@
+```blade
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', config('app.name'))</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        .auth-brand-svg {
-            width: 40px;
-            height: 40px;
-            stroke: #F1620F;
-            stroke-width: 2;
-        }
-        .auth-brand-path {
-            fill: #F1620F;
-        }
-        .auth-decorative-path {
-            stroke: #F1620F;
-            stroke-width: 60;
-            fill: none;
-            stroke-linecap: round;
-        }
-    </style>
-</head>
-<body class="antialiased bg-gray-50 text-gray-900">
-    <div class="min-h-screen flex flex-col lg:flex-row">
-        <!-- Brand Panel - Hidden on Mobile, Left on Desktop -->
-        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-navy-800 via-navy-750 to-navy-800 flex-col justify-between p-12 relative overflow-hidden">
-            <!-- Decorative Animated Background -->
-            <div class="absolute inset-0 opacity-20">
-                <svg class="w-full h-full" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
-                    <path class="auth-decorative-path" d="M200 50 Q220 150, 210 250 Q200 350, 215 450 Q220 550, 200 600"/>
-                </svg>
-            </div>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+      dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
-            <!-- Brand Content -->
-            <div class="relative z-10">
-                <!-- Logo -->
-                <div class="flex items-center gap-3 mb-16">
-                    <svg class="auth-brand-svg" viewBox="0 0 40 40" fill="none">
-                        <circle cx="20" cy="20" r="18"/>
-                        <path class="auth-brand-path" d="M20 8v24M20 32l-3-4h6l-3 4"/>
-                    </svg>
-                    <span class="text-white text-2xl font-bold tracking-tight">دلني</span>
+<head>
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        @yield('title', config('app.name'))
+    </title>
+
+    @vite([
+        'resources/css/app.css',
+        'resources/js/app.js'
+    ])
+
+    <style>
+
+        :root {
+            --auth-orange: #ff7a1a;
+            --auth-orange-hover: #ff6b1a;
+
+            --auth-bg: #06101d;
+
+            --auth-card:
+                rgba(8, 16, 30, 0.74);
+
+            --auth-border:
+                rgba(255,255,255,0.08);
+
+            --auth-text:
+                rgba(255,255,255,0.92);
+
+            --auth-muted:
+                rgba(255,255,255,0.58);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+
+            background: var(--auth-bg);
+
+            color: white;
+
+            overflow-x: hidden;
+        }
+
+        .auth-page {
+            position: relative;
+
+            min-height: 100dvh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                20px
+                16px;
+
+            overflow: hidden;
+
+            isolation: isolate;
+
+            background-image:
+                linear-gradient(
+                    rgba(4, 10, 24, 0.68),
+                    rgba(4, 10, 24, 0.74)
+                ),
+                url('{{ asset('images/registernlogin.png') }}');
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .auth-page::before {
+            content: '';
+
+            position: absolute;
+            inset: 0;
+
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(255,122,26,0.08),
+                    transparent 22%
+                ),
+                radial-gradient(
+                    circle at bottom left,
+                    rgba(59,130,246,0.05),
+                    transparent 26%
+                );
+
+            pointer-events: none;
+
+            z-index: -1;
+        }
+
+        .auth-shell {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .auth-card {
+            position: relative;
+
+            width: 100%;
+
+            padding:
+                24px
+                24px;
+
+            border-radius: 24px;
+
+            background: var(--auth-card);
+
+            border:
+                1px solid var(--auth-border);
+
+            backdrop-filter: blur(14px);
+
+            box-shadow:
+                0 8px 28px rgba(0,0,0,0.24);
+
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: '';
+
+            position: absolute;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255,255,255,0.025),
+                    transparent
+                );
+
+            pointer-events: none;
+        }
+
+        .auth-card-top {
+            margin-bottom: 1.1rem;
+        }
+
+        .auth-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+
+            color: var(--auth-orange);
+
+            font-size: 0.82rem;
+            font-weight: 700;
+
+            text-decoration: none;
+
+            transition:
+                opacity 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .auth-back-link:hover {
+            opacity: 0.92;
+
+            transform: translateX(-2px);
+        }
+
+        .auth-top {
+            text-align: center;
+
+            margin-bottom: 1.35rem;
+        }
+
+        .auth-logo-link {
+            display: inline-flex;
+
+            text-decoration: none;
+        }
+
+        .auth-logo {
+            width: 54px;
+            height: 54px;
+
+            border-radius: 16px;
+
+            object-fit: cover;
+
+            margin-bottom: 0.95rem;
+
+            box-shadow:
+                0 8px 24px rgba(0,0,0,0.24);
+        }
+
+        .auth-title {
+            margin: 0;
+
+            color: white;
+
+            font-size: 1.85rem;
+            font-weight: 900;
+
+            line-height: 1.15;
+
+            letter-spacing: -0.03em;
+        }
+
+        .auth-subtitle {
+            margin:
+                0.75rem auto 0;
+
+            max-width: 340px;
+
+            color: var(--auth-muted);
+
+            font-size: 0.88rem;
+
+            line-height: 1.8;
+
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+
+            .auth-page {
+                padding:
+                    14px
+                    12px;
+            }
+
+            .auth-shell {
+                max-width: 100%;
+            }
+
+            .auth-card {
+                padding:
+                    20px
+                    16px;
+
+                border-radius: 20px;
+
+                backdrop-filter: blur(10px);
+            }
+
+            .auth-title {
+                font-size: 1.55rem;
+            }
+
+            .auth-subtitle {
+                font-size: 0.82rem;
+                line-height: 1.7;
+            }
+
+            .auth-logo {
+                width: 48px;
+                height: 48px;
+
+                border-radius: 14px;
+            }
+
+            .auth-back-link {
+                font-size: 0.78rem;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <div class="auth-shell">
+
+            <section class="auth-card">
+
+                <div class="auth-card-top">
+
+                    <a
+                        href="{{ route('home') }}"
+                        class="auth-back-link"
+                    >
+                        ← العودة إلى الصفحة الرئيسية
+                    </a>
+
                 </div>
 
-                <!-- Main Message -->
-                <h1 class="text-white text-5xl font-black leading-tight mb-8">
-                    @yield('auth_title', 'دلني لأفضل<br/><span class="text-primary-500">الخدمات والمزودين</span>')
-                </h1>
+                <div class="auth-top">
 
-                <!-- Description -->
-                <p class="text-gray-300 text-lg leading-relaxed max-w-lg">
-                    @yield('auth_subtitle', 'ابحث، قارن، واتصل مع أفضل المزودين في منطقتك بسهولة وثقة.')
-                </p>
-            </div>
+                    <a
+                        href="{{ route('home') }}"
+                        class="auth-logo-link"
+                    >
 
-            <!-- Trust Indicators -->
-            <div class="relative z-10 flex gap-6 text-gray-400 text-sm">
-                <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    آمن وموثوق
-                </span>
-                <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    تقييمات حقيقية
-                </span>
-                <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    خدمة سريعة
-                </span>
-            </div>
-        </div>
+                        <img
+                            src="{{ asset('images/logo.jpg') }}"
+                            alt="دلني"
+                            class="auth-logo"
+                        >
 
-        <!-- Form Panel -->
-        <div class="w-full lg:w-1/2 flex flex-col justify-center px-6 py-12 lg:px-12">
-            <!-- Mobile Brand Header -->
-            <div class="lg:hidden flex items-center gap-3 mb-10">
-                <svg class="w-8 h-8" viewBox="0 0 40 40" fill="none" stroke="#F1620F" stroke-width="2">
-                    <circle cx="20" cy="20" r="18"/>
-                    <path fill="#F1620F" d="M20 8v24M20 32l-3-4h6l-3 4"/>
-                </svg>
-                <span class="text-navy-800 text-xl font-bold">دلني</span>
-            </div>
+                    </a>
 
-            <!-- Form Container -->
-            <div class="w-full max-w-md mx-auto">
+                    <h1 class="auth-title">
+                        @yield('auth_title')
+                    </h1>
+
+                    <p class="auth-subtitle">
+                        @yield('auth_subtitle')
+                    </p>
+
+                </div>
+
                 @yield('content')
-            </div>
+
+            </section>
+
         </div>
-    </div>
+
+    </main>
+
 </body>
 </html>
+```

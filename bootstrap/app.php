@@ -44,8 +44,12 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $exceptions->render(function (Throwable $e, Request $request) {
-            // Handle authentication errors - always redirect to login, never show error page
+            // Handle authentication errors - redirect to appropriate login
             if ($e instanceof AuthenticationException) {
+                if ($request->is('provider', 'provider/*')) {
+                    return redirect()->route('filament.provider.auth.login');
+                }
+
                 return redirect()->route('login');
             }
 

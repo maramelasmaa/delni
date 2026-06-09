@@ -7,6 +7,7 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
@@ -20,7 +21,6 @@ class SetPasswordMail extends Mailable implements ShouldQueue
         private readonly string $userName,
     ) {
         $this->onQueue('default');
-        $this->delay(now());
     }
 
     public function envelope(): Envelope
@@ -31,11 +31,14 @@ class SetPasswordMail extends Mailable implements ShouldQueue
         );
     }
 
-    public function content()
+    public function content(): Content
     {
-        return $this->markdown('mail.set-password', [
-            'setPasswordLink' => $this->setPasswordLink,
-            'userName' => $this->userName,
-        ]);
+        return new Content(
+            view: 'emails.set-password',
+            with: [
+                'setPasswordLink' => $this->setPasswordLink,
+                'userName' => $this->userName,
+            ],
+        );
     }
 }

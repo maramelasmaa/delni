@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [FrontendController::class, 'home'])->name('home');
 
+// Provider panel root redirect - must come before Filament panels
+Route::get('/provider', function () {
+    // Valid authenticated provider - redirect to dashboard
+    if (auth()->check() && auth()->user()->hasRole('provider') && auth()->user()->is_active && ! auth()->user()->is_suspended) {
+        return redirect('/provider/dashboard');
+    }
+
+    // Unauthenticated - redirect to login
+    if (! auth()->check()) {
+        return redirect('/provider/login');
+    }
+
+    // Authenticated but doesn't meet requirements (wrong role, suspended, inactive)
+    abort(403, 'Unauthorized to access provider panel');
+})->name('provider.root');
+
 // Favicon route
 Route::get('/favicon.ico', fn () => response()->file(public_path('images/logo.jpg'), ['Content-Type' => 'image/jpeg']));
 
@@ -16,14 +32,14 @@ Route::get('/search', [FrontendController::class, 'search'])->name('public.searc
 Route::get('/category/{category:slug}', [FrontendController::class, 'category'])->name('public.category');
 Route::get('/subcategory/{subcategory:slug}', [FrontendController::class, 'subcategory'])->name('public.subcategory');
 Route::get('/city/{city:slug}', [FrontendController::class, 'city'])->name('public.city');
-Route::get('/provider/{profile:slug}', [FrontendController::class, 'provider'])->name('public.provider');
+Route::get('/providers/{profile:slug}', [FrontendController::class, 'provider'])->name('public.provider');
 Route::middleware([
     'auth',
     'account.locked',
     'user.active',
     'user.not_suspended',
 ])->group(function (): void {
-    Route::post('/provider/{profile:slug}/review', [ReviewController::class, 'store'])
+    Route::post('/providers/{profile:slug}/review', [ReviewController::class, 'store'])
         ->middleware(['review.eligible', 'throttle:reviews.create'])
         ->name('review.store');
 
@@ -63,6 +79,11 @@ Route::get('/onboarding/{token}', [OnboardingController::class, 'showSetPassword
 Route::post('/onboarding/set-password', [OnboardingController::class, 'setPassword'])
     ->middleware('throttle:onboarding.set-password')
     ->name('onboarding.set-password');
+
+// Debug: Display onboarding link
+Route::get('/onboarding-test/{token}', fn (string $token) => view('onboarding-link', [
+    'onboardingUrl' => route('onboarding.show', $token),
+]))->name('onboarding.test');
 
 // Authenticated routes
 Route::middleware([

@@ -14,6 +14,11 @@ class EnsureAccountNotLocked
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip auth routes
+        if ($request->routeIs('filament.*.auth.*')) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if ($user === null) {
@@ -29,7 +34,7 @@ class EnsureAccountNotLocked
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect(route('filament.admin.auth.login'))
+            return redirect()->route('filament.provider.auth.login')
                 ->with('error', 'Your account is temporarily locked. Please try again later.');
         }
 

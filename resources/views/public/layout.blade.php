@@ -45,13 +45,30 @@
             z-index: 100;
             background: transparent;
             border-bottom: none;
-            padding: 1.25rem 0;
+            padding: 1.1rem 0;
+        }
+
+        body.page-search .site-navbar {
+            position: static;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 0;
         }
 
         .site-navbar .container {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 2.5rem;
+        }
+
+        [dir="rtl"] .navbar-menu {
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        [dir="ltr"] .navbar-menu {
+            margin-left: auto;
+            margin-right: 0;
         }
 
         .navbar-brand {
@@ -61,32 +78,43 @@
             text-decoration: none;
             color: #ffffff;
             font-weight: 900;
-            font-size: 1rem;
+            font-size: 1.2rem;
+            line-height: 1.1;
+            flex-shrink: 0;
+        }
+
+        body.page-search .navbar-brand {
+            color: #0f172a;
         }
 
         .navbar-brand img {
-            width: 32px;
-            height: 32px;
+            width: 38px;
+            height: 38px;
             border-radius: 8px;
         }
 
         .navbar-menu {
             display: flex;
             align-items: center;
-            gap: 2rem;
+            gap: 1.8rem;
             list-style: none;
             margin: 0;
             padding: 0;
+            flex-direction: row;
         }
 
         .navbar-menu a {
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
             text-decoration: none;
             color: rgba(255,255,255,0.75);
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 600;
             border-radius: 6px;
             transition: 0.2s ease;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
         }
 
         .navbar-menu a:hover {
@@ -98,24 +126,47 @@
             color: #ff7a1a;
         }
 
+        body.page-search .navbar-menu a {
+            color: #475569;
+        }
+
+        body.page-search .navbar-menu a:hover {
+            color: #0f172a;
+            background: #f3f4f6;
+        }
+
+        body.page-search .navbar-menu a.active {
+            color: #ff7a1a;
+        }
+
         .btn-text {
             color: rgba(255,255,255,0.75) !important;
+            font-size: 1rem !important;
+            font-weight: 600 !important;
         }
 
         .btn-primary {
-            background: #f1620f !important;
+            background: linear-gradient(135deg, #ff8533 0%, #ff6b1a 100%) !important;
             color: #ffffff !important;
             border: none !important;
+            padding: 0.5rem 1.2rem !important;
+            border-radius: 8px !important;
+            font-size: 0.95rem !important;
+            font-weight: 700 !important;
+            box-shadow: 0 6px 14px rgba(255, 107, 26, 0.14) !important;
+            transition: 0.2s ease !important;
         }
 
         .btn-primary:hover {
-            background: #d9540d !important;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(255, 107, 26, 0.22) !important;
         }
 
         .navbar-user {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
+            white-space: nowrap;
         }
 
         .btn-logout {
@@ -144,32 +195,177 @@
             margin-top: 0 !important;
         }
 
-        footer {
+        footer.footer {
             background: #07142b;
             color: rgba(255, 255, 255, 0.72);
             padding: 4rem 0 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        footer a {
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2.5rem;
+        }
+
+        .footer-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer-brand-column {
+            grid-column: 1;
+        }
+
+        .footer-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .footer-brand-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+        }
+
+        .footer-description {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.68);
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .footer-heading {
+            margin: 0 0 1.5rem;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+        }
+
+        .footer-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .footer-links a {
             color: rgba(255, 255, 255, 0.72);
             text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
             transition: 0.2s ease;
+            display: inline-block;
         }
 
-        footer a:hover {
-            color: #f1620f;
+        .footer-links a:hover {
+            color: #ff7a1a;
+            padding-inline-start: 0.3rem;
         }
 
-        .footer-brand {
+        .footer-help-column {
+            grid-column: 4;
+        }
+
+        .footer-help-text {
+            margin: 0 0 1.5rem;
+            color: rgba(255, 255, 255, 0.68);
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .footer-cta-btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #ff8533 0%, #ff6b1a 100%);
             color: #ffffff;
-            font-size: 1.2rem;
-            font-weight: 800;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 900;
+            text-align: center;
+            transition: 0.2s ease;
+            box-shadow: 0 12px 28px rgba(255, 107, 26, 0.22);
+            width: fit-content;
+        }
+
+        .footer-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px rgba(255, 107, 26, 0.32);
+        }
+
+        .footer-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 0 0 2rem;
         }
 
         .footer-bottom {
-            margin-top: 3rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            color: rgba(255, 255, 255, 0.64);
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 1024px) {
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2.5rem;
+                margin-bottom: 2rem;
+                padding-bottom: 2rem;
+            }
+
+            .footer-brand-column {
+                grid-column: 1 / -1;
+            }
+
+            .footer-help-column {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1.5rem;
+            }
+
+            .footer-brand-column,
+            .footer-help-column {
+                grid-column: 1;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
         }
 
         .brand-logo {
@@ -179,7 +375,7 @@
     </style>
 </head>
 
-<body>
+<body @class(['page-search' => request()->routeIs('public.search')])>
     <nav class="site-navbar">
         <div class="container">
             <a href="{{ route('home') }}" class="navbar-brand">
@@ -238,57 +434,55 @@
         @yield('content')
     </main>
 
-    <footer>
+    <footer class="footer">
         <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-5">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <img src="{{ asset('images/logo.jpg') }}" alt="logo" class="brand-logo" style="width: 50px; height: 50px;">
-                        <div>
-                            <div class="footer-brand">{{ config('app.name', 'دلني') }}</div>
-                            <small>{{ __('messages.public.tagline') }}</small>
-                        </div>
+            <div class="footer-grid">
+                <!-- Brand Column -->
+                <div class="footer-column footer-brand-column">
+                    <div class="footer-logo-group">
+                        <img src="{{ asset('images/logo.jpg') }}" alt="logo" class="footer-logo">
+                        <h3 class="footer-brand-title">{{ config('app.name', 'دلني') }}</h3>
                     </div>
-
-                    <p class="mb-0">
+                    <p class="footer-description">
                         {{ __('messages.public.marketplace_description') }}
                     </p>
                 </div>
 
-                <div class="col-6 col-lg-2">
-                    <h6 class="mb-3 text-white">{{ __('messages.public.quick_links') }}</h6>
-
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('home') }}">{{ __('messages.public.home') }}</a>
-                        <a href="{{ route('public.search') }}">{{ __('messages.public.search') }}</a>
-                        <a href="{{ route('register') }}">{{ __('messages.register') }}</a>
-                    </div>
+                <!-- Quick Links Column -->
+                <div class="footer-column">
+                    <h4 class="footer-heading">{{ __('messages.public.quick_links') }}</h4>
+                    <ul class="footer-links">
+                        <li><a href="{{ route('home') }}">{{ __('messages.public.home') }}</a></li>
+                        <li><a href="{{ route('public.search') }}">{{ __('messages.public.search') }}</a></li>
+                        <li><a href="{{ route('register') }}">{{ __('messages.register') }}</a></li>
+                    </ul>
                 </div>
 
-                <div class="col-6 col-lg-2">
-                    <h6 class="mb-3 text-white">{{ __('messages.public.legal') }}</h6>
-
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('privacy') }}">{{ __('messages.public.privacy') }}</a>
-                        <a href="{{ route('terms') }}">{{ __('messages.public.terms') }}</a>
-                        <a href="{{ route('disclaimer') }}">{{ __('messages.public.disclaimer') }}</a>
-                    </div>
+                <!-- Legal Column -->
+                <div class="footer-column">
+                    <h4 class="footer-heading">{{ __('messages.public.legal') }}</h4>
+                    <ul class="footer-links">
+                        <li><a href="{{ route('privacy') }}">{{ __('messages.public.privacy') }}</a></li>
+                        <li><a href="{{ route('terms') }}">{{ __('messages.public.terms') }}</a></li>
+                        <li><a href="{{ route('disclaimer') }}">{{ __('messages.public.disclaimer') }}</a></li>
+                    </ul>
                 </div>
 
-                <div class="col-lg-3">
-                    <h6 class="mb-3 text-white">{{ __('messages.public.need_help') }}</h6>
-
-                    <p class="mb-3">
+                <!-- Help Column -->
+                <div class="footer-column footer-help-column">
+                    <h4 class="footer-heading">{{ __('messages.public.need_help') }}</h4>
+                    <p class="footer-help-text">
                         {{ __('messages.public.need_help_text') }}
                     </p>
-
-                    <a href="{{ route('public.search') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('public.search') }}" class="footer-cta-btn">
                         {{ __('messages.public.start_search') }}
                     </a>
                 </div>
             </div>
 
-            <div class="footer-bottom d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+            <div class="footer-divider"></div>
+
+            <div class="footer-bottom">
                 <span>&copy; {{ date('Y') }} {{ config('app.name', 'دلني') }}. {{ __('messages.public.all_rights_reserved') }}</span>
                 <span>{{ __('messages.public.built_for_libya') }}</span>
             </div>

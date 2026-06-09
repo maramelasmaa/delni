@@ -67,7 +67,7 @@ class SchedulerSafetyTest extends TestCase
         $this->assertTrue($provider->subscriptions()->first()->is_active);
         $this->assertFalse(app(ProfileVisibilityService::class)->isDiscoverable($profile));
 
-        $this->get('/provider/'.$profile->slug)->assertNotFound();
+        $this->get('/providers/'.$profile->slug)->assertNotFound();
 
         $results = app(ProfileSearchService::class)
             ->search(new ProfileSearchFilters(perPage: 10))
@@ -87,7 +87,7 @@ class SchedulerSafetyTest extends TestCase
         $this->subscription($provider, now(), now()->addMonth(), ['is_active' => true, 'approved_at' => now()]);
 
         $this->assertTrue(app(ProfileVisibilityService::class)->isDiscoverable($profile->refresh()));
-        $this->get('/provider/'.$profile->slug)->assertOk();
+        $this->get('/providers/'.$profile->slug)->assertOk();
     }
 
     public function test_expired_marketplace_placement_flag_does_not_boost_public_search(): void

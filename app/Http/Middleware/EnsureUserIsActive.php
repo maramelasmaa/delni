@@ -13,6 +13,11 @@ class EnsureUserIsActive
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip auth routes
+        if ($request->routeIs('filament.*.auth.*')) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if ($user === null) {

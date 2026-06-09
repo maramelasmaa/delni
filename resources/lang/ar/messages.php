@@ -24,6 +24,7 @@ return [
     'set_password_link_copy' => 'أو انسخ والصق هذا الرابط في متصفحك:',
     'set_password_not_requested' => 'إذا لم تتلق دعوة لتصبح مقدم خدمة في دلني، يرجى التواصل مع الدعم.',
     'login' => 'دخول',
+    'logout' => 'تسجيل الخروج',
     'register' => 'تسجيل',
 
     'public' => [
@@ -64,6 +65,7 @@ return [
         'error_404_message' => 'لم يتم العثور على الصفحة التي تبحث عنها.',
         'error_404_title' => 'الصفحة غير موجودة',
         'explore_our_categories' => 'استكشف فئاتنا',
+        'featured_professionals' => 'المحترفون المميزون',
         'filter' => 'تصفية',
         'find_service_by_location' => 'ابحث عن الخدمة حسب الموقع',
         'find_trusted_professionals' => 'ابحث عن متخصصين موثوقين',
@@ -85,6 +87,7 @@ return [
         'need_help' => 'هل تحتاج إلى مساعدة؟',
         'need_help_text' => 'تصفح متخصصونا واعثر على المطابقة المثالية لاحتياجاتك.',
         'newest' => 'الأحدث',
+        'newest_professionals' => 'أحدث المحترفين',
         'no_providers_found' => 'لم يتم العثور على مزودين',
         'no_providers_in_category' => 'لا توجد مزودون في هذه الفئة',
         'no_providers_in_city' => 'لا توجد مزودون في هذه المدينة',
@@ -126,6 +129,8 @@ return [
         'toggle_navigation' => 'تبديل الملاحة',
         'top_rated' => 'الأعلى تقييمًا',
         'top_rated_providers' => 'أفضل المزودين المقيمين',
+        'top_professionals_in_your_area' => 'أفضل المحترفين في منطقتك',
+        'trusted_professionals' => 'محترفون موثوقون',
         'try_again_later' => 'حاول لاحقًا',
         'try_different_search' => 'جرب بحثًا مختلفًا',
         'verify' => 'تحقق',

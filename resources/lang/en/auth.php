@@ -36,4 +36,8 @@ return [
     'onboarding_link_invalid' => 'This onboarding link is invalid. Please check your email for the correct link.',
     'password_set_success' => 'Your password has been set successfully. You can now login to your account.',
     'email_cannot_change' => 'Email address cannot be changed',
+    'welcome' => 'Welcome',
+    'set_password_intro' => 'Hello :name, your provider account has been created on Delni. Click the button below to set a strong password for your account.',
+    'set_password_link' => 'Or copy this link',
+    'regards' => 'Best regards, Delni Team',
 ];

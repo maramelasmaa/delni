@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Provider\Pages\Auth\Login;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -26,8 +28,8 @@ class ProviderPanelProvider extends PanelProvider
             ->id('provider')
             ->path('provider')
             ->brandName('دلني')
-            ->homeUrl('/provider')
-            ->login()
+            ->login(Login::class)
+            ->homeUrl('/provider/dashboard')
             ->profile()
             ->colors([
                 'primary' => Color::hex('#F1620F'),
@@ -37,7 +39,9 @@ class ProviderPanelProvider extends PanelProvider
                 'success' => Color::hex('#22C55E'),
                 'warning' => Color::hex('#F59E0B'),
             ])
+            ->discoverResources(in: app_path('Filament/Provider/Resources'), for: 'App\Filament\Provider\Resources')
             ->discoverPages(in: app_path('Filament/Provider/Pages'), for: 'App\Filament\Provider\Pages')
+            ->discoverWidgets(in: app_path('Filament/Provider/Widgets'), for: 'App\Filament\Provider\Widgets')
             ->widgets([
                 AccountWidget::class,
             ])
@@ -53,7 +57,7 @@ class ProviderPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                'provider.authenticate',
+                Authenticate::class,
                 'account.locked',
                 'user.active',
                 'user.not_suspended',

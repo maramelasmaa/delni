@@ -52,7 +52,6 @@
     @else
         <div class="provider-grid-empty">
             <x-empty-state
-                icon="🔍"
                 title="{{ __('messages.public.no_providers_found') }}"
                 message="{{ __('messages.public.try_different_search') }}"
             />
