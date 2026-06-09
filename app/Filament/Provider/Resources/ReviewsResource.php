@@ -17,11 +17,13 @@ class ReviewsResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-star';
 
-    protected static ?string $navigationLabel = 'التقييمات';
+    protected static ?string $navigationLabel = 'تقييماتي';
 
     protected static ?string $modelLabel = 'تقييم';
 
     protected static ?string $pluralModelLabel = 'التقييمات';
+
+    protected static ?int $navigationSort = 6;
 
     protected static bool $shouldRegisterNavigation = true;
 

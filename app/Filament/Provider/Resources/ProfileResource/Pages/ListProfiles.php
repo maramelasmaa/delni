@@ -8,4 +8,15 @@ use Filament\Resources\Pages\ListRecords;
 class ListProfiles extends ListRecords
 {
     protected static string $resource = ProfileResource::class;
+
+    public function mount(): void
+    {
+        $profile = auth()->user()?->profile;
+
+        if ($profile) {
+            redirect(ProfileResource::getUrl('edit', ['record' => $profile->id]))->send();
+        } else {
+            redirect(ProfileResource::getUrl('create'))->send();
+        }
+    }
 }

@@ -20,13 +20,22 @@ class CredentialsResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-check';
 
-    protected static ?string $navigationLabel = 'بيانات الاعتماد';
+    protected static ?string $navigationLabel = 'شهاداتي وخبراتي';
 
     protected static ?string $modelLabel = 'بيانات اعتماد';
 
     protected static ?string $pluralModelLabel = 'بيانات الاعتماد';
 
+    protected static ?int $navigationSort = 4;  // unchanged
+
     protected static bool $shouldRegisterNavigation = true;
+
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+
+        return $user && $user->hasRole('provider') && $user->profile !== null;
+    }
 
     public static function form(Schema $schema): Schema
     {

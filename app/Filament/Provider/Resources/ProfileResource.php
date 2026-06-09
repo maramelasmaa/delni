@@ -5,8 +5,11 @@ namespace App\Filament\Provider\Resources;
 use App\Models\Profile;
 use App\Models\ProviderType;
 use App\Models\Subcategory;
+use App\Rules\SafeExternalUrl;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Forms\Components\Repeater;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -21,17 +24,32 @@ class ProfileResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static ?string $navigationLabel = 'الملف الشخصي';
+    protected static ?string $navigationLabel = 'ملفي التجاري';
 
     protected static ?string $modelLabel = 'الملف الشخصي';
 
     protected static ?string $pluralModelLabel = 'الملفات الشخصية';
 
+    protected static ?int $navigationSort = 2;
+
     protected static bool $shouldRegisterNavigation = true;
+
+    public static function getNavigationUrl(): string
+    {
+        $profile = auth()->user()?->profile;
+
+        if ($profile) {
+            return static::getUrl('edit', ['record' => $profile->id]);
+        }
+
+        return static::getUrl('create');
+    }
 
     public static function canCreate(): bool
     {
-        return false;
+        $user = auth()->user();
+
+        return $user && $user->hasRole('provider') && $user->profile === null;
     }
 
     public static function canDelete(Model $record): bool
@@ -162,6 +180,50 @@ class ProfileResource extends Resource
                 ])
                 ->columns(2),
 
+            Section::make('الروابط')
+                ->description('روابطك على وسائل التواصل والمواقع الإلكترونية')
+                ->schema([
+                    Repeater::make('links')
+                        ->relationship()
+                        ->label('الروابط')
+                        ->schema([
+                            Forms\Components\TextInput::make('label')
+                                ->label('الاسم')
+                                ->required()
+                                ->maxLength(255)
+                                ->regex('/^[^\<\>\"]+$/')
+                                ->validationMessages([
+                                    'regex' => 'لا يمكن استخدام أحرف HTML في الاسم.',
+                                ]),
+                            Forms\Components\TextInput::make('url')
+                                ->label('الرابط')
+                                ->required()
+                                ->url()
+                                ->rules([new SafeExternalUrl])
+                                ->maxLength(500),
+                            Forms\Components\Select::make('type')
+                                ->label('النوع')
+                                ->options([
+                                    'website' => 'موقع إلكتروني',
+                                    'portfolio' => 'معرض أعمال',
+                                    'social' => 'وسائل اجتماعية',
+                                    'contact' => 'تواصل',
+                                    'other' => 'آخر',
+                                ])
+                                ->default('other'),
+                            Forms\Components\Toggle::make('is_active')
+                                ->label('نشط')
+                                ->default(true)
+                                ->inline(false),
+                        ])
+                        ->columns(2)
+                        ->addActionLabel('إضافة رابط')
+                        ->deleteAction(
+                            fn (Action $action) => $action->label('حذف'),
+                        ),
+                ])
+                ->columnSpanFull(),
+
             Section::make('معلومات للقراءة فقط')
                 ->description('حالة ملفك الشخصي')
                 ->schema([
@@ -207,6 +269,7 @@ class ProfileResource extends Resource
     {
         return [
             'index' => ProfileResource\Pages\ListProfiles::route('/'),
+            'create' => ProfileResource\Pages\CreateProfile::route('/create'),
             'edit' => ProfileResource\Pages\EditProfile::route('/{record}/edit'),
         ];
     }

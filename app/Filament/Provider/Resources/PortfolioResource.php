@@ -22,11 +22,13 @@ class PortfolioResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';
 
-    protected static ?string $navigationLabel = 'الأعمال والمشاريع';
+    protected static ?string $navigationLabel = 'أعمالي ومشاريعي';
 
     protected static ?string $modelLabel = 'عمل';
 
     protected static ?string $pluralModelLabel = 'الأعمال والمشاريع';
+
+    protected static ?int $navigationSort = 3;
 
     protected static bool $shouldRegisterNavigation = true;
 
@@ -65,7 +67,7 @@ class PortfolioResource extends Resource
                 ->columns(2),
 
             Section::make('صور المشروع')
-                ->description('أضف ما يصل إلى 4 صور لكل مشروع')
+                ->description('أضف ما يصل إلى 4 صور لكل مشروع (8 صور كحد أقصى في جميع المشاريع)')
                 ->schema([
                     Repeater::make('images')
                         ->relationship()
@@ -88,7 +90,8 @@ class PortfolioResource extends Resource
                         ->addActionLabel('إضافة صورة')
                         ->deleteAction(
                             fn (Action $action) => $action->label('حذف'),
-                        ),
+                        )
+                        ->helperText('الحد الأقصى 4 صور لهذا المشروع'),
                 ])
                 ->columnSpanFull(),
         ]);
@@ -128,12 +131,16 @@ class PortfolioResource extends Resource
 
     public static function canCreate(): bool
     {
-        $profile = auth()->user()?->profile;
+        $user = auth()->user();
+        if (! $user || ! $user->hasRole('provider')) {
+            return false;
+        }
+
+        $profile = $user->profile;
         if (! $profile) {
             return false;
         }
 
-        // Check if user has reached max 2 portfolio items
         return $profile->portfolioItems()->count() < 2;
     }
 

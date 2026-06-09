@@ -69,14 +69,13 @@ class ProfilePolicy
     }
 
     /**
-     * Profiles are never created manually — auto-created by system only.
-     * Excluded from before() bypass — even admin is denied here.
-     * Any route calling authorize('create', Profile::class) is always denied.
-     * Invariant: P1.
+     * Providers can create their initial profile via self-service onboarding.
+     * Constraint: only if they have provider role and no existing profile.
+     * Invariant: P1 (one profile per provider max).
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('provider') && $user->profile === null;
     }
 
     /**

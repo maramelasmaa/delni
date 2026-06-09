@@ -17,11 +17,13 @@ class SubscriptionResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static ?string $navigationLabel = 'الاشتراك';
+    protected static ?string $navigationLabel = 'اشتراكي';
 
     protected static ?string $modelLabel = 'اشتراك';
 
     protected static ?string $pluralModelLabel = 'الاشتراكات';
+
+    protected static ?int $navigationSort = 5;
 
     protected static bool $shouldRegisterNavigation = true;
 

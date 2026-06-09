@@ -15,6 +15,8 @@ class Dashboard extends Page
 
     protected static ?string $navigationLabel = 'لوحة التحكم';
 
+    protected static ?int $navigationSort = 1;
+
     protected static bool $shouldRegisterNavigation = true;
 
     protected string $view = 'filament.provider.pages.dashboard';
