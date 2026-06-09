@@ -22,7 +22,6 @@ class ProfileCompletenessService
             filled($profile->business_name) ||
             filled($profile->user?->name)
         )
-        && filled($profile->bio)
         && $profile->city_id !== null
         && $profile->category_id !== null
         && filled($profile->whatsapp)

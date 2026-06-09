@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Profile;
-use App\Models\ProfileStats;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
@@ -28,6 +27,26 @@ class ProviderCreationService
     public function __construct(
         private readonly ProfileStatsService $statsService,
     ) {}
+
+    /**
+     * Initialize ProfileStats for all existing profiles that lack them.
+     * This is a maintenance operation to fix missing stats records.
+     */
+    public function initializeMissingStats(): int
+    {
+        $profilesWithoutStats = Profile::whereDoesntHave('stats')->pluck('id');
+        $count = 0;
+
+        foreach ($profilesWithoutStats as $profileId) {
+            $profile = Profile::find($profileId);
+            if ($profile) {
+                $this->statsService->initializeForProfile($profile);
+                $count++;
+            }
+        }
+
+        return $count;
+    }
 
     /**
      * Create a complete provider profile for an authenticated user.

@@ -132,11 +132,11 @@ class ProfileVisibilityService
             $missing[] = 'business_name';
         }
 
-        if (! filled($profile->city_id)) {
+        if (! $profile->city_id) {
             $missing[] = 'city';
         }
 
-        if (! filled($profile->category_id)) {
+        if (! $profile->category_id) {
             $missing[] = 'category';
         }
 
