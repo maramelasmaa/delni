@@ -1,6 +1,6 @@
 @props([
     'providers',
-    'columns' => 3,
+    'columns' => 4,
     'title' => null,
     'subtitle' => null,
 ])
@@ -8,10 +8,10 @@
 @php
     $colClass = match($columns) {
         1 => 'col-12',
-        2 => 'col-xl-6 col-lg-6',
-        3 => 'col-xl-4 col-md-6',
-        4 => 'col-xl-3 col-lg-4 col-md-6',
-        default => 'col-xl-4 col-md-6',
+        2 => 'col-xl-6 col-lg-6 col-md-6',
+        3 => 'col-xl-4 col-lg-4 col-md-6',
+        4 => 'col-lg-3 col-md-6 col-sm-12',
+        default => 'col-lg-3 col-md-6 col-sm-12',
     };
 @endphp
 
@@ -66,6 +66,15 @@
                 position: relative;
             }
 
+            .provider-grid-section .row {
+                margin: 0 -0.5rem;
+            }
+
+            .provider-grid-section .row > [class*="col-"] {
+                padding: 0 0.5rem;
+                margin-bottom: 1.5rem;
+            }
+
             .provider-grid-count {
                 display: inline-flex;
                 align-items: center;
@@ -88,6 +97,26 @@
             @media (max-width: 768px) {
                 .provider-grid-count {
                     align-self: flex-start;
+                }
+
+                .provider-grid-section .row {
+                    margin: 0 -0.25rem;
+                }
+
+                .provider-grid-section .row > [class*="col-"] {
+                    padding: 0 0.25rem;
+                    margin-bottom: 1rem;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .provider-grid-section .row {
+                    margin: 0;
+                }
+
+                .provider-grid-section .row > [class*="col-"] {
+                    padding: 0;
+                    margin-bottom: 1rem;
                 }
             }
         </style>

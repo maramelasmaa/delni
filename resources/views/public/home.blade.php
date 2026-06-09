@@ -482,13 +482,19 @@
 
 </style>
 
+<!-- Category Navigation -->
+<x-category-nav :categories="$categories" />
+
+<!-- City Navigation -->
+<x-city-nav :cities="$cities" />
+
 <!-- Featured Providers -->
 @if($featuredProviders->count() > 0)
     <section class="home-section">
         <div class="container">
             <x-provider-grid
                 :providers="$featuredProviders"
-                :columns="3"
+                :columns="4"
                 title="{{ __('messages.public.featured_professionals') }}"
                 subtitle="{{ __('messages.public.top_professionals_in_your_area') }}"
             />
@@ -502,7 +508,7 @@
         <div class="container">
             <x-provider-grid
                 :providers="$topRatedProviders"
-                :columns="3"
+                :columns="4"
                 title="{{ __('messages.public.highest_rated') }}"
                 subtitle="{{ __('messages.public.trusted_professionals') }}"
             />
@@ -516,7 +522,7 @@
         <div class="container">
             <x-provider-grid
                 :providers="$latestProviders"
-                :columns="3"
+                :columns="4"
                 title="{{ __('messages.public.newest_professionals') }}"
                 subtitle="{{ __('messages.public.recently_joined') }}"
             />

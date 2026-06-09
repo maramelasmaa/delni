@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Filament\Provider\Pages;
 
 use App\Filament\Provider\Widgets\StatsOverviewWidget;
-use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Pages\Page;
 
-class Dashboard extends BaseDashboard
+class Dashboard extends Page
 {
+    protected static string $routePath = '/dashboard';
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
 
     protected static ?string $navigationLabel = 'لوحة التحكم';
 
     protected static bool $shouldRegisterNavigation = true;
+
+    protected string $view = 'filament.provider.pages.dashboard';
 
     public function getTitle(): string
     {
@@ -30,7 +34,7 @@ class Dashboard extends BaseDashboard
         return null;
     }
 
-    protected function getHeaderWidgets(): array
+    public function getWidgets(): array
     {
         return [
             StatsOverviewWidget::class,

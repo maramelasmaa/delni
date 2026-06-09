@@ -132,6 +132,10 @@
                 background: #fff;
                 box-shadow: 0 10px 28px rgba(11, 26, 52, 0.08);
                 transition: 0.22s ease;
+                max-width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
             }
 
             .provider-card:hover {
@@ -191,6 +195,8 @@
                 padding: 1.3rem;
                 display: flex;
                 flex-direction: column;
+                flex: 1;
+                justify-content: space-between;
             }
 
             .provider-card__title {

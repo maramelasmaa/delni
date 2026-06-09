@@ -88,6 +88,8 @@ return [
         'need_help_text' => 'تصفح متخصصونا واعثر على المطابقة المثالية لاحتياجاتك.',
         'newest' => 'الأحدث',
         'newest_professionals' => 'أحدث المحترفين',
+        'no_categories' => 'لا توجد فئات متاحة',
+        'no_cities' => 'لا توجد مدن متاحة',
         'no_providers_found' => 'لم يتم العثور على مزودين',
         'no_providers_in_category' => 'لا توجد مزودون في هذه الفئة',
         'no_providers_in_city' => 'لا توجد مزودون في هذه المدينة',

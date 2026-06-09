@@ -90,6 +90,8 @@ return [
         'need_help_text' => 'Browse our professionals and find the perfect match for your needs.',
         'newest' => 'Newest',
         'newest_professionals' => 'Newest Professionals',
+        'no_categories' => 'No Categories Available',
+        'no_cities' => 'No Cities Available',
         'no_providers_found' => 'No Providers Found',
         'no_providers_in_category' => 'No Providers in This Category',
         'no_providers_in_city' => 'No Providers in This City',
