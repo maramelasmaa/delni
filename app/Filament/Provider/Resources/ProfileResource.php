@@ -2,14 +2,12 @@
 
 namespace App\Filament\Provider\Resources;
 
+use App\Models\City;
 use App\Models\Profile;
 use App\Models\ProviderType;
 use App\Models\Subcategory;
-use App\Rules\SafeExternalUrl;
-use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms;
-use Filament\Forms\Components\Repeater;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -98,7 +96,7 @@ class ProfileResource extends Resource
                         ->searchable(),
                     Forms\Components\Select::make('city_id')
                         ->label('المدينة')
-                        ->relationship('city', 'name', fn (Builder $query) => $query->where('is_active', true))
+                        ->options(fn () => City::where('is_active', true)->pluck('name_ar', 'id'))
                         ->searchable()
                         ->required(),
                 ])
@@ -123,19 +121,16 @@ class ProfileResource extends Resource
                 ])
                 ->columns(2),
 
-            Section::make('وسائل التواصل')
-                ->description('طرق التواصل معك')
+            Section::make('وسائل التواصل والمواقع')
+                ->description('روابط مواقعك والمنصات الإجتماعية')
                 ->schema([
                     Forms\Components\TextInput::make('phone')
                         ->label('الهاتف')
                         ->tel()
-                        ->required()
-                        ->regex('/^[\d\s\-\+\(\)]+$/')
                         ->maxLength(20),
                     Forms\Components\TextInput::make('whatsapp')
                         ->label('واتساب')
-                        ->required()
-                        ->regex('/^[\d\s\-\+\(\)]+$/')
+                        ->tel()
                         ->maxLength(20),
                     Forms\Components\TextInput::make('website')
                         ->label('الموقع الإلكتروني')
@@ -151,6 +146,10 @@ class ProfileResource extends Resource
                         ->maxLength(255),
                     Forms\Components\TextInput::make('linkedin')
                         ->label('لينكد إن')
+                        ->url()
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('github')
+                        ->label('GitHub')
                         ->url()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('map_url')
@@ -180,67 +179,6 @@ class ProfileResource extends Resource
                 ])
                 ->columns(2),
 
-            Section::make('الروابط')
-                ->description('روابطك على وسائل التواصل والمواقع الإلكترونية')
-                ->schema([
-                    Repeater::make('links')
-                        ->relationship()
-                        ->label('الروابط')
-                        ->schema([
-                            Forms\Components\TextInput::make('label')
-                                ->label('الاسم')
-                                ->required()
-                                ->maxLength(255)
-                                ->regex('/^[^\<\>\"]+$/')
-                                ->validationMessages([
-                                    'regex' => 'لا يمكن استخدام أحرف HTML في الاسم.',
-                                ]),
-                            Forms\Components\TextInput::make('url')
-                                ->label('الرابط')
-                                ->required()
-                                ->url()
-                                ->rules([new SafeExternalUrl])
-                                ->maxLength(500),
-                            Forms\Components\Select::make('type')
-                                ->label('النوع')
-                                ->options([
-                                    'website' => 'موقع إلكتروني',
-                                    'portfolio' => 'معرض أعمال',
-                                    'social' => 'وسائل اجتماعية',
-                                    'contact' => 'تواصل',
-                                    'other' => 'آخر',
-                                ])
-                                ->default('other'),
-                            Forms\Components\Toggle::make('is_active')
-                                ->label('نشط')
-                                ->default(true)
-                                ->inline(false),
-                        ])
-                        ->columns(2)
-                        ->addActionLabel('إضافة رابط')
-                        ->deleteAction(
-                            fn (Action $action) => $action->label('حذف'),
-                        ),
-                ])
-                ->columnSpanFull(),
-
-            Section::make('معلومات للقراءة فقط')
-                ->description('حالة ملفك الشخصي')
-                ->schema([
-                    Forms\Components\Placeholder::make('is_complete')
-                        ->label('اكتمال الملف الشخصي')
-                        ->content(fn ($record) => $record?->is_complete ? 'مكتمل ✓' : 'غير مكتمل'),
-                    Forms\Components\Placeholder::make('calculateCompletionPercentage')
-                        ->label('نسبة الإكمال')
-                        ->content(fn ($record) => ($record?->calculateCompletionPercentage() ?? 0).'%'),
-                    Forms\Components\Placeholder::make('stats.rating_avg')
-                        ->label('التقييم')
-                        ->content(fn ($record) => $record?->stats?->rating_avg ?? '0.0'),
-                    Forms\Components\Placeholder::make('stats.reviews_count')
-                        ->label('عدد التقييمات')
-                        ->content(fn ($record) => $record?->stats?->reviews_count ?? '0'),
-                ])
-                ->columns(2),
         ]);
     }
 
