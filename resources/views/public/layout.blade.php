@@ -315,6 +315,9 @@
         </div>
     </footer>
 
+    {{-- Chatbot Widget --}}
+    @include('components.chatbot-widget')
+
     @stack('scripts')
 </body>
 </html>
