@@ -60,7 +60,7 @@ class ChatResponseFormatterService
                 'reviews_count' => $dto->reviewsCount,
                 'logo_url' => $dto->logoUrl,
                 'badges' => $this->buildBadges($dto),
-                'url' => route('public.provider.profile', $dto->slug),
+                'url' => route('public.provider', $dto->slug),
             ])
             ->toArray();
     }
