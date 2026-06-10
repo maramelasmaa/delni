@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,61 +14,134 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #F1620F;
+            --navy: #0B1A34;
+            --bg: #FCFBFB;
+            --surface: #FFFFFF;
+            --border: #E7E7E7;
+            --muted: #5D5959;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #0B1A34 0%, #112240 100%);
-            color: #fff;
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--navy);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 1rem;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
         }
 
         .error-container {
-            background: rgba(17, 34, 64, 0.8);
-            border: 1px solid rgba(241, 98, 15, 0.3);
-            border-radius: 8px;
-            padding: 40px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
             max-width: 500px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(11, 26, 52, 0.03);
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .error-code {
-            font-size: 48px;
-            font-weight: bold;
-            color: #F1620F;
-            margin-bottom: 16px;
+            font-size: clamp(2.5rem, 10vw, 3.5rem);
+            font-weight: 900;
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.03em;
         }
 
         .error-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 12px;
+            font-size: clamp(1.5rem, 3vw, 1.8rem);
+            font-weight: 900;
+            color: var(--navy);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
         }
 
         .error-message {
-            color: #ccc;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 30px;
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
         }
 
         .back-button {
             display: inline-block;
-            background: #F1620F;
+            background: var(--primary);
             color: white;
-            padding: 10px 24px;
-            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: background 0.2s;
+            font-size: 0.95rem;
+            font-weight: 700;
+            transition: background 0.2s ease;
+            border: none;
+            cursor: pointer;
         }
 
         .back-button:hover {
             background: #D9550C;
+        }
+
+        .debug-info {
+            text-align: left;
+            background: #FCFBFB;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--muted);
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+
+        .debug-info strong {
+            color: var(--navy);
+            font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+            .error-container {
+                padding: 1.25rem;
+            }
+
+            .error-code {
+                font-size: 2.2rem;
+                margin-bottom: 0.4rem;
+            }
+
+            .error-title {
+                font-size: 1.4rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .error-message {
+                font-size: 0.9rem;
+                margin-bottom: 1.25rem;
+            }
+
+            .back-button {
+                padding: 0.65rem 1.25rem;
+                font-size: 0.9rem;
+            }
+
+            .debug-info {
+                padding: 0.75rem;
+                margin-top: 1.25rem;
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -78,7 +154,7 @@
             Please try again or contact support if the problem persists.
         </div>
         @if(config('app.debug') && isset($exception))
-            <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 4px; margin-top: 30px; font-family: monospace; font-size: 12px;">
+            <div class="debug-info">
                 <strong>{{ get_class($exception) }}:</strong> {{ $exception->getMessage() }}
                 @if($exception->getFile())
                     <br><br><strong>File:</strong> {{ $exception->getFile() }}:{{ $exception->getLine() }}

@@ -175,12 +175,20 @@ class ProviderResource extends Resource
 
     public static function fillProviderFormData(array $data, ?User $record): array
     {
+        // Ensure relations are loaded to avoid N+1 queries
+        $record?->loadMissing(['profile.stats', 'profile.subcategories', 'subscriptions']);
+
         $profile = $record?->profile;
         $stats = $profile?->stats;
-        $subscription = $record?->subscriptions()
-            ->latest('starts_at')
-            ->latest('id')
+
+        // Use pre-loaded subscriptions collection instead of query
+        $subscription = $record?->subscriptions
+            ->sortByDesc('starts_at')
+            ->sortByDesc('id')
             ->first();
+
+        // Get subcategory from pre-loaded collection instead of query
+        $subcategoryId = $profile?->subcategories?->first()?->id;
 
         $data['profile'] = [
             'business_name' => $profile?->business_name,
@@ -189,7 +197,7 @@ class ProviderResource extends Resource
             'bio' => $profile?->bio,
             'city_id' => $profile?->city_id,
             'category_id' => $profile?->category_id,
-            'subcategory_id' => $profile?->subcategories()->value('subcategories.id'),
+            'subcategory_id' => $subcategoryId,
             'service_area_note' => $profile?->service_area_note,
             'map_url' => $profile?->map_url,
             'whatsapp' => $profile?->whatsapp,

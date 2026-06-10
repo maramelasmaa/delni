@@ -8,6 +8,7 @@ use App\Models\Profile;
 use App\Models\ProfileStats;
 use App\Models\Review;
 use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -60,9 +61,9 @@ class MarketplacePlacementSeeder extends Seeder
             'tech' => Category::where('name', 'Tech & Software')->value('id'),
         ];
 
-        // Get subscription plan IDs
-        $monthlyPlan = Subscription::where('plan_id', 1)->value('plan_id') ?? 1;
-        $yearlyPlan = Subscription::where('plan_id', 2)->value('plan_id') ?? 2;
+        // Get subscription plan IDs (from subscription_plans table)
+        $monthlyPlan = SubscriptionPlan::first()?->id ?? 1;
+        $yearlyPlan = SubscriptionPlan::skip(1)->first()?->id ?? $monthlyPlan;
 
         // Create reviewer users
         $reviewers = $this->createReviewers();
@@ -105,12 +106,12 @@ class MarketplacePlacementSeeder extends Seeder
         foreach ($reviewerData as $data) {
             $user = User::firstOrCreate(['email' => $data['email']], [
                 'name' => $data['name'],
-                'phone' => '+218' . str_pad(rand(900000, 999999), 9, '0', STR_PAD_LEFT),
+                'phone' => '+218'.str_pad(rand(900000, 999999), 9, '0', STR_PAD_LEFT),
                 'password' => Hash::make('Demo@1234'),
                 'is_active' => true,
                 'is_suspended' => false,
             ]);
-            if (!$user->hasRole('user')) {
+            if (! $user->hasRole('user')) {
                 $user->assignRole('user');
             }
             $reviewers[] = $user;
@@ -353,20 +354,20 @@ class MarketplacePlacementSeeder extends Seeder
         // Create provider user
         $provider = User::firstOrCreate(['email' => $data['user']['email']], [
             'name' => $data['user']['name'],
-            'phone' => '+218' . str_pad(rand(900000, 999999), 9, '0', STR_PAD_LEFT),
+            'phone' => '+218'.str_pad(rand(900000, 999999), 9, '0', STR_PAD_LEFT),
             'password' => Hash::make('Demo@1234'),
             'is_active' => true,
             'is_suspended' => $data['suspended'] ?? false,
         ]);
-        if (!$provider->hasRole('provider')) {
+        if (! $provider->hasRole('provider')) {
             $provider->assignRole('provider');
         }
 
         // Create profile
-        $slug = Str::slug($data['profile']['business_name']) . '-' . $provider->id;
+        $slug = Str::slug($data['profile']['business_name']).'-'.$provider->id;
         $profile = Profile::firstOrCreate(['user_id' => $provider->id], [
             'business_name' => $data['profile']['business_name'],
-            'bio' => 'مزود خدمات احترافي متخصص في ' . $data['profile']['business_name'] . '. نقدم أفضل الخدمات بجودة عالية وأسعار منافسة.',
+            'bio' => 'مزود خدمات احترافي متخصص في '.$data['profile']['business_name'].'. نقدم أفضل الخدمات بجودة عالية وأسعار منافسة.',
             'slug' => $slug,
             'city_id' => $data['profile']['city'],
             'category_id' => $data['profile']['category'],
@@ -377,8 +378,11 @@ class MarketplacePlacementSeeder extends Seeder
             'type' => 'business',
         ]);
 
-        // Sync subcategories (just the first relevant subcategory)
-        $profile->subcategories()->sync([1, 2, 3]);
+        // Sync subcategories (use actual category subcategories if they exist)
+        $subcategories = $profile->category?->subcategories()->pluck('id')->take(3)->toArray() ?? [];
+        if (! empty($subcategories)) {
+            $profile->subcategories()->sync($subcategories);
+        }
 
         // Create/update profile stats with placement
         $isTopRated = $data['rating'] >= 4.5 && $data['reviews'] >= 5;
@@ -418,13 +422,13 @@ class MarketplacePlacementSeeder extends Seeder
             [
                 'starts_at' => $startDate->toDateString(),
                 'ends_at' => $endDate->toDateString(),
-                'is_active' => !($data['expired_subscription'] ?? false),
+                'is_active' => ! ($data['expired_subscription'] ?? false),
                 'approved_at' => now(),
                 'approved_by' => $adminId,
                 'processed_at' => now(),
                 'processed_by' => $adminId,
                 'payment_method' => 'bank_transfer',
-                'payment_reference' => 'REF-' . strtoupper(Str::random(8)),
+                'payment_reference' => 'REF-'.strtoupper(Str::random(8)),
                 'payment_date' => now()->toDateString(),
             ]
         );

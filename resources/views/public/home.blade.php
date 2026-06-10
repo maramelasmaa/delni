@@ -3,542 +3,885 @@
 @section('title', __('messages.public.home') . ' - ' . config('app.name'))
 
 @section('content')
-
 @php
     $categories = $categories ?? collect();
     $cities = $cities ?? collect();
 
-    $professionalsCount = $categories->sum(
-        fn ($category) => (int) ($category->discoverable_profiles_count ?? 0)
-    );
+    $featuredProviders = $featuredProviders ?? collect();
+
+    $providersCount = $categories->sum(fn ($category) => (int) ($category->discoverable_profiles_count ?? 0));
+    $categoriesCount = $categories->count();
+    $citiesCount = $cities->count();
 @endphp
 
-<section class="home-hero">
-
-    <div class="hero-gradient hero-gradient-1"></div>
-    <div class="hero-gradient hero-gradient-2"></div>
-    <div class="hero-grid"></div>
-
+{{-- Main Landing Hero Section --}}
+<section class="home-hero-viewport">
     <div class="container">
-        <div class="hero-inner">
-            <h1 class="hero-title">
-                {{ __('messages.public.find_trusted_professionals') }}
-
-                <span>
-                    {{ __('messages.public.in_libya') }}
-                </span>
+        <div class="hero-content-wrapper">
+            <h1 class="hero-main-title">
+                دور على الخدمة<br>
+                اللي تحتاجها <span class="highlight">بسهولة</span>
             </h1>
 
-            <p class="hero-text">
-                {{ __('messages.public.browse_local_professionals') }}
-            </p>
+            {{-- Floating Combined Search Engine Form --}}
+            <form action="{{ route('public.search') }}" method="GET" class="hero-search-card" id="searchForm">
 
-            <form
-                action="{{ route('public.search') }}"
-                method="GET"
-                class="premium-search"
-            >
-
-                <div class="premium-field premium-keyword">
-
-                    <svg
-                        class="field-svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-
+                {{-- Global Search Bar Input Field --}}
+                <div class="hero-input-field field-keyword">
+                    <x-render-icon icon="heroicon-o-magnifying-glass" class="field-icon" />
                     <input
                         type="text"
                         name="keyword"
-                        placeholder="{{ __('messages.public.search_placeholder') }}"
-                        value="{{ request('keyword') }}"
+                        placeholder="ابحث عن خدمة، مقدم خدمة أو كلمة مفتاحية..."
                         maxlength="100"
                         autocomplete="off"
                     >
                 </div>
 
-                <div class="premium-field">
+                {{-- Desktop Filters Block Layout Nodes --}}
+                <div class="desktop-filters-group">
+                    <div class="hero-input-field">
+                        <x-render-icon icon="heroicon-o-briefcase" class="field-icon" />
+                        <select name="category_id" id="desktopCategory">
+                            <option value="">كل الفئات</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}">
+                                    {{ $category->localized_name ?? $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    <svg
-                        class="field-svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-
-                    <select name="city_id">
-
-                        <option value="">
-                            {{ __('messages.public.all_cities') }}
-                        </option>
-
-                        @foreach($cities->take(15) as $city)
-                            <option value="{{ $city->id }}">
-                                {{ $city->localized_name ?? $city->name }}
-                            </option>
-                        @endforeach
-
-                    </select>
+                    <div class="hero-input-field">
+                        <x-render-icon icon="heroicon-o-map-pin" class="field-icon" />
+                        <select name="city_id" id="desktopCity">
+                            <option value="">كل المدن</option>
+                            @foreach($cities as $city)
+                                <option value="{{ $city->id }}">
+                                    {{ $city->localized_name ?? $city->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
-                <div class="premium-field">
-
-                    <svg
-                        class="field-svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path d="M12 2v20"></path>
-                        <path d="M2 12h20"></path>
-                    </svg>
-
-                    <select name="category_id">
-
-                        <option value="">
-                            {{ __('messages.public.all_categories') }}
-                        </option>
-
-                        @foreach($categories->take(15) as $category)
-                            <option value="{{ $category->id }}">
-                                {{ $category->localized_name ?? $category->name }}
-                            </option>
-                        @endforeach
-
-                    </select>
-                </div>
-
-                <button
-                    type="submit"
-                    class="premium-search-btn"
-                >
-                    {{ __('messages.public.search') }}
+                {{-- Mobile Drawer Trigger Action Button Control --}}
+                <button type="button" class="mobile-filter-pill-trigger" id="openMobileFilters">
+                    <x-render-icon icon="heroicon-o-funnel" class="mobile-pill-icon" />
+                    <span id="filterPillText">تحديد الفئة والمدينة</span>
                 </button>
 
+                {{-- Core Action Search Submit Button --}}
+                <button type="submit" class="btn-hero-submit">
+                    <x-render-icon icon="heroicon-o-magnifying-glass" />
+                    <span>بحث</span>
+                </button>
+
+                {{-- PWA Mobile Sliding Bottom Sheet Filter Drawer Module --}}
+                <div class="mobile-filter-drawer-overlay" id="drawerOverlay">
+                    <div class="mobile-filter-drawer-card">
+                        <div class="drawer-drag-handle"></div>
+                        <div class="drawer-header">
+                            <h3 class="drawer-title">تخصيص البحث</h3>
+                            <button type="button" class="drawer-close-btn" id="closeMobileFilters">✕</button>
+                        </div>
+
+                        <div class="drawer-body-inputs">
+                            <div class="drawer-input-group">
+                                <label class="drawer-field-label">مجال الخدمة المطلوب</label>
+                                <div class="drawer-select-wrapper">
+                                    <x-render-icon icon="heroicon-o-briefcase" class="drawer-select-icon" />
+                                    <select id="mobileCategory" class="drawer-custom-select">
+                                        <option value="">كل الفئات والمجالات</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}">
+                                                {{ $category->localized_name ?? $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="drawer-input-group">
+                                <label class="drawer-field-label">المدينة / المنطقة</label>
+                                <div class="drawer-select-wrapper">
+                                    <x-render-icon icon="heroicon-o-map-pin" class="drawer-select-icon" />
+                                    <select id="mobileCity" class="drawer-custom-select">
+                                        <option value="">كل المدن والمناطق</option>
+                                        @foreach($cities as $city)
+                                            <option value="{{ $city->id }}">
+                                                {{ $city->localized_name ?? $city->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="drawer-footer-actions">
+                            <button type="button" class="btn-drawer-apply-trigger" id="applyMobileFilters">
+                                تأكيد الاختيارات
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </form>
 
-            <div class="hero-stats">
-
-                <div class="hero-stat">
-                    <strong>{{ $professionalsCount }}+</strong>
-                    <span>{{ __('messages.public.professionals') }}</span>
+            {{-- Modern Platform Live Metric Statistics Counter Nodes --}}
+            <div class="hero-stats-row">
+                <div class="stat-metric-card">
+                    <div class="stat-icon-box">
+                        <x-render-icon icon="heroicon-o-briefcase" />
+                    </div>
+                    <div class="stat-info-text">
+                        <strong class="stat-number">{{ number_format($categoriesCount) }}+</strong>
+                        <span class="stat-label">فئة متنوعة</span>
+                    </div>
                 </div>
 
-                <div class="hero-stat">
-                    <strong>{{ $cities->count() }}+</strong>
-                    <span>{{ __('messages.public.cities') }}</span>
+                <div class="stat-metric-card">
+                    <div class="stat-icon-box">
+                        <x-render-icon icon="heroicon-o-map-pin" />
+                    </div>
+                    <div class="stat-info-text">
+                        <strong class="stat-number">{{ number_format($citiesCount) }}</strong>
+                        <span class="stat-label">مدينة في ليبيا</span>
+                    </div>
                 </div>
 
-                <div class="hero-stat">
-                    <strong>{{ $categories->count() }}+</strong>
-                    <span>{{ __('messages.public.categories') }}</span>
+                <div class="stat-metric-card">
+                    <div class="stat-icon-box">
+                        <x-render-icon icon="heroicon-o-users" />
+                    </div>
+                    <div class="stat-info-text">
+                        <strong class="stat-number">{{ number_format($providersCount) }}+</strong>
+                        <span class="stat-label">مقدم خدمة موثوق</span>
+                    </div>
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
 </section>
 
-<style>
-/* ===== PREMIUM HERO SECTION ===== */
+{{-- Ultra-Compact Horizontal Categories Carousel Selector Section --}}
+@if($categories->count() > 0)
+    <section class="categories-explorer-section">
+        <div class="container">
+            <div class="section-header-inline">
+                <div class="header-text-side">
+                    <span class="section-tagline">تصفح حسب الفئة</span>
+                    <h2 class="section-main-title">الخدمات المتاحة على المنصة</h2>
+                </div>
+                <a href="{{ route('public.categories') }}" class="btn-link-all">
+                    <span>عرض الكل</span>
+                    <x-render-icon icon="heroicon-o-arrow-left" class="icon-flip-rtl" />
+                </a>
+            </div>
 
-.home-hero {
-    position: relative;
-    overflow: hidden;
-    min-height: 92vh;
-    display: flex;
-    align-items: center;
-    background-image: url('/images/herobackground.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    padding: 4rem 0;
-}
+            <div class="modern-categories-slider">
+                @foreach($categories->take(8) as $category)
+                    <a href="{{ route('public.category', $category->slug) }}" class="category-interactive-card">
+                        <div class="category-icon-wrapper">
+                            <x-render-icon :icon="$category->icon ?: 'heroicon-o-briefcase'" />
+                        </div>
+                        <div class="category-meta-text">
+                            <strong class="category-card-name">{{ $category->localized_name ?? $category->name }}</strong>
+                            <span class="category-card-count">
+                                {{ $category->discoverable_profiles_count ?? 0 }} مزود
+                            </span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+@endif
 
-.home-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        linear-gradient(135deg, rgba(7,20,43,0.6) 0%, rgba(13,34,72,0.5) 50%, rgba(5,11,24,0.6) 100%);
-    z-index: 1;
-    pointer-events: none;
-}
-
-.hero-gradient {
-    position: absolute;
-    border-radius: 999px;
-    filter: blur(120px);
-    opacity: 0.06;
-    z-index: 2;
-}
-
-.hero-gradient-1 {
-    width: 500px;
-    height: 500px;
-    background: #ff8533;
-    top: -200px;
-    right: -100px;
-}
-
-.hero-gradient-2 {
-    width: 450px;
-    height: 450px;
-    background: #2f5abb;
-    bottom: -200px;
-    left: -150px;
-}
-
-.hero-grid {
-    position: absolute;
-    inset: 0;
-    opacity: 0.03;
-    z-index: 3;
-    background-image:
-        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 80px 80px;
-}
-
-.hero-inner {
-    position: relative;
-    z-index: 10;
-    max-width: 1320px;
-    margin: 0 auto;
-    text-align: center;
-    padding: 6rem 2rem 4rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* === TYPOGRAPHY === */
-.hero-title {
-    margin: 0 auto;
-    max-width: 90%;
-    color: #ffffff;
-    font-size: clamp(2.8rem, 6vw, 5rem);
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-    text-align: center;
-    display: block;
-    word-break: break-word;
-}
-
-.hero-title span {
-    display: block;
-    color: #ff7a1a;
-    font-size: 0.58em;
-    margin-top: 0.6rem;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-}
-
-.hero-text {
-    margin: 1.2rem auto 2.5rem;
-    max-width: 720px;
-    color: rgba(255,255,255,0.75);
-    font-size: clamp(1rem, 2.2vw, 1.3rem);
-    font-weight: 500;
-    line-height: 1.8;
-    letter-spacing: -0.01em;
-    text-align: center;
-}
-
-/* === SEARCH BAR (HERO CENTERPIECE) === */
-.premium-search {
-    display: grid;
-    grid-template-columns: 1.5fr 0.95fr 0.95fr 0.85fr;
-    gap: 0.75rem;
-    max-width: 1050px;
-    margin: 0 auto;
-    padding: 0.9rem;
-    border-radius: 24px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.18);
-    backdrop-filter: blur(24px);
-    box-shadow:
-        0 32px 96px rgba(0,0,0,0.35),
-        inset 0 1px 2px rgba(255,255,255,0.08);
-    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.premium-search:focus-within {
-    background: rgba(255,255,255,0.15);
-    border-color: rgba(255,255,255,0.25);
-    box-shadow:
-        0 40px 120px rgba(0,0,0,0.4),
-        inset 0 1px 2px rgba(255,255,255,0.12);
-}
-
-.premium-field {
-    height: 72px;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0 1.2rem;
-    border-radius: 18px;
-    background: #ffffff;
-    transition: 0.2s ease;
-}
-
-.premium-field:focus-within {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 28px rgba(241,98,15,0.18);
-}
-
-.field-svg {
-    width: 22px;
-    height: 22px;
-    color: #ff7a1a;
-    flex-shrink: 0;
-    transition: 0.2s ease;
-}
-
-.premium-field:focus-within .field-svg {
-    color: #ff7a1a;
-}
-
-.premium-field input,
-.premium-field select {
-    width: 100%;
-    border: 0;
-    outline: none;
-    background: transparent;
-    color: #0f172a;
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 700;
-}
-
-.premium-field input::placeholder {
-    color: #cbd5e1;
-    font-weight: 500;
-}
-
-.premium-field select {
-    appearance: none;
-    cursor: pointer;
-}
-
-.premium-search-btn {
-    height: 72px;
-    padding: 0 2.4rem;
-    border: 0;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #ff8533 0%, #ff6b1a 100%);
-    color: #ffffff;
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 900;
-    cursor: pointer;
-    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 20px 48px rgba(255,107,26,0.32);
-}
-
-.premium-search-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 28px 64px rgba(255,107,26,0.42);
-}
-
-.premium-search-btn:active {
-    transform: translateY(-1px);
-}
-
-/* === STATS SECTION === */
-.hero-stats {
-    display: flex;
-    justify-content: center;
-    gap: 4rem;
-    margin-top: 3rem;
-    padding-top: 3rem;
-    border-top: 1px solid rgba(255,255,255,0.12);
-}
-
-.hero-stat {
-    min-width: 160px;
-}
-
-.hero-stat strong {
-    display: block;
-    color: #ff8533;
-    font-size: 2.8rem;
-    font-weight: 900;
-    line-height: 1;
-    margin-bottom: 0.4rem;
-    letter-spacing: -0.02em;
-}
-
-.hero-stat span {
-    color: rgba(255,255,255,0.64);
-    font-weight: 600;
-    font-size: 0.95rem;
-    letter-spacing: 0.01em;
-}
-
-/* === RESPONSIVE === */
-@media (max-width: 1024px) {
-    .premium-search {
-        grid-template-columns: 1.2fr 0.9fr 0.9fr 0.8fr;
-        max-width: 90%;
-        gap: 0.6rem;
-        padding: 0.75rem;
-    }
-
-    .hero-inner {
-        padding: 5rem 1.5rem 3rem;
-    }
-
-    .hero-stats {
-        gap: 2.5rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .premium-search {
-        grid-template-columns: 1fr 0.9fr;
-        gap: 0.5rem;
-    }
-
-    .premium-search-btn {
-        grid-column: 1 / -1;
-    }
-
-    .hero-stats {
-        gap: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .hero-text {
-        margin: 1rem auto 2rem;
-    }
-}
-
-@media (max-width: 640px) {
-    .home-hero {
-        min-height: auto;
-        padding: 3rem 0;
-    }
-
-    .hero-inner {
-        padding: 4rem 1rem 2.5rem;
-    }
-
-    .hero-title {
-        font-size: 2.2rem;
-        line-height: 1;
-    }
-
-    .hero-title span {
-        font-size: 1.3rem;
-        margin-top: 0.4rem;
-    }
-
-    .hero-text {
-        font-size: 1rem;
-        margin: 0.8rem auto 1.5rem;
-    }
-
-    .premium-search {
-        grid-template-columns: 1fr;
-        gap: 0.4rem;
-        padding: 0.6rem;
-        max-width: 100%;
-    }
-
-    .premium-field,
-    .premium-search-btn {
-        height: 64px;
-    }
-
-    .premium-field {
-        padding: 0 1rem;
-    }
-
-    .hero-stats {
-        gap: 1.5rem;
-        margin-top: 2rem;
-        padding-top: 2rem;
-    }
-
-    .hero-stat strong {
-        font-size: 2rem;
-    }
-}
-
-</style>
-
-<!-- Category Navigation -->
-<x-category-nav :categories="$categories" />
-
-<!-- City Navigation -->
-<x-city-nav :cities="$cities" />
-
-<!-- Featured Providers -->
+{{-- Featured Providers Custom Layout Slot Node --}}
 @if($featuredProviders->count() > 0)
-    <section class="home-section">
+    <section class="featured-providers-section text-center">
         <div class="container">
             <x-provider-grid
                 :providers="$featuredProviders"
-                :columns="4"
-                title="{{ __('messages.public.featured_professionals') }}"
-                subtitle="{{ __('messages.public.top_professionals_in_your_area') }}"
+                :columns="3"
+                title="الخدمات الموثوقة"
+                subtitle="مقدمو خدمات برتبة عالية وتقييمات إيجابية من العملاء."
+                compact="true"
             />
         </div>
     </section>
 @endif
 
-<!-- Top Rated Providers -->
-@if($topRatedProviders->count() > 0)
-    <section class="home-section">
-        <div class="container">
-            <x-provider-grid
-                :providers="$topRatedProviders"
-                :columns="4"
-                title="{{ __('messages.public.highest_rated') }}"
-                subtitle="{{ __('messages.public.trusted_professionals') }}"
-            />
+{{-- Provider CTA Section --}}
+<section class="provider-cta-section">
+    <div class="container">
+        <div class="provider-cta-card">
+            <h2 class="cta-title">{{ __('messages.public.are_you_professional') }}</h2>
+            <p class="cta-description">{{ __('messages.public.join_marketplace_description') }}</p>
+            <a href="{{ route('contact') }}" class="cta-button">{{ __('messages.public.contact_us') }}</a>
         </div>
-    </section>
-@endif
-
-<!-- Latest Providers -->
-@if($latestProviders->count() > 0)
-    <section class="home-section">
-        <div class="container">
-            <x-provider-grid
-                :providers="$latestProviders"
-                :columns="4"
-                title="{{ __('messages.public.newest_professionals') }}"
-                subtitle="{{ __('messages.public.recently_joined') }}"
-            />
-        </div>
-    </section>
-@endif
+    </div>
+</section>
 
 <style>
-    .home-section {
-        padding: 3rem 0;
-        border-bottom: 1px solid #f0f0f0;
+    /* Premium Application Variables Setup */
+    :root {
+        --brand-primary: #F1620F;
+        --brand-primary-hover: #D7530A;
+        --brand-dark: #0B1A34;
+        --brand-dark-gradient: #14284D;
+        --bg-surface: #FFFFFF;
+        --bg-subtle: #F8FAFC;
+        --text-primary: #0B1A34;
+        --text-secondary: #475569;
+        --text-light-muted: #94A3B8;
+        --border-color: #E2E8F0;
+        --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .home-section:last-of-type {
-        border-bottom: none;
+    /* Modern Minimalist Layout Settings */
+    .home-hero-viewport {
+        position: relative;
+        background: linear-gradient(135deg, rgba(11, 26, 52, 0.93), rgba(20, 40, 77, 0.97)),
+                    url('{{ asset('images/herobackground2.png') }}') center/cover no-repeat;
+        padding: 5rem 0 4rem;
+        color: #FFFFFF;
+        overflow: hidden;
+    }
+
+    .hero-content-wrapper {
+        max-width: 1040px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .hero-main-title {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        line-height: 1.3;
+        letter-spacing: -0.03em;
+        margin: 0 0 2.25rem;
+    }
+
+    .hero-main-title .highlight {
+        color: var(--brand-primary);
+        position: relative;
+    }
+
+    /* Redesign of Search Card Container */
+    .hero-search-card {
+        background: var(--bg-surface);
+        padding: 0.65rem;
+        border-radius: 20px;
+        box-shadow: 0 25px 60px -15px rgba(11, 26, 52, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: grid;
+        grid-template-columns: 1.5fr 2fr auto;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 3rem;
+    }
+
+    .desktop-filters-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    .hero-input-field {
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-color);
+        height: 54px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        padding: 0 1.15rem;
+        gap: 0.65rem;
+        transition: var(--transition-smooth);
+    }
+
+    .hero-input-field:focus-within {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 3px rgba(241, 98, 15, 0.12);
+        background: #FFFFFF;
+    }
+
+    .hero-input-field .field-icon {
+        width: 18px;
+        height: 18px;
+        color: #64748B;
+        flex-shrink: 0;
+    }
+
+    .hero-input-field input,
+    .hero-input-field select {
+        width: 100%;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: var(--brand-dark);
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .hero-input-field input::placeholder {
+        color: var(--text-light-muted);
+    }
+
+    /* Mobile Filter Touch-pill trigger UI */
+    .mobile-filter-pill-trigger {
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-color);
+        height: 44px;
+        padding: 0 1rem;
+        border-radius: 10px;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        text-align: right;
+    }
+
+    .mobile-pill-icon {
+        width: 15px;
+        height: 15px;
+        color: var(--brand-primary);
+    }
+
+    /* Redesigned Clean Action Submit Node Button */
+    .btn-hero-submit {
+        background: var(--brand-primary);
+        color: #FFFFFF;
+        border: none;
+        height: 54px;
+        padding: 0 2.25rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: var(--transition-smooth);
+        box-shadow: 0 8px 18px -4px rgba(241, 98, 15, 0.3);
+    }
+
+    .btn-hero-submit:hover {
+        background: var(--brand-primary-hover);
+        transform: translateY(-1px);
+    }
+
+    .btn-hero-submit svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Native App Flyout-Drawer System Framework (Mobile PWA) */
+    .mobile-filter-drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(11, 26, 52, 0.5);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .mobile-filter-drawer-overlay.drawer-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .mobile-filter-drawer-card {
+        background: var(--bg-surface);
+        width: 100%;
+        border-radius: 24px 24px 0 0;
+        padding: 1.25rem 1.5rem 2.5rem;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+        transform: translateY(100%);
+        transition: transform 0.28s cubic-bezier(0.32, 0.94, 0.6, 1);
+        box-sizing: border-box;
+    }
+
+    .mobile-filter-drawer-overlay.drawer-open .mobile-filter-drawer-card {
+        transform: translateY(0);
+    }
+
+    .drawer-drag-handle {
+        width: 40px;
+        height: 5px;
+        background-color: var(--border-color);
+        border-radius: 3px;
+        margin: 0 auto 1.25rem;
+    }
+
+    .drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+    }
+
+    .drawer-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--brand-dark);
+        margin: 0;
+    }
+
+    .drawer-close-btn {
+        background: var(--bg-subtle);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .drawer-body-inputs {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .drawer-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: right;
+    }
+
+    .drawer-field-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+    }
+
+    .drawer-select-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .drawer-select-icon {
+        position: absolute;
+        right: 1rem;
+        width: 18px;
+        height: 18px;
+        color: var(--text-light-muted);
+        pointer-events: none;
+    }
+
+    .drawer-custom-select {
+        width: 100%;
+        height: 50px;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0 2.75rem 0 1.25rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--brand-dark);
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .drawer-footer-actions {
+        width: 100%;
+    }
+
+    .btn-drawer-apply-trigger {
+        width: 100%;
+        background-color: var(--brand-dark);
+        color: #FFFFFF;
+        border: none;
+        height: 50px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    /* Professional Floating Metric Counter Layout Row */
+    .hero-stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+
+    .stat-metric-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: right;
+    }
+
+    .stat-icon-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: rgba(241, 98, 15, 0.12);
+        color: #FF9D66;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .stat-icon-box svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .stat-info-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-number {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #FFFFFF;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.65);
+        font-weight: 500;
+        margin-top: 0.15rem;
+    }
+
+    /* Ultra-Compact Categories Section Styling */
+    .categories-explorer-section {
+        padding: 2.5rem 0;
+        background-color: var(--bg-surface);
+    }
+
+    .section-header-inline {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-tagline {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--brand-primary);
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .section-main-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--brand-dark);
+        margin: 0;
+    }
+
+    .btn-link-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--brand-primary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 700;
+        transition: var(--transition-smooth);
+    }
+
+    .btn-link-all:hover {
+        color: var(--brand-primary-hover);
+    }
+
+    .btn-link-all svg {
+        width: 16px;
+        height: 16px;
+        transition: transform 0.25s ease;
+    }
+
+    .btn-link-all:hover .icon-flip-rtl {
+        transform: translateX(-4px);
+    }
+
+    /* Horizontal Carousel Grid Mechanics */
+    .modern-categories-slider {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 0.75rem;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modern-categories-slider::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-interactive-card {
+        flex: 0 0 auto;
+        width: 240px;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 0.85rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        text-decoration: none;
+        transition: var(--transition-smooth);
+    }
+
+    .category-interactive-card:hover {
+        background: #FFFFFF;
+        border-color: var(--brand-primary);
+        transform: translateY(-2px);
+    }
+
+    .category-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: rgba(241, 98, 15, 0.06);
+        color: var(--brand-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: var(--transition-smooth);
+    }
+
+    .category-interactive-card:hover .category-icon-wrapper {
+        background: var(--brand-primary);
+        color: #FFFFFF;
+    }
+
+    .category-icon-wrapper svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .category-meta-text {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .category-card-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--brand-dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .category-card-count {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: 0.1rem;
+    }
+
+    .featured-providers-section {
+        padding: 4rem 0;
+        background-color: var(--bg-subtle);
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Screen Breakpoint Adaptations Viewport Adjustments */
+    @media (max-width: 991px) {
+        .hero-search-card {
+            grid-template-columns: 1fr auto;
+        }
+        .desktop-filters-group {
+            display: none;
+        }
+        .mobile-filter-pill-trigger {
+            display: inline-flex;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .hero-stats-row {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .home-hero-viewport {
+            padding: 3.5rem 0 3rem;
+        }
+        .hero-search-card {
+            grid-template-columns: 1fr;
+            padding: 0.75rem;
+            border-radius: 18px;
+            gap: 0.65rem;
+        }
+        .btn-hero-submit {
+            width: 100%;
+            height: 48px;
+        }
+        .hero-input-field {
+            height: 48px;
+        }
+        .category-interactive-card {
+            width: 210px;
+        }
+    }
+
+    /* Provider CTA Section */
+    .provider-cta-section {
+        padding: 3rem 0;
+        background: linear-gradient(135deg, rgba(241, 98, 15, 0.08), rgba(241, 98, 15, 0.04));
+    }
+
+    .provider-cta-card {
+        background: var(--bg-surface);
+        border: 2px solid var(--brand-primary);
+        border-radius: 20px;
+        padding: clamp(2rem, 5vw, 3rem);
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(241, 98, 15, 0.1);
+    }
+
+    .cta-title {
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
+        font-weight: 900;
+        color: var(--brand-dark);
+        margin-bottom: 1rem;
+        letter-spacing: -0.03em;
+    }
+
+    .cta-description {
+        font-size: clamp(0.9rem, 2vw, 1.05rem);
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        line-height: 1.7;
+        max-width: 500px;
+        margin-inline: auto;
+    }
+
+    .cta-button {
+        display: inline-block;
+        background: var(--brand-primary);
+        color: white;
+        padding: 0.85rem 2rem;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 700;
+        transition: var(--transition-smooth);
+        border: 2px solid var(--brand-primary);
+    }
+
+    .cta-button:hover {
+        background: transparent;
+        color: var(--brand-primary);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .provider-cta-section {
+            padding: 2rem 0;
+        }
+
+        .provider-cta-card {
+            padding: 1.5rem;
+        }
+
+        .cta-title {
+            margin-bottom: 0.75rem;
+        }
+
+        .cta-description {
+            margin-bottom: 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        .cta-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+        }
     }
 </style>
 
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const openBtn = document.getElementById('openMobileFilters');
+        const closeBtn = document.getElementById('closeMobileFilters');
+        const applyBtn = document.getElementById('applyMobileFilters');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        const mobileCategory = document.getElementById('mobileCategory');
+        const mobileCity = document.getElementById('mobileCity');
+        const desktopCategory = document.getElementById('desktopCategory');
+        const desktopCity = document.getElementById('desktopCity');
+        const filterPillText = document.getElementById('filterPillText');
+
+        if (!openBtn || !drawerOverlay) return;
+
+        // Open bottom drawer overlay card
+        openBtn.addEventListener('click', () => {
+            drawerOverlay.classList.add('drawer-open');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close drawer overlay card helper
+        const closeDrawer = () => {
+            drawerOverlay.classList.remove('drawer-open');
+            document.body.style.overflow = '';
+        };
+
+        closeBtn.addEventListener('click', closeDrawer);
+        drawerOverlay.addEventListener('click', (e) => {
+            if (e.target === drawerOverlay) closeDrawer();
+        });
+
+        // Map values chosen inside mobile view back to underlying inputs
+        applyBtn.addEventListener('click', () => {
+            desktopCategory.value = mobileCategory.value;
+            desktopCity.value = mobileCity.value;
+
+            // Change pill text label state color contextually
+            if (mobileCategory.value || mobileCity.value) {
+                filterPillText.textContent = "تمت تصفية الاختيارات ✓";
+                filterPillText.style.color = "var(--brand-primary)";
+            } else {
+                filterPillText.textContent = "تحديد الفئة والمدينة";
+                filterPillText.style.color = "";
+            }
+            closeDrawer();
+        });
+    });
+</script>
 @endsection

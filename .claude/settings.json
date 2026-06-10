@@ -29,7 +29,13 @@
       "Edit(/.claude/skills/laravel-debugging-assistant/**)",
       "Bash(Remove-Item \"c:\\\\laragon\\\\www\\\\delni\\\\resources\\\\views\\\\filament\\\\provider\\\\pages\\\\dashboard.blade.php\" -ErrorAction SilentlyContinue)",
       "Bash(Write-Output \"Custom view removed\")",
-      "Bash(vendor\\\\bin\\\\pint --dirty --format agent)"
+      "Bash(vendor\\\\bin\\\\pint --dirty --format agent)",
+      "PowerShell(vendor\\\\bin\\\\pint --dirty --format agent)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\laragon\\\\www\\\\delni\\\\resources\\\\views\" -Recurse | Where-Object { $_.Name -match \"nav|header|layout\" } | Select-Object FullName)",
+      "Bash(grep -n \"## public\\\\\\\\\\\\\\\\home.blade.php\" BLADES_EXPORT.md)",
+      "Bash(vendor/bin/pint --dirty --format agent resources/views/errors/ resources/lang/)",
+      "Bash(vendor/bin/pint --dirty --format agent app/Http/Controllers/Public/ routes/web.php)",
+      "Bash(grep -E \"\\\\.\\(php|blade|md\\)$\")"
     ],
     "additionalDirectories": [
       "c:\\laragon\\www\\delni\\storage"

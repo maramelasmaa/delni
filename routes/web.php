@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\OnboardingController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\FrontendController;
 use App\Http\Controllers\Public\ReviewController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,8 @@ Route::get('/provider', function () {
 Route::get('/favicon.ico', fn () => response()->file(public_path('images/logo.jpg'), ['Content-Type' => 'image/jpeg']));
 
 Route::get('/search', [FrontendController::class, 'search'])->name('public.search');
+Route::get('/top-rated', [FrontendController::class, 'topRated'])->name('public.top-rated');
+Route::get('/categories', [FrontendController::class, 'categories'])->name('public.categories');
 Route::get('/category/{category:slug}', [FrontendController::class, 'category'])->name('public.category');
 Route::get('/subcategory/{subcategory:slug}', [FrontendController::class, 'subcategory'])->name('public.subcategory');
 Route::get('/city/{city:slug}', [FrontendController::class, 'city'])->name('public.city');
@@ -53,6 +56,9 @@ Route::get('/locale/{locale}', [FrontendController::class, 'switchLocale'])->nam
 Route::view('/privacy', 'public.legal.privacy')->name('privacy');
 Route::view('/terms', 'public.legal.terms')->name('terms');
 Route::view('/disclaimer', 'public.legal.disclaimer')->name('disclaimer');
+
+// Contact page
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

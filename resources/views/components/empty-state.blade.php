@@ -6,23 +6,23 @@
     'actionUrl' => null,
 ])
 
-<div class="empty-state">
-    <div class="empty-state-icon">
+<div class="delni-empty-state">
+    <div class="delni-empty-state__icon">
         <x-render-icon :icon="$icon" />
     </div>
 
-    <h3 class="empty-state-title">
+    <h3 class="delni-empty-state__title">
         {{ $title }}
     </h3>
 
     @if($message)
-        <p class="empty-state-message">
+        <p class="delni-empty-state__message">
             {{ $message }}
         </p>
     @endif
 
     @if($actionLabel && $actionUrl)
-        <a href="{{ $actionUrl }}" class="btn btn-primary mt-4">
+        <a href="{{ $actionUrl }}" class="delni-empty-state__action">
             {{ $actionLabel }}
         </a>
     @endif
@@ -31,47 +31,97 @@
 @once
     @push('styles')
         <style>
-            .empty-state {
+            .delni-empty-state {
                 text-align: center;
-                padding: 3.5rem 2rem;
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 1rem;
-                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+                padding: clamp(2rem, 5vw, 3.5rem) 1.25rem;
+                background:
+                    radial-gradient(circle at top, rgba(255, 122, 26, 0.08), transparent 38%),
+                    #ffffff;
+                border: 1px solid #e8edf4;
+                border-radius: 24px;
+                box-shadow: 0 14px 38px rgba(11, 26, 52, 0.06);
             }
 
-            .empty-state-icon {
-                width: 56px;
-                height: 56px;
-                margin: 0 auto 1.5rem;
-                border-radius: 0.75rem;
-                background: #f1f5f9;
-                color: #94a3b8;
+            .delni-empty-state__icon {
+                width: 64px;
+                height: 64px;
+                margin: 0 auto 1.25rem;
+                border-radius: 20px;
+                background: #fff7ed;
+                color: #f1620f;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border: 1px solid #e2e8f0;
+                border: 1px solid rgba(241, 98, 15, 0.14);
             }
 
-            .empty-state-icon svg {
-                width: 26px;
-                height: 26px;
-                display: block;
+            .delni-empty-state__icon svg {
+                width: 30px;
+                height: 30px;
             }
 
-            .empty-state-title {
-                font-size: 1.1rem;
-                font-weight: 600;
-                color: #1e293b;
-                margin-bottom: 0.6rem;
+            .delni-empty-state__title {
+                margin: 0 0 0.5rem;
+                font-size: 1.12rem;
+                font-weight: 900;
+                color: #0b1a34;
+                letter-spacing: -0.02em;
             }
 
-            .empty-state-message {
-                color: #64748b;
-                max-width: 380px;
+            .delni-empty-state__message {
+                max-width: 420px;
                 margin: 0 auto;
-                line-height: 1.6;
-                font-size: 0.95rem;
+                color: #64748b;
+                line-height: 1.8;
+                font-size: 0.94rem;
+                font-weight: 500;
+            }
+
+            .delni-empty-state__action {
+                margin-top: 1.2rem;
+                min-height: 44px;
+                padding: 0.7rem 1.1rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #ff8533, #ff6b1a);
+                color: #fff;
+                text-decoration: none;
+                font-size: 0.9rem;
+                font-weight: 900;
+                box-shadow: 0 12px 24px rgba(255, 107, 26, 0.18);
+                transition: 0.15s ease;
+            }
+
+            .delni-empty-state__action:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 14px 32px rgba(255, 107, 26, 0.24);
+            }
+
+            @media (max-width: 640px) {
+                .delni-empty-state {
+                    padding: 2rem 1rem;
+                }
+
+                .delni-empty-state__icon {
+                    width: 56px;
+                    height: 56px;
+                    margin-bottom: 1rem;
+                }
+
+                .delni-empty-state__title {
+                    font-size: 1rem;
+                }
+
+                .delni-empty-state__message {
+                    font-size: 0.88rem;
+                }
+
+                .delni-empty-state__action {
+                    min-height: 40px;
+                    font-size: 0.85rem;
+                }
             }
         </style>
     @endpush

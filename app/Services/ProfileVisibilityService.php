@@ -30,6 +30,8 @@ class ProfileVisibilityService
      */
     public function evaluate(Profile $profile): ProfileVisibilityResult
     {
+        // Ensure user is loaded to avoid N+1
+        $profile->loadMissing('user');
         $user = $profile->user;
 
         // Check: User exists
@@ -72,14 +74,16 @@ class ProfileVisibilityService
         }
 
         // Check: Has active, non-expired subscription
-        $subscription = $user->subscriptions()
+        // Ensure subscriptions are loaded to avoid N+1
+        $user->loadMissing('subscriptions');
+        $subscription = $user->subscriptions
             ->where('is_active', true)
-            ->whereDate('ends_at', '>=', Carbon::today())
+            ->where(fn ($sub) => $sub->ends_at->gte(Carbon::today()))
             ->first();
 
         if (! $subscription) {
             // Distinguish: no subscription vs expired subscription
-            $anySubscription = $user->subscriptions()->first();
+            $anySubscription = $user->subscriptions->first();
 
             if (! $anySubscription) {
                 return new ProfileVisibilityResult(
@@ -127,6 +131,9 @@ class ProfileVisibilityService
     {
         $missing = [];
 
+        // Ensure relationships are loaded to avoid N+1
+        $profile->loadMissing(['user', 'subcategories']);
+
         // Check required fields from completeness calculation
         if (! filled($profile->business_name) && ! filled($profile->user?->name)) {
             $missing[] = 'business_name';
@@ -140,7 +147,7 @@ class ProfileVisibilityService
             $missing[] = 'category';
         }
 
-        if (! $profile->subcategories()->exists()) {
+        if ($profile->subcategories->isEmpty()) {
             $missing[] = 'subcategories';
         }
 

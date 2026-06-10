@@ -1,122 +1,151 @@
 @props([
     'providers',
-    'columns' => 4,
+    'columns' => 3,
     'title' => null,
     'subtitle' => null,
 ])
 
 @php
-    $colClass = match($columns) {
-        1 => 'col-12',
-        2 => 'col-xl-6 col-lg-6 col-md-6',
-        3 => 'col-xl-4 col-lg-4 col-md-6',
-        4 => 'col-lg-3 col-md-6 col-sm-12',
-        default => 'col-lg-3 col-md-6 col-sm-12',
+    $count = method_exists($providers, 'count') ? $providers->count() : count($providers);
+
+    $gridClass = match((int) $columns) {
+        1 => 'delni-provider-grid--one',
+        2 => 'delni-provider-grid--two',
+        4 => 'delni-provider-grid--four',
+        default => 'delni-provider-grid--three',
     };
 @endphp
 
-<section class="provider-grid-section">
+<section class="delni-provider-section">
     @if($title || $subtitle)
-        <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-2 mb-4">
+        <header class="delni-section-head">
             <div>
                 @if($title)
-                    <h2 class="section-title mb-1">
-                        {{ $title }}
-                    </h2>
+                    <h2 class="delni-section-title">{{ $title }}</h2>
                 @endif
 
                 @if($subtitle)
-                    <p class="section-subtitle mb-0">
-                        {{ $subtitle }}
-                    </p>
+                    <p class="delni-section-subtitle">{{ $subtitle }}</p>
                 @endif
             </div>
 
-            @if($providers->count() > 0)
-                <div class="provider-grid-count">
-                    {{ $providers->count() }}
-                    {{ __('messages.public.providers') }}
-                </div>
+            @if($count > 0)
+                <span class="delni-section-count">
+                    {{ $count }} {{ __('messages.public.providers') }}
+                </span>
             @endif
-        </div>
+        </header>
     @endif
 
-    @if($providers->count() > 0)
-        <div class="row g-4">
+    @if($count > 0)
+        <div class="delni-provider-grid {{ $gridClass }}">
             @foreach($providers as $provider)
-                <div class="{{ $colClass }}">
-                    <x-provider-card :provider="$provider" />
-                </div>
+                <x-provider-card :provider="$provider" />
             @endforeach
         </div>
     @else
-        <div class="provider-grid-empty">
-            <x-empty-state
-                title="{{ __('messages.public.no_providers_found') }}"
-                message="{{ __('messages.public.try_different_search') }}"
-            />
-        </div>
+        <x-empty-state
+            title="{{ __('messages.public.no_providers_found') }}"
+            message="{{ __('messages.public.try_different_search') }}"
+            actionLabel="{{ __('messages.public.search') }}"
+            actionUrl="{{ route('public.search') }}"
+        />
     @endif
 </section>
 
 @once
     @push('styles')
         <style>
-            .provider-grid-section {
-                position: relative;
+            .delni-provider-section {
+                width: 100%;
             }
 
-            .provider-grid-section .row {
-                margin: 0 -0.5rem;
+            .delni-section-head {
+                display: flex;
+                align-items: end;
+                justify-content: space-between;
+                gap: 1rem;
+                margin-bottom: 1.25rem;
             }
 
-            .provider-grid-section .row > [class*="col-"] {
-                padding: 0 0.5rem;
-                margin-bottom: 1.5rem;
+            .delni-section-title {
+                margin: 0;
+                color: #0B1A34;
+                font-size: clamp(1.35rem, 3vw, 1.9rem);
+                line-height: 1.2;
+                font-weight: 950;
+                letter-spacing: -.04em;
             }
 
-            .provider-grid-count {
+            .delni-section-subtitle {
+                margin: .45rem 0 0;
+                color: #5D5959;
+                font-size: .95rem;
+                line-height: 1.8;
+                font-weight: 600;
+            }
+
+            .delni-section-count {
+                flex-shrink: 0;
+                min-height: 38px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.35rem;
-                padding: 0.65rem 1rem;
-                background: rgba(241, 98, 15, 0.08);
-                color: #F1620F;
+                padding: .55rem .85rem;
                 border-radius: 999px;
-                font-size: 0.88rem;
-                font-weight: 800;
-                border: 1px solid rgba(241, 98, 15, 0.12);
-                white-space: nowrap;
+                background: rgba(241, 98, 15, .08);
+                color: #F1620F;
+                border: 1px solid rgba(241, 98, 15, .12);
+                font-size: .82rem;
+                font-weight: 900;
             }
 
-            .provider-grid-empty {
-                margin-top: 1rem;
+            .delni-provider-grid {
+                display: grid;
+                gap: 1rem;
             }
 
-            @media (max-width: 768px) {
-                .provider-grid-count {
-                    align-self: flex-start;
-                }
+            .delni-provider-grid--one {
+                grid-template-columns: 1fr;
+            }
 
-                .provider-grid-section .row {
-                    margin: 0 -0.25rem;
-                }
+            .delni-provider-grid--two {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
 
-                .provider-grid-section .row > [class*="col-"] {
-                    padding: 0 0.25rem;
+            .delni-provider-grid--three {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .delni-provider-grid--four {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            @media (max-width: 1160px) {
+                .delni-provider-grid--four {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 920px) {
+                .delni-provider-grid--four,
+                .delni-provider-grid--three {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 640px) {
+                .delni-section-head {
+                    align-items: start;
+                    flex-direction: column;
                     margin-bottom: 1rem;
                 }
-            }
 
-            @media (max-width: 480px) {
-                .provider-grid-section .row {
-                    margin: 0;
-                }
-
-                .provider-grid-section .row > [class*="col-"] {
-                    padding: 0;
-                    margin-bottom: 1rem;
+                .delni-provider-grid,
+                .delni-provider-grid--four,
+                .delni-provider-grid--three,
+                .delni-provider-grid--two {
+                    grid-template-columns: 1fr;
                 }
             }
         </style>

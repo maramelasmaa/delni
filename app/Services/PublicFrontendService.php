@@ -47,23 +47,10 @@ class PublicFrontendService
 
             $featuredProviders = $this->rankingService
                 ->applyHomepageRanking($this->discoverableProfilesQuery())
-                ->limit(6)
-                ->get();
-            $topRatedProviders = $this->rankingService
-                ->applyTopRatedEligibility($this->discoverableProfilesQuery())
-                ->limit(6)
-                ->get();
-            $latestProviders = $this->discoverableProfilesQuery()
-                ->latest('profiles.created_at')
-                ->limit(6)
                 ->get();
 
             $loadedProviders = $this->loadHomepageProviderRelations(
-                $featuredProviders
-                    ->merge($topRatedProviders)
-                    ->merge($latestProviders)
-                    ->unique('id')
-                    ->values(),
+                $featuredProviders->values(),
                 $categoryMap
             );
 
@@ -76,8 +63,6 @@ class PublicFrontendService
                     ->get()
                     ->each(fn (City $city) => $city->setAttribute('discoverable_profiles_count', (int) ($cityCounts[$city->id] ?? 0))),
                 'featuredProviders' => $this->reuseLoadedProviders($featuredProviders, $loadedProviders),
-                'topRatedProviders' => $this->reuseLoadedProviders($topRatedProviders, $loadedProviders),
-                'latestProviders' => $this->reuseLoadedProviders($latestProviders, $loadedProviders),
             ];
         });
     }
@@ -186,9 +171,66 @@ class PublicFrontendService
         });
     }
 
+    public function topRated(Request $request): array
+    {
+        return $this->inspectQueries(function () use ($request): array {
+            $query = $this->discoverableProfilesQuery();
+
+            if ($request->filled('city_id')) {
+                $query->where('profiles.city_id', $request->integer('city_id'));
+            }
+
+            if ($request->filled('category_id')) {
+                $query->where('profiles.category_id', $request->integer('category_id'));
+            }
+
+            $profiles = $this->paginateProfiles(
+                $this->rankingService
+                    ->applyTopRatedEligibility($query),
+                $request,
+                ['stats', 'city', 'category']
+            );
+
+            return [
+                'profiles' => $profiles,
+                'providerCount' => $profiles->total(),
+                'categories' => $this->activeCategories(),
+                'cities' => $this->activeCities(),
+                'filters' => $request->only(['city_id', 'category_id']),
+            ];
+        });
+    }
+
+    public function allCategories(): array
+    {
+        return $this->inspectQueries(function (): array {
+            $categoryCounts = $this->profileCountsBy('profiles.category_id');
+            $subcategoryCounts = $this->profileCountsBySubcategory();
+
+            $categories = Category::query()
+                ->where('is_active', true)
+                ->with(['subcategories' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')])
+                ->orderBy('sort_order')
+                ->get()
+                ->each(function (Category $category) use ($categoryCounts) {
+                    $category->setAttribute('discoverable_profiles_count', (int) ($categoryCounts[$category->id] ?? 0));
+                })
+                ->each(function (Category $category) use ($subcategoryCounts) {
+                    $category->subcategories->each(function (Subcategory $subcategory) use ($subcategoryCounts) {
+                        $subcategory->setAttribute('discoverable_profiles_count', (int) ($subcategoryCounts[$subcategory->id] ?? 0));
+                    });
+                });
+
+            return [
+                'categories' => $categories,
+            ];
+        });
+    }
+
     public function provider(Profile $profile): array
     {
         return $this->inspectQueries(function () use ($profile): array {
+            // Load all required relations upfront with optimized queries
             $profile->load([
                 'user',
                 'stats',
@@ -197,8 +239,9 @@ class PublicFrontendService
                 'subcategories',
                 'activeLinks',
                 'credentials',
-                'portfolioItems' => fn ($query) => $query->where('is_active', true),
-                'portfolioItems.images',
+                'portfolioItems' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order'),
+                'portfolioItems.images' => fn ($query) => $query->orderBy('sort_order'),
+                'approvedReviews' => fn ($query) => $query->orderByDesc('created_at'),
                 'approvedReviews.user',
             ]);
 

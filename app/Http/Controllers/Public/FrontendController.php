@@ -38,6 +38,24 @@ class FrontendController extends Controller
         ]);
     }
 
+    public function topRated(Request $request): View
+    {
+        $payload = $this->frontendService->topRated($request);
+
+        return view('public.top-rated', $payload['data'] + [
+            'queryStats' => $payload['queryStats'],
+        ]);
+    }
+
+    public function categories(): View
+    {
+        $payload = $this->frontendService->allCategories();
+
+        return view('public.categories', $payload['data'] + [
+            'queryStats' => $payload['queryStats'],
+        ]);
+    }
+
     public function category(Category $category, Request $request): View
     {
         abort_unless($category->is_active, 404);

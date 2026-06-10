@@ -3,138 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رابط الإعداد</title>
+    <title>رابط الإعداد والتفعيل</title>
+    {{-- High-quality typography addition --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
     <style>
+        /* Design Tokens & Variables */
+        :root {
+            --brand-primary: #F1620F;
+            --brand-primary-hover: #D7530A;
+            --brand-dark: #0B1A34;
+            --brand-dark-light: #14284D;
+            --bg-surface: #FFFFFF;
+            --bg-subtle: #F8FAFC;
+            --text-primary: #0B1A34;
+            --text-secondary: #475569;
+            --border-color: #E2E8F0;
+            --transition-smooth: all 0.2s ease-in-out;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-dark-light) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 1.5rem;
         }
+
         .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            background: var(--bg-surface);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            max-width: 580px;
             width: 100%;
-            padding: 40px;
+            padding: 2.5rem 2rem;
             text-align: center;
         }
+
         h1 {
-            color: #003366;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: var(--brand-dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+            font-weight: 800;
         }
+
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.5;
         }
+
+        /* Clean Link Display Box */
         .link-box {
-            background: #f5f5f5;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 30px 0;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
             word-break: break-all;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
-            color: #333;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+            direction: ltr; /* Keeps URL slashes and tokens properly ordered */
+            text-align: left;
+        }
+
+        /* Action Controls Layout Matrix */
+        .actions-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            margin: 1.5rem 0 2rem;
+        }
+
+        .btn {
+            width: 100%;
+            height: 50px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            border: none;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-primary {
+            background-color: var(--brand-primary);
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(241, 98, 15, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--brand-primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #EDF2F7;
+            border-color: #CBD5E1;
+        }
+
+        /* Interactive Success Status Layer */
+        .success-banner {
+            display: none;
+            background: #DEF7EC;
+            color: #03543F;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-top: -0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid #BCF0DA;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        /* RTL-Correct Information Alert Box */
+        .info-alert {
+            background: rgba(241, 98, 15, 0.05);
+            border-right: 4px solid var(--brand-primary);
+            border-left: none; /* Corrects standard default left-border frameworks */
+            padding: 1rem 1.25rem;
+            text-align: right;
+            border-radius: 4px 12px 12px 4px;
+            color: #A73F05;
+            font-size: 0.85rem;
+            font-weight: 500;
             line-height: 1.6;
         }
-        .button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 14px 40px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
+
+        .footer-note {
+            margin-top: 2rem;
+            color: var(--text-light-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+            line-height: 1.5;
         }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .copy-btn {
-            background: #f1620f;
-            padding: 10px 20px;
-            font-size: 14px;
-            margin-top: 15px;
-        }
-        .copy-btn:hover {
-            background: #e0540a;
-        }
-        .success {
-            display: none;
-            background: #d4edda;
-            color: #155724;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 15px;
-            border: 1px solid #c3e6cb;
-        }
-        .info {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: right;
-            border-radius: 4px;
-            color: #0c5394;
-            font-size: 14px;
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 2rem 1.25rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>🔐 رابط الإعداد</h1>
-        <p class="subtitle">انسخ الرابط أدناه أو اضغط على الزر لتعيين كلمة مرورك</p>
+        <h1>🔐 رابط الإعداد والتفعيل</h1>
+        <p class="subtitle">قم بالضغط مباشرة على زر التفعيل المرفق بالأسفل، أو يمكنك نسخ الرابط المباشر واستخدامه في المتصفح الخاص بك.</p>
 
-        <div class="link-box" id="linkBox">
-            {{ $onboardingUrl }}
+        {{-- Interactive URL text terminal node --}}
+        <div class="link-box" id="linkBox">{{ $onboardingUrl }}</div>
+
+        <div class="success-banner" id="successBanner">✓ تم نسخ رابط التفعيل بنجاح!</div>
+
+        <div class="actions-wrapper">
+            <a href="{{ $onboardingUrl }}" class="btn btn-primary">
+                <span>إكمال عملية الإعداد والبدء</span>
+                <span>←</span>
+            </a>
+
+            <button class="btn btn-secondary" onclick="copyToClipboard()">
+                <span>📋 نسخ الرابط المباشر</span>
+            </button>
         </div>
 
-        <button class="button copy-btn" onclick="copyToClipboard()">
-            📋 انسخ الرابط
-        </button>
-        <div class="success" id="success">✓ تم النسخ بنجاح!</div>
-
-        <div class="info">
-            ⏰ انتبه: هذا الرابط صالح لمدة محدودة فقط. تأكد من استخدامه قبل انتهاء الصلاحية.
+        <div class="info-alert">
+            ⏰ <strong>تنبيه هام:</strong> هذا الرابط مخصص للاستخدام مرة واحدة وصالح لفترة زمنية محدودة فقط. يرجى إتمام عملية الإعداد قبل انتهاء صلاحية الجلسة.
         </div>
 
-        <a href="{{ $onboardingUrl }}" class="button" style="margin-top: 20px;">
-            إكمال الإعداد →
-        </a>
-
-        <p style="margin-top: 30px; color: #999; font-size: 13px;">
-            إذا واجهت مشاكل، يرجى نسخ الرابط أعلاه والصقه في عنوان المتصفح.
+        <p class="footer-note">
+            إذا لم يعمل زر الانتقال المباشر، يرجى نسخ عنوان الرابط ولصقه يدوياً في شريط العنوان أعلى متصفح الويب الخاص بك.
         </p>
     </div>
 
     <script>
         function copyToClipboard() {
-            const text = document.getElementById('linkBox').innerText;
+            const text = document.getElementById('linkBox').innerText.trim();
             navigator.clipboard.writeText(text).then(() => {
-                const successMsg = document.getElementById('success');
-                successMsg.style.display = 'block';
+                const banner = document.getElementById('successBanner');
+                banner.style.display = 'block';
                 setTimeout(() => {
-                    successMsg.style.display = 'none';
-                }, 3000);
+                    banner.style.display = 'none';
+                }, 3500);
             }).catch(() => {
-                alert('فشل النسخ. يرجى محاولة يدويًا.');
+                alert('عذراً، فشل النسخ التلقائي. يرجى تظليل الرابط ونسخه يدوياً.');
             });
         }
     </script>

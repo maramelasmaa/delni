@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\Profile;
 use App\Models\ProviderType;
 use App\Models\Subcategory;
+use App\Services\ProfileImageService;
 use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -15,6 +16,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 
 class ProfileResource extends Resource
 {
@@ -197,20 +199,36 @@ class ProfileResource extends Resource
                 ->schema([
                     Forms\Components\FileUpload::make('logo')
                         ->label('شعار النشاط')
-                        ->helperText('يفضل استخدام صورة واضحة ومربعة لظهور أفضل. (الحد الأقصى 5 MB)')
+                        ->helperText('صورة واضحة ومربعة لظهور أفضل. (الحد الأقصى 2 MB)')
                         ->image()
-                        ->maxSize(5120)
-                        ->directory('profiles/logos')
-                        ->visibility('public')
-                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
+                        ->maxSize(2048)
+                        ->imagePreviewHeight(400)
+                        ->previewable()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                        ->columnSpanFull()
+                        ->required()
+                        ->saveUploadedFileUsing(function (UploadedFile $file, Profile $record, ProfileImageService $imageService) {
+                            return $imageService->replaceImage($record->logo, $file, 'avatar');
+                        })
+                        ->deleteUploadedFileUsing(function ($file, ProfileImageService $imageService) {
+                            $imageService->deleteImage($file);
+                        }),
                     Forms\Components\FileUpload::make('cover_image')
                         ->label('صورة الغلاف')
-                        ->helperText('صورة الغلاف تساعد في إبراز نشاطك للعملاء. (الحد الأقصى 5 MB)')
+                        ->helperText('صورة جميلة تعكس نشاطك وجودة خدماتك. (الحد الأقصى 4 MB)')
                         ->image()
-                        ->maxSize(5120)
-                        ->directory('profiles/covers')
-                        ->visibility('public')
-                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
+                        ->maxSize(4096)
+                        ->imagePreviewHeight(300)
+                        ->previewable()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                        ->columnSpanFull()
+                        ->required()
+                        ->saveUploadedFileUsing(function (UploadedFile $file, Profile $record, ProfileImageService $imageService) {
+                            return $imageService->replaceImage($record->cover_image, $file, 'cover');
+                        })
+                        ->deleteUploadedFileUsing(function ($file, ProfileImageService $imageService) {
+                            $imageService->deleteImage($file);
+                        }),
                 ])
                 ->columns(2),
 

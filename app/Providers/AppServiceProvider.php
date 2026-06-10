@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\Model;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -50,6 +51,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Prevent N+1 queries by detecting lazy-loaded relationships in development
+        Model::preventLazyLoading(! app()->isProduction());
 
         User::observe(UserObserver::class);
         Profile::observe(ProfileObserver::class);

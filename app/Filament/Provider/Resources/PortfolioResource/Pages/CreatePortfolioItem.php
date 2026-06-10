@@ -28,7 +28,18 @@ class CreatePortfolioItem extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['profile_id'] = auth()->user()->profile->id;
+        $profile = auth()->user()->profile;
+        $data['profile_id'] = $profile->id;
+
+        // Validate portfolio item limit (max 2)
+        if ($profile->portfolioItems()->count() >= 2) {
+            $this->halt();
+        }
+
+        // Validate image limit (max 4 per item)
+        if (isset($data['images']) && is_array($data['images']) && count($data['images']) > 4) {
+            $this->halt();
+        }
 
         return $data;
     }

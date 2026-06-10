@@ -13,43 +13,36 @@
         || request()->filled('sort');
 @endphp
 
-<div class="search-filters">
-    <form method="GET" action="{{ route('public.search') }}" class="filters-form">
-        <div class="filters-header">
+<div class="delni-filters">
+    <form method="GET" action="{{ route('public.search') }}" class="delni-filters__form">
+        <header class="delni-filters__header">
             <div>
-                <h3 class="filters-title">
-                    {{ __('messages.public.search_filters') }}
-                </h3>
-                <p class="filters-subtitle">
-                    {{ __('messages.public.search_filters_hint') }}
-                </p>
+                <h3>مرشحات البحث</h3>
+                <p>ضيّق النتائج حسب احتياجك.</p>
             </div>
-        </div>
 
-        <!-- Keyword -->
-        <div class="filter-field">
-            <label for="keyword" class="filter-label">
-                {{ __('messages.public.search_keyword') }}
-            </label>
+            @if($hasFilters)
+                <a href="{{ route('public.search') }}">مسح</a>
+            @endif
+        </header>
+
+        <div class="delni-filter-field">
+            <label for="keyword">كلمة البحث</label>
             <input
                 type="text"
                 id="keyword"
                 name="keyword"
-                class="filter-input"
-                placeholder="{{ __('messages.public.search_placeholder') }}"
                 value="{{ request('keyword') }}"
                 maxlength="100"
+                placeholder="مثال: تصوير، سباكة، تصميم..."
             >
         </div>
 
-        <!-- Category -->
         @if($categories)
-            <div class="filter-field">
-                <label for="category_id" class="filter-label">
-                    {{ __('messages.public.category') }}
-                </label>
-                <select id="category_id" name="category_id" class="filter-select">
-                    <option value="">{{ __('messages.public.all_categories') }}</option>
+            <div class="delni-filter-field">
+                <label for="category_id">الفئة</label>
+                <select id="category_id" name="category_id">
+                    <option value="">جميع الفئات</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>
                             {{ $category->localized_name ?? $category->name }}
@@ -59,14 +52,11 @@
             </div>
         @endif
 
-        <!-- City -->
         @if($cities)
-            <div class="filter-field">
-                <label for="city_id" class="filter-label">
-                    {{ __('messages.public.city') }}
-                </label>
-                <select id="city_id" name="city_id" class="filter-select">
-                    <option value="">{{ __('messages.public.all_cities') }}</option>
+            <div class="delni-filter-field">
+                <label for="city_id">المدينة</label>
+                <select id="city_id" name="city_id">
+                    <option value="">جميع المدن</option>
                     @foreach($cities as $city)
                         <option value="{{ $city->id }}" @selected((string) request('city_id') === (string) $city->id)>
                             {{ $city->localized_name ?? $city->name }}
@@ -76,14 +66,11 @@
             </div>
         @endif
 
-        <!-- Provider Type -->
         @if($providerTypes)
-            <div class="filter-field">
-                <label for="provider_type" class="filter-label">
-                    {{ __('messages.public.provider_type') }}
-                </label>
-                <select id="provider_type" name="provider_type" class="filter-select">
-                    <option value="">{{ __('messages.public.all_types') }}</option>
+            <div class="delni-filter-field">
+                <label for="provider_type">نوع المزود</label>
+                <select id="provider_type" name="provider_type">
+                    <option value="">جميع الأنواع</option>
                     @foreach($providerTypes as $code => $name)
                         <option value="{{ $code }}" @selected((string) request('provider_type') === (string) $code)>
                             {{ is_object($name) ? ($name->localized_name ?? $name->name) : $name }}
@@ -93,230 +80,188 @@
             </div>
         @endif
 
-        <!-- Remote Toggle -->
-        <div class="filter-field filter-checkbox">
+        <label class="delni-filter-check" for="remote">
             <input
                 type="checkbox"
                 id="remote"
                 name="remote"
-                class="filter-checkbox-input"
                 value="1"
                 @checked(request('remote') == 1)
             >
-            <label class="filter-checkbox-label" for="remote">
-                <x-render-icon icon="heroicon-o-globe-alt" class="w-4 h-4 inline-block me-1" />
-                {{ __('messages.public.remote_work') }}
-            </label>
-        </div>
+            <span>
+                <strong>يدعم العمل عن بعد</strong>
+                <small>مناسب للخدمات الرقمية والاستشارات</small>
+            </span>
+        </label>
 
-        <!-- Sort -->
-        <div class="filter-field">
-            <label for="sort" class="filter-label">
-                {{ __('messages.public.sort_by') }}
-            </label>
-            <select id="sort" name="sort" class="filter-select">
-                <option value="" @selected(!request('sort'))>
-                    {{ __('messages.public.relevance') }}
-                </option>
-                <option value="rating" @selected(request('sort') === 'rating')>
-                    {{ __('messages.public.highest_rated') }}
-                </option>
-                <option value="reviews" @selected(request('sort') === 'reviews')>
-                    {{ __('messages.public.most_reviewed') }}
-                </option>
-                <option value="newest" @selected(request('sort') === 'newest')>
-                    {{ __('messages.public.newest') }}
-                </option>
+        <div class="delni-filter-field">
+            <label for="sort">ترتيب النتائج</label>
+            <select id="sort" name="sort">
+                <option value="" @selected(!request('sort'))>الأكثر صلة</option>
+                <option value="rating" @selected(request('sort') === 'rating')>الأعلى تقييماً</option>
+                <option value="reviews" @selected(request('sort') === 'reviews')>الأكثر مراجعات</option>
+                <option value="newest" @selected(request('sort') === 'newest')>الأحدث</option>
             </select>
         </div>
 
-        <!-- Actions -->
-        <div class="filter-actions">
-            <button type="submit" class="filter-btn filter-btn-primary">
-                {{ __('messages.public.search') }}
-            </button>
-
-            @if($hasFilters)
-                <a href="{{ route('public.search') }}" class="filter-link-clear">
-                    {{ __('messages.public.clear_filters') }}
-                </a>
-            @endif
-        </div>
+        <button type="submit" class="delni-filters__submit">
+            تطبيق البحث
+        </button>
     </form>
 </div>
 
 @once
     @push('styles')
         <style>
-            .search-filters {
-                background: #ffffff;
-                border: 1px solid #e5e7eb;
-                border-radius: 14px;
+            .delni-filters {
+                border-radius: 24px;
+                background: #fff;
+                border: 1px solid #E7E7E7;
+                box-shadow: 0 14px 34px rgba(11, 26, 52, .06);
+                overflow: hidden;
+            }
+
+            .delni-filters__form {
+                display: flex;
+                flex-direction: column;
+                gap: .9rem;
                 padding: 1rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             }
 
-            .filters-form {
+            .delni-filters__header {
                 display: flex;
-                flex-direction: column;
-                gap: 0.8rem;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 1rem;
+                padding-bottom: .9rem;
+                border-bottom: 1px solid #E7E7E7;
             }
 
-            .filters-header {
-                margin-bottom: 0.4rem;
-            }
-
-            .filters-title {
-                margin: 0 0 0.3rem;
-                font-size: 1rem;
-                font-weight: 900;
-                color: #0f172a;
-                letter-spacing: -0.01em;
-            }
-
-            .filters-subtitle {
+            .delni-filters__header h3 {
                 margin: 0;
-                color: #64748b;
-                font-size: 0.8rem;
-                font-weight: 500;
+                color: #0B1A34;
+                font-size: 1.05rem;
+                line-height: 1.3;
+                font-weight: 950;
+                letter-spacing: -.025em;
             }
 
-            .filter-field {
-                display: flex;
-                flex-direction: column;
-                gap: 0.35rem;
-            }
-
-            .filter-label {
-                display: block;
-                color: #0f172a;
-                font-size: 0.85rem;
-                font-weight: 800;
-                letter-spacing: -0.01em;
-            }
-
-            .filter-input,
-            .filter-select {
-                height: 40px;
-                padding: 0 0.9rem;
-                border-radius: 10px;
-                border: 1px solid #e5e7eb;
-                background: #ffffff;
-                color: #0f172a;
-                font-family: inherit;
-                font-size: 0.9rem;
+            .delni-filters__header p {
+                margin: .35rem 0 0;
+                color: #5D5959;
+                font-size: .82rem;
+                line-height: 1.7;
                 font-weight: 600;
-                outline: none;
-                transition: 0.15s ease;
             }
 
-            .filter-input::placeholder {
-                color: #94a3b8;
-                font-weight: 500;
-            }
-
-            .filter-input:focus,
-            .filter-select:focus {
-                border-color: #ff7a1a;
-                box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.08);
-            }
-
-            .filter-checkbox {
-                flex-direction: row;
-                align-items: center;
-                gap: 0.5rem;
-            }
-
-            .filter-checkbox-input {
-                width: 18px;
-                height: 18px;
-                border: 1.5px solid #d1d5db;
-                border-radius: 5px;
-                cursor: pointer;
-                accent-color: #ff7a1a;
-                transition: 0.15s ease;
-                flex-shrink: 0;
-                margin: 0;
-            }
-
-            .filter-checkbox-input:checked {
-                background: #ff7a1a;
-                border-color: #ff7a1a;
-            }
-
-            .filter-checkbox-label {
-                color: #0f172a;
-                font-size: 0.9rem;
-                font-weight: 600;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 0.35rem;
-                margin: 0;
-            }
-
-            .filter-actions {
-                display: flex;
-                flex-direction: column;
-                gap: 0.6rem;
-                margin-top: 0.4rem;
-            }
-
-            .filter-btn {
-                height: 40px;
-                padding: 0 1.2rem;
-                border-radius: 10px;
-                font-family: inherit;
-                font-size: 0.9rem;
-                font-weight: 700;
-                border: none;
-                cursor: pointer;
-                transition: 0.15s ease;
-                letter-spacing: -0.01em;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .filter-btn-primary {
-                background: linear-gradient(135deg, #ff8533 0%, #ff6b1a 100%);
-                color: #ffffff;
-                box-shadow: 0 8px 16px rgba(255, 107, 26, 0.16);
-            }
-
-            .filter-btn-primary:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 10px 24px rgba(255, 107, 26, 0.24);
-            }
-
-            .filter-link-clear {
-                color: #ff7a1a;
+            .delni-filters__header a {
+                color: #F1620F;
                 text-decoration: none;
+                font-size: .82rem;
+                font-weight: 950;
+            }
+
+            .delni-filter-field {
+                display: flex;
+                flex-direction: column;
+                gap: .4rem;
+            }
+
+            .delni-filter-field label {
+                color: #0B1A34;
+                font-size: .84rem;
+                font-weight: 950;
+            }
+
+            .delni-filter-field input,
+            .delni-filter-field select {
+                width: 100%;
+                height: 44px;
+                padding-inline: .85rem;
+                border-radius: 14px;
+                border: 1px solid #E7E7E7;
+                background: #FCFBFB;
+                color: #0B1A34;
+                font: inherit;
+                font-size: .88rem;
+                font-weight: 800;
+                outline: none;
+                transition: .18s ease;
+            }
+
+            .delni-filter-field input::placeholder {
+                color: #9b9696;
                 font-weight: 700;
-                font-size: 0.85rem;
-                text-align: center;
-                transition: 0.15s ease;
-                padding: 0.5rem;
             }
 
-            .filter-link-clear:hover {
-                color: #ff6b1a;
+            .delni-filter-field input:focus,
+            .delni-filter-field select:focus {
+                border-color: rgba(241, 98, 15, .65);
+                background: #fff;
+                box-shadow: 0 0 0 4px rgba(241, 98, 15, .08);
             }
 
-            @media (max-width: 768px) {
-                .search-filters {
-                    padding: 0.9rem;
-                }
+            .delni-filter-check {
+                min-height: 74px;
+                display: flex;
+                align-items: center;
+                gap: .75rem;
+                padding: .8rem;
+                border-radius: 18px;
+                background: #FCFBFB;
+                border: 1px solid #E7E7E7;
+                cursor: pointer;
+            }
 
-                .filter-input,
-                .filter-select {
-                    height: 44px;
-                    font-size: 0.9rem;
-                }
+            .delni-filter-check input {
+                width: 20px;
+                height: 20px;
+                flex-shrink: 0;
+                accent-color: #F1620F;
+                cursor: pointer;
+            }
 
-                .filter-btn {
-                    height: 44px;
-                    font-size: 0.9rem;
+            .delni-filter-check span {
+                display: flex;
+                flex-direction: column;
+                gap: .15rem;
+            }
+
+            .delni-filter-check strong {
+                color: #0B1A34;
+                font-size: .9rem;
+                font-weight: 950;
+            }
+
+            .delni-filter-check small {
+                color: #5D5959;
+                font-size: .78rem;
+                line-height: 1.6;
+                font-weight: 600;
+            }
+
+            .delni-filters__submit {
+                min-height: 46px;
+                border: 0;
+                border-radius: 15px;
+                background: #F1620F;
+                color: #fff;
+                font: inherit;
+                font-size: .9rem;
+                font-weight: 950;
+                cursor: pointer;
+                box-shadow: 0 12px 24px rgba(241, 98, 15, .2);
+                transition: .18s ease;
+            }
+
+            .delni-filters__submit:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 16px 30px rgba(241, 98, 15, .26);
+            }
+
+            @media (max-width: 900px) {
+                .delni-filters__form {
+                    padding: .9rem;
                 }
             }
         </style>

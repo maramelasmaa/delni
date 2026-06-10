@@ -3,6 +3,7 @@
 namespace App\Filament\Provider\Resources;
 
 use App\Models\PortfolioItem;
+use App\Services\ProfileImageService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -15,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 
 class PortfolioResource extends Resource
 {
@@ -43,40 +45,29 @@ class PortfolioResource extends Resource
                         ->placeholder('مثال: تصميم وتنفيذ فيلا سكنية')
                         ->helperText('اختر عنواناً واضحاً يعكس طبيعة المشروع.')
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->columnSpanFull(),
                     Forms\Components\Textarea::make('short_description')
                         ->label('وصف قصير')
                         ->placeholder('اكتب سطراً أو اثنين يلخصان المشروع...')
                         ->helperText('سيظهر هذا الوصف في قائمة الأعمال.')
-                        ->rows(2)
+                        ->rows(3)
                         ->maxLength(255)
                         ->columnSpanFull(),
                     Forms\Components\Textarea::make('description')
                         ->label('الوصف التفصيلي')
                         ->placeholder('اشرح تفاصيل المشروع والخدمات التي قدمتها...')
                         ->helperText('وضح تفاصيل المشروع والتحديات وكيفية حلك لها.')
-                        ->rows(3)
+                        ->rows(4)
                         ->maxLength(1000)
                         ->columnSpanFull(),
-                    Forms\Components\TextInput::make('main_url')
-                        ->label('رابط المشروع')
-                        ->placeholder('https://...')
-                        ->helperText('رابط موقع المشروع أو النتيجة النهائية (اختياري)')
-                        ->url()
-                        ->maxLength(500),
-                    Forms\Components\TextInput::make('link')
-                        ->label('رابط إضافي')
-                        ->placeholder('https://...')
-                        ->helperText('رابط إضافي مثل معرض الصور أو الفيديو (اختياري)')
-                        ->url()
-                        ->maxLength(500),
                     Forms\Components\Toggle::make('is_active')
                         ->label('نشط (مرئي للعملاء)')
                         ->helperText('إذا أوقفت المشروع، لن يراه العملاء في ملفك.')
                         ->default(true)
-                        ->inline(false),
-                ])
-                ->columns(2),
+                        ->inline(false)
+                        ->columnSpanFull(),
+                ]),
 
             Section::make('صور المشروع')
                 ->description('أضف صوراً عالية الجودة لعرض أفضل للعملاء')
@@ -90,25 +81,31 @@ class PortfolioResource extends Resource
                                 ->helperText('صورة واضحة وعالية الجودة. (الحد الأقصى 5 MB)')
                                 ->image()
                                 ->maxSize(5120)
-                                ->directory('portfolio')
-                                ->visibility('public')
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                                ->required(),
+                                ->saveUploadedFileUsing(function (UploadedFile $file, ProfileImageService $imageService) {
+                                    return $imageService->storePortfolioImage($file);
+                                })
+                                ->deleteUploadedFileUsing(function ($file, ProfileImageService $imageService) {
+                                    $imageService->deleteImage($file);
+                                })
+                                ->columnSpanFull(),
                             Forms\Components\TextInput::make('alt')
                                 ->label('النص البديل')
                                 ->placeholder('وصف مختصر للصورة')
                                 ->helperText('نص يظهر إذا لم تحمل الصورة (اختياري)')
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->columnSpanFull(),
                         ])
                         ->columns(1)
+                        ->minItems(1)
                         ->maxItems(4)
                         ->addActionLabel('إضافة صورة')
                         ->deleteAction(
                             fn (Action $action) => $action->label('حذف'),
                         )
-                        ->helperText('يمكنك إضافة حتى 4 صور لهذا المشروع. (8 صور كحد أقصى في جميع مشاريعك)'),
-                ])
-                ->columnSpanFull(),
+                        ->helperText('يمكنك إضافة حتى 4 صور لهذا المشروع. (8 صور كحد أقصى في جميع مشاريعك)')
+                        ->columnSpanFull(),
+                ]),
         ]);
     }
 
