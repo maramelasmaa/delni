@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Forms\Components\HeroiconPicker;
 use App\Filament\Resources\Traits\AdminAccessOnly;
 use App\Models\City;
 use App\Models\Profile;
@@ -15,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 class CityResource extends Resource
@@ -51,7 +51,7 @@ class CityResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('الترجمات')
+                Section::make('Translations')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label(__('filament.fields.name_en'))
@@ -60,27 +60,25 @@ class CityResource extends Resource
                             ->maxLength(255),
                         Forms\Components\TextInput::make('name_ar')
                             ->label(__('filament.fields.name_ar'))
-                            ->placeholder('مثال: طرابلس')
+                            ->placeholder('Example: Tripoli')
                             ->required()
                             ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Section::make('العرض')
+                Section::make('Display')
                     ->schema([
                         Forms\Components\TextInput::make('slug')
-                            ->label('الرابط المختصر')
+                            ->label('Slug')
                             ->placeholder('tripoli')
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255)
-                            ->hint('معرف مناسب للرابط'),
-                        HeroiconPicker::make('icon')
-                            ->nullable(),
+                            ->hint('A suitable identifier for the URL'),
                     ])
                     ->columns(2),
 
-                Section::make('الحالة')
+                Section::make('Status')
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->required()
@@ -99,11 +97,6 @@ class CityResource extends Resource
                     ->label(__('filament.fields.name'))
                     ->searchable('name')
                     ->sortable('name'),
-                Tables\Columns\TextColumn::make('icon')
-                    ->label('الأيقونة')
-                    ->formatStateUsing(fn ($state) => $state ?? '—')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('filament.fields.active'))
                     ->boolean()
@@ -139,6 +132,11 @@ class CityResource extends Resource
                         }
                     }),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery();
     }
 
     public static function getRelations(): array

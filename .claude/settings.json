@@ -35,7 +35,10 @@
       "Bash(grep -n \"## public\\\\\\\\\\\\\\\\home.blade.php\" BLADES_EXPORT.md)",
       "Bash(vendor/bin/pint --dirty --format agent resources/views/errors/ resources/lang/)",
       "Bash(vendor/bin/pint --dirty --format agent app/Http/Controllers/Public/ routes/web.php)",
-      "Bash(grep -E \"\\\\.\\(php|blade|md\\)$\")"
+      "Bash(grep -E \"\\\\.\\(php|blade|md\\)$\")",
+      "Bash(curl -s \"http://localhost/diagnostic/admin-test\")",
+      "Bash(curl -s \"http://localhost/diagnostic/admin-check\")",
+      "Bash(grep -E \"\\\\.\\(md|txt\\)$\")"
     ],
     "additionalDirectories": [
       "c:\\laragon\\www\\delni\\storage"

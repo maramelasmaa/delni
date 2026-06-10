@@ -24,6 +24,13 @@ use Illuminate\Validation\Validator;
  *
  * Reviews are intentionally live by default for the marketplace flow. The
  * controller still sets status explicitly instead of relying on a DB default.
+ *
+ * Security: This request enforces all eligibility checks via middleware and policy.
+ * Eligibility middleware (EnsureReviewEligible) on the route ensures:
+ *   - Account is at least 24 hours old
+ *   - User has not exceeded 10 reviews/day limit
+ *
+ * @see EnsureReviewEligible middleware
  */
 class CreateReviewRequest extends FormRequest
 {

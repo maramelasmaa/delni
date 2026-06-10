@@ -14,7 +14,7 @@ class Subcategory extends Model
     use HasFactory, HasLocalizedName, SoftDeletes;
 
     protected $fillable = [
-        'category_id', 'name', 'name_ar', 'slug', 'sort_order', 'is_active',
+        'category_id', 'name', 'name_ar', 'slug', 'icon_id', 'sort_order', 'is_active',
     ];
 
     protected $casts = [
@@ -24,6 +24,11 @@ class Subcategory extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function icon(): BelongsTo
+    {
+        return $this->belongsTo(Icon::class);
     }
 
     public function profiles(): BelongsToMany

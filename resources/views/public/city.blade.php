@@ -18,8 +18,7 @@
     <div class="container">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div class="lg:col-span-2">
-                <h1 class="text-4xl font-black mb-4 flex items-center gap-3">
-                    <x-render-icon icon="heroicon-o-map-pin" class="w-10 h-10" />
+                <h1 class="text-4xl font-black mb-4">
                     {{ $city->localized_name }}
                 </h1>
                 @if($city->description)
@@ -28,9 +27,6 @@
                 <p class="text-white/70">
                     {{ $profiles->total() ?? 0 }} {{ __('messages.public.professionals') }}
                 </p>
-            </div>
-            <div class="flex items-center justify-center h-32 text-white/80">
-                <x-render-icon icon="heroicon-o-building-office-2" class="w-24 h-24" />
             </div>
         </div>
     </div>

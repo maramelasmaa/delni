@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Forms\Components\HeroiconPicker;
 use App\Filament\Resources\Traits\AdminAccessOnly;
 use App\Models\Category;
 use App\Models\Profile;
@@ -15,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 class CategoryResource extends Resource
@@ -51,7 +51,7 @@ class CategoryResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('الترجمات')
+                Section::make('Translations')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label(__('filament.fields.name_en'))
@@ -60,37 +60,47 @@ class CategoryResource extends Resource
                             ->maxLength(255),
                         Forms\Components\TextInput::make('name_ar')
                             ->label(__('filament.fields.name_ar'))
-                            ->placeholder('مثال: خدمات السباكة')
+                            ->placeholder('Example: Plumbing Services')
                             ->required()
                             ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Section::make('العرض')
+                Section::make('Display')
                     ->schema([
                         Forms\Components\TextInput::make('slug')
                             ->placeholder('plumbing-services')
-                            ->label('الرابط المختصر')
+                            ->label('Slug')
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
-                        HeroiconPicker::make('icon')
-                            ->nullable(),
+                        Forms\Components\FileUpload::make('svg_file')
+                            ->label('Upload SVG Icon')
+                            ->acceptedFileTypes(['image/svg+xml'])
+                            ->maxSize(500)
+                            ->storeFiles(false)
+                            ->nullable()
+                            ->hint('Upload SVG (will be auto-orange & 24x24px)'),
                         Forms\Components\TextInput::make('sort_order')
                             ->placeholder('0')
                             ->numeric()
                             ->default(0)
-                            ->hint('ترتيب الظهور في القوائم'),
+                            ->hint('Display order in menus'),
                     ])
                     ->columns(3),
 
-                Section::make('الحالة')
+                Section::make('Status')
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->required()
                             ->default(true),
                     ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('icon');
     }
 
     public static function table(Table $table): Table
@@ -104,12 +114,12 @@ class CategoryResource extends Resource
                     ->searchable('name')
                     ->sortable('name'),
                 Tables\Columns\TextColumn::make('slug')->label('الرابط المختصر')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('icon')
+                Tables\Columns\TextColumn::make('icon.name')
                     ->label('الأيقونة')
-                    ->formatStateUsing(fn ($state) => $state ?? '—')
-                    ->description(fn ($record) => self::getIconPreview($record->icon))
-                    ->searchable()
-                    ->sortable(),
+                    ->formatStateUsing(fn ($state, $record) => $state ? "🎨 {$state}" : '—')
+                    ->description(fn ($record) => $record->icon ? route('icon.show', $record->icon) : 'No icon')
+                    ->searchable('icon.name')
+                    ->sortable('icon.name'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('filament.fields.active'))
                     ->boolean()

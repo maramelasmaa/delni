@@ -6,10 +6,13 @@ use App\Models\Profile;
 use App\Models\User;
 use App\Services\ProviderCreationService;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    use LazilyRefreshDatabase;
+
     /**
      * Set up test environment with required seeders.
      */

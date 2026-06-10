@@ -23,7 +23,7 @@
                     <div class="panel-main-interactive">
                         <div class="panel-identity-block">
                             <div class="category-icon-circle">
-                                <x-render-icon :icon="$category->icon ?: 'heroicon-o-briefcase'" />
+                                <x-svg-icon :icon="$category->getRelation('icon')" />
                             </div>
                             <div class="category-header-text">
                                 <h2 class="category-title">{{ $category->localized_name ?? $category->name }}</h2>

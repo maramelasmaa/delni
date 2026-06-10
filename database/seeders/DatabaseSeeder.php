@@ -19,13 +19,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AdminUserSeeder::class,
             SubscriptionPlanSeeder::class,
-            CategorySeeder::class,
-            CitySeeder::class,
+            ProviderTypeIconSeeder::class,
         ]);
-
-        // Optional: Seed marketplace test data with diverse providers and placements
-        if ($this->command->confirm('Seed marketplace placement test data? (for testing ranking system)', true)) {
-            $this->call(MarketplacePlacementSeeder::class);
-        }
     }
 }

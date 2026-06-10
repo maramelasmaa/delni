@@ -17,31 +17,6 @@
     </div>
 </div>
 
-<section class="subcategory-hero-header">
-    <div class="container">
-        <div class="subcategory-hero-inner-grid">
-            <div class="subcategory-meta-details">
-                <h1 class="subcategory-title-main">
-                    {{ $subcategory->localized_name }}
-                </h1>
-                @if($subcategory->description)
-                    <p class="subcategory-desc-para">{{ $subcategory->description }}</p>
-                @endif
-                <div class="subcategory-badge-pill">
-                    <x-render-icon icon="heroicon-o-users" class="badge-icon-node" />
-                    <span>{{ $profiles->total() ?? 0 }} {{ __('messages.public.professionals') }}</span>
-                </div>
-            </div>
-
-            <div class="subcategory-graphic-container">
-                <div class="graphic-circle-backdrop">
-                    <x-render-icon :icon="$subcategory->icon ?: 'heroicon-o-document-text'" class="graphic-svg" />
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 <section class="archive-split-workspace">
     <div class="container">
         <div class="workspace-layout-grid">
@@ -107,81 +82,6 @@
         font-weight: 950;
     }
 
-    .subcategory-hero-header {
-        padding: 3.5rem 0;
-        background: linear-gradient(135deg, rgba(11, 26, 52, 0.93), rgba(20, 40, 77, 0.97)),
-                    url('{{ asset('images/herobackground2.png') }}') center/cover no-repeat;
-        color: #fff;
-    }
-
-    .subcategory-hero-inner-grid {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 2rem;
-        align-items: center;
-    }
-
-    .subcategory-meta-details {
-        max-width: 700px;
-    }
-
-    .subcategory-title-main {
-        margin: 0 0 1rem;
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        font-weight: 950;
-        line-height: 1.15;
-        letter-spacing: -0.04em;
-    }
-
-    .subcategory-desc-para {
-        margin: 0 0 1.25rem;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1rem;
-        line-height: 1.8;
-        font-weight: 600;
-    }
-
-    .subcategory-badge-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.75rem 1.25rem;
-        border-radius: 999px;
-        background: rgba(241, 98, 15, 0.2);
-        border: 1px solid rgba(241, 98, 15, 0.3);
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 0.9rem;
-        font-weight: 700;
-    }
-
-    .badge-icon-node {
-        width: 18px;
-        height: 18px;
-        color: #FF9D66;
-    }
-
-    .subcategory-graphic-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .graphic-circle-backdrop {
-        width: 160px;
-        height: 160px;
-        border-radius: 24px;
-        background: rgba(241, 98, 15, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #FF9D66;
-    }
-
-    .graphic-svg {
-        width: 80px;
-        height: 80px;
-    }
-
     .archive-split-workspace {
         padding: 2rem 0 4rem;
         background: #FCFBFB;
@@ -218,36 +118,9 @@
             position: static;
             top: auto;
         }
-
-        .subcategory-hero-inner-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        .graphic-circle-backdrop {
-            width: 140px;
-            height: 140px;
-        }
-
-        .graphic-svg {
-            width: 70px;
-            height: 70px;
-        }
     }
 
     @media (max-width: 768px) {
-        .subcategory-hero-header {
-            padding: 2rem 0;
-        }
-
-        .subcategory-title-main {
-            font-size: clamp(1.5rem, 4vw, 2.25rem);
-        }
-
-        .subcategory-desc-para {
-            font-size: 0.9rem;
-        }
-
         .archive-split-workspace {
             padding: 1.5rem 0 3rem;
         }
@@ -265,30 +138,6 @@
 
         .breadcrumb-divider {
             margin: 0 0.2rem;
-        }
-
-        .subcategory-hero-header {
-            padding: 1.5rem 0;
-        }
-
-        .subcategory-title-main {
-            font-size: clamp(1.25rem, 3vw, 1.75rem);
-            margin-bottom: 0.75rem;
-        }
-
-        .subcategory-desc-para {
-            font-size: 0.85rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .graphic-circle-backdrop {
-            width: 120px;
-            height: 120px;
-        }
-
-        .graphic-svg {
-            width: 60px;
-            height: 60px;
         }
     }
 </style>

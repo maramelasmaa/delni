@@ -1,55 +1,126 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Enums\ReviewStatus;
 use App\Models\Review;
-use Illuminate\Support\Facades\Auth;
 
 class ReviewModerationService
 {
-    public function approve(
-        Review $review,
-        ?string $note = null
-    ): void {
-        $review->update([
-            'status' => 'approved',
-            'moderated_by' => Auth::id(),
-            'moderated_at' => now(),
-            'moderation_note' => $note,
-        ]);
+    /**
+     * Get the current authenticated admin user.
+     * Falls back to Auth::id() if user not injected.
+     */
+    private function getAdminId(): ?int
+    {
+        return auth('web')->id();
     }
 
-    public function reject(
-        Review $review,
-        ?string $note = null
-    ): void {
-        $review->update([
-            'status' => 'rejected',
-            'moderated_by' => Auth::id(),
-            'moderated_at' => now(),
-            'moderation_note' => $note,
-        ]);
-    }
-
-    public function markFlagHandled(Review $review): void
+    /**
+     * Admin approves a review (general approval, not flag-related).
+     * Used for reviews that may have been pending moderation.
+     * Sets status to approved and marks as moderated.
+     * Stats recalculation triggered via ReviewObserver::updated()
+     */
+    public function approve(Review $review, ?string $note = null): void
     {
         $review->update([
-            'flag_handled_by' => Auth::id(),
-            'flag_handled_at' => now(),
+            'status' => ReviewStatus::APPROVED,
+            'moderated_by' => $this->getAdminId(),
+            'moderated_at' => now(),
+            'moderation_note' => $note,
         ]);
     }
 
+    /**
+     * Admin rejects a review (general rejection, not flag-related).
+     * Hides the review and removes from ratings.
+     * Stats recalculation triggered via ReviewObserver::updated()
+     */
+    public function reject(Review $review, ?string $note = null): void
+    {
+        $review->update([
+            'status' => ReviewStatus::REJECTED,
+            'moderated_by' => $this->getAdminId(),
+            'moderated_at' => now(),
+            'moderation_note' => $note,
+        ]);
+    }
+
+    /**
+     * Admin ACCEPTS a flag — hides the review.
+     * Called when admin agrees the flagged review violates policy.
+     * Arabic label: "قبول البلاغ وإخفاء التقييم"
+     *
+     * Effect:
+     *   - status = rejected (hidden from public)
+     *   - is_flagged = true (flag accepted)
+     *   - flag_handled_by = admin id
+     *   - flag_handled_at = now()
+     *   - review no longer counts in ratings
+     *   - stats recalculated via ReviewObserver::updated()
+     */
+    public function acceptFlag(Review $review, ?string $note = null): void
+    {
+        $review->update([
+            'status' => ReviewStatus::REJECTED,
+            'is_flagged' => true,
+            'flag_handled_by' => $this->getAdminId(),
+            'flag_handled_at' => now(),
+            'moderated_by' => $this->getAdminId(),
+            'moderated_at' => now(),
+            'moderation_note' => $note,
+        ]);
+    }
+
+    /**
+     * Admin REJECTS a flag — keeps review public.
+     * Called when admin disagrees with the flag and believes review is legitimate.
+     * Arabic label: "رفض البلاغ وإبقاء التقييم"
+     *
+     * Effect:
+     *   - status = approved (stays public)
+     *   - is_flagged = false (flag rejected, clear the flag)
+     *   - flag_handled_by = admin id
+     *   - flag_handled_at = now()
+     *   - review continues counting in ratings
+     *   - review removed from active flag queue
+     *   - stats recalculated via ReviewObserver::updated() if status changed
+     */
+    public function rejectFlag(Review $review, ?string $note = null): void
+    {
+        $review->update([
+            'status' => ReviewStatus::APPROVED,
+            'is_flagged' => false,
+            'flag_handled_by' => $this->getAdminId(),
+            'flag_handled_at' => now(),
+            'moderated_by' => $this->getAdminId(),
+            'moderated_at' => now(),
+            'moderation_note' => $note,
+        ]);
+    }
+
+    /**
+     * Keep flagged review public (alias for rejectFlag for UI clarity).
+     * Deprecated: use rejectFlag() directly for new code.
+     */
     public function keep(Review $review, ?string $note = null): void
     {
-        $this->approve($review, $note);
-        $this->markFlagHandled($review);
+        $this->rejectFlag($review, $note);
     }
 
+    /**
+     * Soft-delete a review.
+     * Used for removing reviews from the database (hide permanently).
+     * Stats recalculation triggered via ReviewObserver::deleted()
+     */
     public function softDelete(Review $review, ?string $note = null): void
     {
         if ($note !== null) {
             $review->update([
-                'moderated_by' => Auth::id(),
+                'moderated_by' => $this->getAdminId(),
                 'moderated_at' => now(),
                 'moderation_note' => $note,
             ]);
@@ -58,12 +129,18 @@ class ReviewModerationService
         $review->delete();
     }
 
+    /**
+     * Restore a soft-deleted review.
+     * Returns review to public view and ratings.
+     * Stats recalculation triggered via ReviewObserver::restored()
+     */
     public function restore(Review $review, ?string $note = null): void
     {
         $review->restore();
 
         $review->update([
-            'moderated_by' => Auth::id(),
+            'status' => ReviewStatus::APPROVED,
+            'moderated_by' => $this->getAdminId(),
             'moderated_at' => now(),
             'moderation_note' => $note,
         ]);

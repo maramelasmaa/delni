@@ -6,7 +6,20 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\FrontendController;
 use App\Http\Controllers\Public\ReviewController;
+use App\Models\Icon;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+
+// Icon serving route
+Route::get('/icon/{icon}', function (Icon $icon) {
+    $path = Storage::disk('icons')->path($icon->file_path);
+    $mimeType = $icon->format === 'svg' ? 'image/svg+xml' : "image/{$icon->format}";
+
+    return response()->file($path, [
+        'Content-Type' => $mimeType,
+        'Content-Disposition' => 'inline',
+    ]);
+})->name('icon.show');
 
 Route::get('/', [FrontendController::class, 'home'])->name('home');
 
@@ -43,7 +56,7 @@ Route::middleware([
     'user.not_suspended',
 ])->group(function (): void {
     Route::post('/providers/{profile:slug}/review', [ReviewController::class, 'store'])
-        ->middleware(['review.eligible', 'throttle:reviews.create'])
+        ->middleware(['password.changed', 'review.eligible', 'throttle:reviews.create'])
         ->name('review.store');
 
     Route::post('/reviews/{review}/flag', [ReviewController::class, 'flag'])

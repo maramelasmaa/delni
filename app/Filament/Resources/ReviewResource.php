@@ -149,28 +149,43 @@ class ReviewResource extends Resource
             ])
             ->paginated([25, 50, 100])
             ->recordActions([
-                Action::make('keep')
-                    ->label('Keep')
+                Action::make('acceptFlag')
+                    ->label('قبول البلاغ وإخفاء التقييم')
+                    ->translateLabel()
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('تأكيد قبول البلاغ')
+                    ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
+                    ->action(function (Review $record, ReviewModerationService $service): void {
+                        $service->acceptFlag($record);
+                    }),
+                Action::make('rejectFlag')
+                    ->label('رفض البلاغ وإبقاء التقييم')
+                    ->translateLabel()
+                    ->icon('heroicon-o-x-circle')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('تأكيد رفض البلاغ')
+                    ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
+                    ->action(function (Review $record, ReviewModerationService $service): void {
+                        $service->rejectFlag($record);
+                    }),
+                Action::make('approve')
+                    ->label(__('filament.actions.approve'))
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
+                    ->visible(fn (Review $record): bool => ! $record->is_flagged && $record->status === ReviewStatus::APPROVED->value && ! $record->trashed())
                     ->action(function (Review $record, ReviewModerationService $service): void {
-                        $service->keep($record);
+                        $service->approve($record);
                     }),
                 Action::make('reject')
-                    ->label('Reject')
+                    ->label('رفض التقييم')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
-                    ->visible(fn (Review $record): bool => ! $record->trashed())
+                    ->visible(fn (Review $record): bool => ! $record->is_flagged && $record->status === ReviewStatus::APPROVED->value && ! $record->trashed())
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->reject($record);
-                    }),
-                Action::make('markFlagHandled')
-                    ->label('Mark handled')
-                    ->icon('heroicon-o-flag')
-                    ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
-                    ->action(function (Review $record, ReviewModerationService $service): void {
-                        $service->markFlagHandled($record);
                     }),
                 EditAction::make()
                     ->modal(),
@@ -196,14 +211,25 @@ class ReviewResource extends Resource
                     ->action(function (Collection $records, ReviewModerationService $service): void {
                         $records->each(fn ($review) => $service->reject($review));
                     }),
-                BulkAction::make('mark_flags_handled')
-                    ->label('Mark flags handled')
-                    ->icon('heroicon-o-flag')
+                BulkAction::make('acceptFlags')
+                    ->label('قبول البلاغات المحددة')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
                     ->requiresConfirmation()
                     ->action(function (Collection $records, ReviewModerationService $service): void {
                         $records
                             ->filter(fn (Review $review): bool => $review->is_flagged && $review->flag_handled_at === null)
-                            ->each(fn (Review $review) => $service->markFlagHandled($review));
+                            ->each(fn (Review $review) => $service->acceptFlag($review));
+                    }),
+                BulkAction::make('rejectFlags')
+                    ->label('رفض البلاغات المحددة')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records, ReviewModerationService $service): void {
+                        $records
+                            ->filter(fn (Review $review): bool => $review->is_flagged && $review->flag_handled_at === null)
+                            ->each(fn (Review $review) => $service->rejectFlag($review));
                     }),
             ]);
     }

@@ -12,6 +12,16 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Subscription Resource - Admin Panel
+ *
+ * Authorization: This resource uses Filament's implicit policy binding via Gate::policy()
+ * registered in AppServiceProvider. SubscriptionPolicy is automatically enforced by Filament
+ * on all record operations (create, update, delete). No explicit authorize() calls needed.
+ *
+ * @see AppServiceProvider::boot() line 67
+ * @see SubscriptionPolicy
+ */
 class SubscriptionResource extends Resource
 {
     protected static ?string $model = Subscription::class;

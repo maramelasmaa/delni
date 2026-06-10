@@ -60,6 +60,12 @@ return [
             'report' => false,
         ],
 
+        'icons' => [
+            'driver' => 'local',
+            'root' => storage_path('app/icons'),
+            'visibility' => 'private',
+        ],
+
     ],
 
     /*

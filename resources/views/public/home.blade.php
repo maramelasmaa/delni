@@ -151,7 +151,7 @@
 
                 <div class="stat-metric-card">
                     <div class="stat-icon-box">
-                        <x-render-icon icon="heroicon-o-users" />
+                        <x-render-icon icon="heroicon-o-check-circle" />
                     </div>
                     <div class="stat-info-text">
                         <strong class="stat-number">{{ number_format($providersCount) }}+</strong>
@@ -182,7 +182,7 @@
                 @foreach($categories->take(8) as $category)
                     <a href="{{ route('public.category', $category->slug) }}" class="category-interactive-card">
                         <div class="category-icon-wrapper">
-                            <x-render-icon :icon="$category->icon ?: 'heroicon-o-briefcase'" />
+                            <x-svg-icon :icon="$category->getRelation('icon')" size="24" />
                         </div>
                         <div class="category-meta-text">
                             <strong class="category-card-name">{{ $category->localized_name ?? $category->name }}</strong>

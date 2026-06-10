@@ -34,7 +34,7 @@
 
             <div class="category-graphic-container">
                 <div class="graphic-circle-backdrop">
-                    <x-render-icon :icon="$category->icon ?: 'heroicon-o-briefcase'" class="graphic-svg" />
+                    <x-svg-icon :icon="$category->getRelation('icon')" class="graphic-svg" />
                 </div>
             </div>
         </div>

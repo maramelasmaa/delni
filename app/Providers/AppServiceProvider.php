@@ -35,6 +35,7 @@ use App\Policies\UserPolicy;
 use Illuminate\Auth\Events\Attempting;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\Model;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -133,6 +133,7 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
+        // Search API rate limiter - attached to GET /api/profiles/search
         RateLimiter::for('search', function (Request $request): Limit {
             if ($request->user() !== null) {
                 return Limit::perMinute(60)->by('search|user:'.$request->user()->id);
@@ -141,14 +142,18 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(20)->by('search|ip:'.$request->ip());
         });
 
+        // Review creation rate limiter - attached to POST /providers/{slug}/review
+        // Paired with EnsureReviewEligible middleware for redundant protection
         RateLimiter::for('reviews.create', function (Request $request): Limit {
             return Limit::perDay(10)->by('reviews.create|user:'.$request->user()?->id);
         });
 
+        // Review flagging rate limiter - attached to POST /reviews/{id}/flag
         RateLimiter::for('reviews.flag', function (Request $request): Limit {
             return Limit::perDay(20)->by('reviews.flag|user:'.$request->user()?->id);
         });
 
+        // Email verification resend limiter - currently unused, available for future use
         RateLimiter::for('verification.resend', function (Request $request): Limit {
             return Limit::perHour(3)->by('verification.resend|user:'.$request->user()?->id);
         });

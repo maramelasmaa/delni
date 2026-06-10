@@ -29,14 +29,16 @@ class ReviewController extends Controller
 
     public function flag(FlagReviewRequest $request, Review $review): RedirectResponse
     {
-        $review->update([
-            'is_flagged' => true,
-            'flagged_by' => $request->user()->id,
-            'flagged_at' => now(),
-            'flagged_reason' => $request->string('reason')->value(),
-            'flag_handled_at' => null,
-            'flag_handled_by' => null,
-        ]);
+        DB::transaction(function () use ($request, $review): void {
+            $review->update([
+                'is_flagged' => true,
+                'flagged_by' => $request->user()->id,
+                'flagged_at' => now(),
+                'flagged_reason' => $request->string('reason')->value(),
+                'flag_handled_at' => null,
+                'flag_handled_by' => null,
+            ]);
+        });
 
         return back()->with('success', __('messages.review_flagged'));
     }

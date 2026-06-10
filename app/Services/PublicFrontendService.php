@@ -33,7 +33,7 @@ class PublicFrontendService
 
             $categories = Category::query()
                 ->where('is_active', true)
-                ->with(['subcategories' => fn ($query) => $query->where('is_active', true)])
+                ->with(['icon', 'subcategories' => fn ($query) => $query->where('is_active', true)->with('icon')])
                 ->orderBy('sort_order')
                 ->get()
                 ->each(fn (Category $category) => $category->setAttribute('discoverable_profiles_count', (int) ($categoryCounts[$category->id] ?? 0)));
@@ -107,7 +107,8 @@ class PublicFrontendService
             );
 
             $subcategoryCounts = $this->profileCountsBySubcategory();
-            $category->load(['subcategories' => fn ($query) => $query->where('is_active', true)]);
+            $category->load('icon');
+            $category->load(['subcategories' => fn ($query) => $query->where('is_active', true)->with('icon')]);
             $category->subcategories->each(
                 fn (Subcategory $subcategory) => $subcategory->setAttribute(
                     'discoverable_profiles_count',
@@ -126,7 +127,7 @@ class PublicFrontendService
     public function subcategory(Subcategory $subcategory, Request $request): array
     {
         return $this->inspectQueries(function () use ($subcategory, $request): array {
-            $subcategory->load('category');
+            $subcategory->load('category', 'icon');
 
             $profiles = $this->paginateProfiles(
                 $this->rankingService
@@ -157,6 +158,7 @@ class PublicFrontendService
     public function city(City $city, Request $request): array
     {
         return $this->inspectQueries(function () use ($city, $request): array {
+
             $profiles = $this->paginateProfiles(
                 $this->rankingService
                     ->applySearchRanking($this->discoverableProfilesQuery()->where('profiles.city_id', $city->id)),
@@ -209,7 +211,7 @@ class PublicFrontendService
 
             $categories = Category::query()
                 ->where('is_active', true)
-                ->with(['subcategories' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')])
+                ->with(['icon', 'subcategories' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')->with('icon')])
                 ->orderBy('sort_order')
                 ->get()
                 ->each(function (Category $category) use ($categoryCounts) {
