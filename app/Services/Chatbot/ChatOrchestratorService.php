@@ -245,7 +245,16 @@ class ChatOrchestratorService
             );
         }
 
-        $response = 'لقيتلك مقدمي خدمة مناسبين:';
+        // Use DeepSeek to generate a natural response message
+        $response = $this->generateResponseWithDeepSeek(
+            state: $state,
+            providersCount: $providers->count(),
+        );
+
+        // Fallback if DeepSeek fails
+        if (! $response) {
+            $response = 'لقيتلك مقدمي خدمة مناسبين:';
+        }
 
         return $this->responseFormatter->format(
             message: $response,
@@ -257,6 +266,47 @@ class ChatOrchestratorService
                 'needs_category' => false,
             ],
         );
+    }
+
+    /**
+     * Generate response message using DeepSeek API.
+     *
+     * Falls back to deterministic message if API fails.
+     */
+    private function generateResponseWithDeepSeek(array $state, int $providersCount): ?string
+    {
+        if (! $this->deepSeek->isEnabled()) {
+            return null;
+        }
+
+        $city = $state['city_name'] ?? 'المنطقة';
+        $category = $state['category_slug'] ?? 'الخدمة';
+
+        $prompt = <<<PROMPT
+        أنت مساعد دلني (تطبيق البحث عن مزودي الخدمات الليبي).
+
+        عثرت للتو على $providersCount مزود خدمات في $city يقدمون خدمات $category.
+
+        اكتب رسالة ترحيب قصيرة بالعربية (سطر واحد فقط، بدون قائمة) توضح أنك عثرت على مزودي الخدمات المطابقين.
+        اجعلها دافئة وودية ومختصرة.
+
+        الرسالة يجب أن تكون بصيغة عربية طبيعية وتشمل عدد مزودي الخدمات الذين عثرت عليهم والمدينة والخدمة.
+        PROMPT;
+
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'أنت مساعد ودود يساعد الناس في البحث عن مزودي الخدمات في ليبيا. تتحدث باللهجة الليبية بشكل طبيعي وودي.',
+            ],
+            [
+                'role' => 'user',
+                'content' => $prompt,
+            ],
+        ];
+
+        $response = $this->deepSeek->chat($messages);
+
+        return $response ? trim($response) : null;
     }
 
     /**
