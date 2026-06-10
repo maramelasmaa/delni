@@ -46,7 +46,12 @@ class ServiceIntentExtractor
         $aliases = config('delni_service_aliases', []);
 
         // Find service by alias matching
-        $detectedService = $this->detectService($message, $aliases);
+        try {
+            $detectedService = $this->detectService($message, $aliases);
+        } catch (\Exception $e) {
+            \Log::error('ServiceIntentExtractor error', ['error' => $e->getMessage(), 'message' => $message]);
+            $detectedService = ['normalized' => null, 'category_slug' => null, 'confidence' => 'low'];
+        }
 
         // Extract auxiliary info
         $city = $this->extractCity($message);
@@ -78,6 +83,11 @@ class ServiceIntentExtractor
         foreach ($aliases as $serviceKey => $config) {
             foreach ($config['aliases'] as $alias) {
                 if (str_contains($message, $alias)) {
+                    \Log::info('ServiceIntentExtractor matched', [
+                        'message' => $message,
+                        'alias' => $alias,
+                        'service' => $serviceKey,
+                    ]);
                     return [
                         'normalized' => $alias,
                         'category_slug' => $config['category_slug'],
@@ -86,6 +96,11 @@ class ServiceIntentExtractor
                 }
             }
         }
+
+        \Log::info('ServiceIntentExtractor no match', [
+            'message' => $message,
+            'aliases_count' => count($aliases),
+        ]);
 
         return ['normalized' => null, 'category_slug' => null, 'confidence' => 'low'];
     }

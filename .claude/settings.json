@@ -38,7 +38,8 @@
       "Bash(grep -E \"\\\\.\\(php|blade|md\\)$\")",
       "Bash(curl -s \"http://localhost/diagnostic/admin-test\")",
       "Bash(curl -s \"http://localhost/diagnostic/admin-check\")",
-      "Bash(grep -E \"\\\\.\\(md|txt\\)$\")"
+      "Bash(grep -E \"\\\\.\\(md|txt\\)$\")",
+      "Bash(curl -s -X POST http://localhost:8080/api/chat/message -H 'Content-Type: application/json' -d '{\"message\":\"تكييف في طرابلس\",\"conversation_id\":\"test_123\"}')"
     ],
     "additionalDirectories": [
       "c:\\laragon\\www\\delni\\storage"

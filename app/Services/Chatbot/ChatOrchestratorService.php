@@ -2,6 +2,7 @@
 
 namespace App\Services\Chatbot;
 
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
@@ -134,17 +135,51 @@ class ChatOrchestratorService
         string $conversationId,
         ?User $user,
     ): array {
-        // Use smart matcher to understand intent and find providers
+        // CRITICAL: Check for pending field first (multi-turn conversation)
+        $pendingField = $state['pending_field'] ?? null;
+
+        if ($pendingField === 'city') {
+            // User is answering "which city?" question
+            $cityResolver = app(CityAliasResolver::class);
+            $resolvedCity = $cityResolver->resolve($message);
+
+            if ($resolvedCity) {
+                // City successfully resolved!
+                $state['city_id'] = $resolvedCity['id'];
+                $state['pending_field'] = null;
+                $this->saveConversationState($conversationId, $state);
+
+                // Continue with provider search using resolved city
+                return $this->performProviderSearch($state, $conversationId);
+            }
+
+            // City not understood
+            return $this->responseFormatter->format(
+                message: 'ما فهمت اسم المدينة. جرّب: طرابلس، بنغازي، مصراتة، طبرق',
+                intent: 'provider_search',
+                providers: collect(),
+                metadata: [
+                    'session_id' => $conversationId,
+                    'needs_city' => true,
+                    'needs_category' => false,
+                ],
+            );
+        }
+
+        // No pending field - fresh intent detection
         $match = $this->smartMatcher->match($message);
 
-        // Save state
-        $state['messages_count'] = ($state['messages_count'] ?? 0) + 1;
-        if ($match['intent']['city_id']) {
-            $state['last_city_id'] = $match['intent']['city_id'];
+        // Save detected intent to state
+        if ($match['intent']['category_slug'] ?? null) {
+            $state['category_slug'] = $match['intent']['category_slug'];
         }
+        if ($match['intent']['city_id'] ?? null) {
+            $state['city_id'] = $match['intent']['city_id'];
+        }
+        $state['message_count'] = ($state['message_count'] ?? 0) + 1;
         $this->saveConversationState($conversationId, $state);
 
-        // If clarification needed, ask once
+        // Clarification needed (service unclear)
         if ($match['needs_clarification']) {
             return $this->responseFormatter->format(
                 message: $match['clarification_message'],
@@ -158,8 +193,11 @@ class ChatOrchestratorService
             );
         }
 
-        // If city needed, ask for it (NOT category)
+        // City needed - set as pending and ask
         if ($match['needs_city']) {
+            $state['pending_field'] = 'city';
+            $this->saveConversationState($conversationId, $state);
+
             return $this->responseFormatter->format(
                 message: $match['clarification_message'],
                 intent: 'provider_search',
@@ -172,11 +210,28 @@ class ChatOrchestratorService
             );
         }
 
-        // Build response message
-        $providers = $match['providers'];
+        // All required fields present - search providers
+        return $this->performProviderSearch($state, $conversationId);
+    }
+
+    /**
+     * Perform actual provider search with complete intent info.
+     */
+    private function performProviderSearch(array $state, string $conversationId): array
+    {
+        // Extract category from state
+        $categoryId = null;
+        if ($state['category_slug'] ?? null) {
+            $categoryId = Category::where('slug', $state['category_slug'])->value('id');
+        }
+
+        $providers = app(ProviderSearchForChatService::class)->search(
+            categoryId: $categoryId,
+            cityId: $state['city_id'] ?? null,
+        );
 
         if ($providers->count() === 0) {
-            $response = $match['fallback_explanation'] ?? 'حالياً ما لقيناش مقدم خدمة مطابق.';
+            $response = 'حالياً ما لقيناش مقدمي خدمات مطابقين. جرّب مدينة أخرى أو خدمة مختلفة.';
 
             return $this->responseFormatter->format(
                 message: $response,
@@ -190,13 +245,10 @@ class ChatOrchestratorService
             );
         }
 
-        // Build response with found providers
-        $responseMessage = $match['fallback_explanation']
-            ? $match['fallback_explanation']
-            : 'لقيتلك مقدمي خدمة مناسبين:';
+        $response = 'لقيتلك مقدمي خدمة مناسبين:';
 
         return $this->responseFormatter->format(
-            message: $responseMessage,
+            message: $response,
             intent: 'provider_search',
             providers: $providers,
             metadata: [
