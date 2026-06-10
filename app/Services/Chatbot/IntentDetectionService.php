@@ -17,19 +17,57 @@ namespace App\Services\Chatbot;
 class IntentDetectionService
 {
     private array $greetingPatterns = [
-        // Arabic greetings
-        'أهلا',
-        'مرحبا',
+        // Arabic greetings - Formal Islamic
         'السلام عليكم',
+        'السلام عليكم ورحمة الله',
+        'السلام عليكم ورحمة الله وبركاته',
+        'وعليكم السلام',
+        'وعليكم السلام ورحمة الله',
+        'وعليكم السلام ورحمة الله وبركاته',
         'السلام',
+        // Arabic greetings - Casual
+        'أهلا',
+        'أهلا وسهلا',
+        'أهلا بك',
+        'مرحبا',
+        'مرحبا بك',
+        'هلا',
+        'هلا وسهلا',
+        // Arabic greetings - "How are you"
         'شلونك',
-        'كيفك',
+        'شلون أحوالك',
         'شنو أخبارك',
+        'كيفك',
+        'كيف حالك',
+        'كيفك أنت',
+        'كيفك أنتي',
+        'كيف أحوالك',
+        'شن أخبارك',
+        'شنو حالك',
+        // Arabic greetings - Responses
+        'تمام',
         'تمام التمام',
-        'السلام والرحمة',
+        'بخير',
+        'بخير الحمد لله',
+        'الحمد لله',
+        'ماشي الحال',
+        'تمام تمام',
+        'والله تمام',
+        'كل التمام',
+        'أنا بخير',
+        'الحمد لله على السلامة',
+        // Arabic greetings - Time-specific
         'صباح الخير',
+        'صباح النور',
         'مساء الخير',
-        // English greetings
+        'مساء النور',
+        'ليلة طيبة',
+        'تصبح على خير',
+        // Arabic greetings - Other
+        'السلام والرحمة',
+        'السلام عليكن',
+        'سلام عليكم',
+        // English greetings - Standard
         'hello',
         'hi',
         'hey',
@@ -39,6 +77,15 @@ class IntentDetectionService
         'good evening',
         'how are you',
         'what\'s up',
+        // English greetings - Casual
+        'yo',
+        'sup',
+        'hey bro',
+        'bro',
+        'wassup',
+        'what\'s good',
+        'how\'s it going',
+        'how you doing',
     ];
 
     private array $joinQuestionPatterns = [
