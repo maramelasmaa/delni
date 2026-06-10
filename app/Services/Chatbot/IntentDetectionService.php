@@ -17,21 +17,32 @@ namespace App\Services\Chatbot;
 class IntentDetectionService
 {
     private array $greetingPatterns = [
+        // Arabic greetings
         'أهلا',
         'مرحبا',
         'السلام عليكم',
         'السلام',
         'شلونك',
         'كيفك',
-        'كيفك',
         'شنو أخبارك',
         'تمام التمام',
         'السلام والرحمة',
         'صباح الخير',
         'مساء الخير',
+        // English greetings
+        'hello',
+        'hi',
+        'hey',
+        'greetings',
+        'good morning',
+        'good afternoon',
+        'good evening',
+        'how are you',
+        'what\'s up',
     ];
 
     private array $joinQuestionPatterns = [
+        // Arabic
         'كيف نسجل',
         'كيفية التسجيل',
         'كيف أصير',
@@ -41,9 +52,18 @@ class IntentDetectionService
         'الانضمام',
         'كيف أنضم',
         'كيف أصير مزود خدمات',
+        // English
+        'how to register',
+        'how do i sign up',
+        'how to join',
+        'become a provider',
+        'become a service provider',
+        'register as provider',
+        'sign up as provider',
     ];
 
     private array $supportQuestionPatterns = [
+        // Arabic
         'شنو دلني',
         'ما هي دلني',
         'شن دلني',
@@ -54,6 +74,18 @@ class IntentDetectionService
         'شرح',
         'ساعدني',
         'مساعدة',
+        // English
+        'what is delni',
+        'how to use',
+        'how does it work',
+        'how to find',
+        'how to contact',
+        'help',
+        'support',
+        'explain',
+        'tell me about',
+        'about delni',
+        'features',
     ];
 
     /**
