@@ -74,16 +74,15 @@ class ProfileVisibilityService
         }
 
         // Check: Has active, non-expired subscription
-        // Ensure subscriptions are loaded to avoid N+1
-        $user->loadMissing('subscriptions');
-        $subscription = $user->subscriptions
+        // Use fresh subscriptions query to ensure latest data
+        $subscription = $user->subscriptions()
             ->where('is_active', true)
-            ->where(fn ($sub) => $sub->ends_at->gte(Carbon::today()))
+            ->whereDate('ends_at', '>=', Carbon::today())
             ->first();
 
         if (! $subscription) {
             // Distinguish: no subscription vs expired subscription
-            $anySubscription = $user->subscriptions->first();
+            $anySubscription = $user->subscriptions()->first();
 
             if (! $anySubscription) {
                 return new ProfileVisibilityResult(
@@ -131,8 +130,8 @@ class ProfileVisibilityService
     {
         $missing = [];
 
-        // Ensure relationships are loaded to avoid N+1
-        $profile->loadMissing(['user', 'subcategories']);
+        // Load user relationship if not already loaded (avoid N+1 but allow fresh data)
+        $profile->loadMissing('user');
 
         // Check required fields from completeness calculation
         if (! filled($profile->business_name) && ! filled($profile->user?->name)) {
@@ -147,7 +146,8 @@ class ProfileVisibilityService
             $missing[] = 'category';
         }
 
-        if ($profile->subcategories->isEmpty()) {
+        // Use query-based check for subcategories to ensure fresh data
+        if (! $profile->subcategories()->exists()) {
             $missing[] = 'subcategories';
         }
 
