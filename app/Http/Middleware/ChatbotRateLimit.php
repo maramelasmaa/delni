@@ -23,9 +23,17 @@ class ChatbotRateLimit
         $window = auth()->check() ? 1440 : 60; // minutes
 
         if (RateLimiter::tooManyAttempts($key, $limit)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            $minutes = ceil($retryAfter / 60);
+
             return response()->json([
-                'error' => 'تم تجاوز الحد المسموح من الرسائل. يرجى المحاولة لاحقاً.',
-                'retry_after' => RateLimiter::availableIn($key),
+                'error' => auth()->check()
+                    ? "تم الوصول لحد الاستخدام اليومي ({$limit} رسالة). يرجى المحاولة بعد {$minutes} دقيقة."
+                    : "تم الوصول لحد الاستخدام بالساعة ({$limit} رسالة). يرجى المحاولة بعد {$minutes} دقيقة.",
+                'limit' => $limit,
+                'window_minutes' => $window,
+                'retry_after_seconds' => $retryAfter,
+                'retry_after_minutes' => $minutes,
             ], 429);
         }
 

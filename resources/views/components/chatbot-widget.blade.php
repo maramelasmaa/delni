@@ -494,7 +494,18 @@
                 });
 
                 if (!response.ok) {
-                    this.addMessage('حدث خطأ. الرجاء المحاولة لاحقاً.', 'bot');
+                    const data = await response.json();
+
+                    // Handle rate limiting (429)
+                    if (response.status === 429) {
+                        const errorMessage = data?.error || `تم تجاوز الحد المسموح. الرجاء الانتظار ${data?.retry_after_minutes || 1} دقيقة.`;
+                        this.addMessage(errorMessage, 'bot');
+                        return;
+                    }
+
+                    // Handle other errors
+                    const errorMessage = data?.error || 'حدث خطأ. الرجاء المحاولة لاحقاً.';
+                    this.addMessage(errorMessage, 'bot');
                     return;
                 }
 
