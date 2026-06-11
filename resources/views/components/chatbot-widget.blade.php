@@ -1,5 +1,5 @@
-{{-- Chatbot Floating Widget --}}
-<div id="delni-chatbot" class="delni-chatbot" data-api-url="{{ route('api.chat.v2.message') }}">
+{{-- Chatbot V3: Conversational Stateful Widget --}}
+<div id="delni-chatbot" class="delni-chatbot" data-api-url="{{ route('api.chat.v3.message') }}">
     {{-- Float Button --}}
     <button class="chatbot-toggle" aria-label="فتح محادثة المساعد" onclick="window.delniChatbot?.toggle()">
         <svg xmlns="http://www.w3.org/2000/svg" class="chatbot-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -449,9 +449,9 @@
 <script>
     window.delniChatbot = {
         conversationId: null,
-        apiUrl: '{{ route("api.chat.v2.message") }}',
-        initUrl: '{{ route("api.chat.v2.init") }}',
-        resetUrl: '{{ route("api.chat.v2.reset") }}',
+        apiUrl: '{{ route("api.chat.v3.message") }}',
+        initUrl: '{{ route("api.chat.v3.init") }}',
+        resetUrl: '{{ route("api.chat.v3.reset") }}',
 
         async init() {
             try {
@@ -628,11 +628,12 @@
                     },
                     body: JSON.stringify({
                         conversation_id: this.conversationId,
+                        message: 'reset',
                     }),
                 });
 
                 const data = await response.json();
-                this.conversationId = data?.new_conversation_id || 'chat_' + Date.now();
+                this.conversationId = data?.conversation_id || 'chat_' + Date.now();
 
                 const messagesContainer = document.getElementById('messages');
                 messagesContainer.innerHTML = `
