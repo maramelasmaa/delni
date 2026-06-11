@@ -9,6 +9,7 @@ use App\Services\Chatbot\ChatSafetyService;
 use App\Services\Chatbot\CityAliasResolver;
 use App\Services\Chatbot\CityResolverService;
 use App\Services\Chatbot\ConversationStateManager;
+use App\Services\Chatbot\ConversationStateRepository;
 use App\Services\Chatbot\CostTracker;
 use App\Services\Chatbot\DeepSeekClient;
 use App\Services\Chatbot\DeepSeekConversationService;
@@ -39,6 +40,7 @@ class ChatbotServiceProvider extends ServiceProvider
         $this->app->singleton(DeepSeekConversationService::class);
         $this->app->singleton(ChatResponseFormatterService::class);
         $this->app->singleton(ConversationStateManager::class);
+        $this->app->singleton(ConversationStateRepository::class);
         $this->app->singleton(ChatOrchestratorService::class);
     }
 }
