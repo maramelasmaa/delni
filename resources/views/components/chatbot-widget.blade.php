@@ -1,5 +1,5 @@
 {{-- Chatbot Floating Widget --}}
-<div id="delni-chatbot" class="delni-chatbot" data-api-url="{{ route('api.chat.init') }}">
+<div id="delni-chatbot" class="delni-chatbot" data-api-url="{{ route('api.chat.v2.message') }}">
     {{-- Float Button --}}
     <button class="chatbot-toggle" aria-label="فتح محادثة المساعد" onclick="window.delniChatbot?.toggle()">
         <svg xmlns="http://www.w3.org/2000/svg" class="chatbot-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -264,6 +264,20 @@
         border-radius: 8px;
         margin: 8px 0;
         border-left: 3px solid var(--primary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid var(--border);
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .provider-card:hover {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+        border-left-color: #ea580c;
+        border-left-width: 4px;
     }
 
     .provider-card-header {
@@ -279,6 +293,11 @@
         border-radius: 4px;
         background: white;
         object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .provider-info {
+        flex: 1;
     }
 
     .provider-info h4 {
@@ -304,6 +323,22 @@
 
     .stars {
         color: #fbbf24;
+    }
+
+    .provider-badges {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+
+    .provider-badge {
+        background: var(--primary);
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
     }
 
     .chatbot-input-area {
@@ -414,9 +449,9 @@
 <script>
     window.delniChatbot = {
         conversationId: null,
-        apiUrl: '{{ route("api.chat.message") }}',
-        initUrl: '{{ route("api.chat.init") }}',
-        resetUrl: '{{ route("api.chat.reset") }}',
+        apiUrl: '{{ route("api.chat.v2.message") }}',
+        initUrl: '{{ route("api.chat.v2.init") }}',
+        resetUrl: '{{ route("api.chat.v2.reset") }}',
 
         async init() {
             try {
@@ -464,7 +499,7 @@
                 }
 
                 const data = await response.json();
-                this.conversationId = data.session_id || this.conversationId;
+                this.conversationId = data.conversation_id || this.conversationId;
 
                 // Safe access to message field
                 const botMessage = data?.message ?? 'حدث خطأ مؤقت في المساعد.';
@@ -502,8 +537,18 @@
 
         addProviderCard(provider) {
             const messagesContainer = document.getElementById('messages');
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'provider-card';
+
+            // Create clickable link
+            const cardLink = document.createElement('a');
+            cardLink.href = provider.url || '#';
+            cardLink.className = 'provider-card';
+            cardLink.target = '_blank';
+            cardLink.onclick = (e) => {
+                if (provider.url) {
+                    window.location.href = provider.url;
+                }
+                return false;
+            };
 
             let ratingHtml = '';
             if (provider.rating_avg) {
@@ -511,20 +556,29 @@
                 ratingHtml = `<div class="provider-rating"><span class="stars">${stars}</span> ${provider.rating_avg} (${provider.reviews_count})</div>`;
             }
 
-            cardDiv.innerHTML = `
+            let badgesHtml = '';
+            if (provider.badges && provider.badges.length > 0) {
+                const badgeElements = provider.badges.map(badge =>
+                    `<span class="provider-badge">${badge}</span>`
+                ).join('');
+                badgesHtml = `<div class="provider-badges">${badgeElements}</div>`;
+            }
+
+            cardLink.innerHTML = `
                 <div class="provider-card-header">
-                    ${provider.logo_url ? `<img src="${provider.logo_url}" alt="${provider.business_name}" class="provider-logo">` : ''}
+                    ${provider.logo_url ? `<img src="${provider.logo_url}" alt="${provider.business_name}" class="provider-logo">` : '<div style="width: 40px; height: 40px; border-radius: 4px; background: #e5e7eb;"></div>'}
                     <div class="provider-info">
                         <h4>${provider.business_name}</h4>
                         <p>${provider.category} • ${provider.city}</p>
                         ${ratingHtml}
+                        ${badgesHtml}
                     </div>
                 </div>
             `;
 
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message bot-message';
-            messageDiv.appendChild(cardDiv);
+            messageDiv.appendChild(cardLink);
 
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
