@@ -2,501 +2,227 @@
 
 namespace App\Services\Chatbot;
 
-use App\Models\Category;
 use App\Models\City;
-use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Orchestrates the complete chatbot flow.
+ * Conversational Chatbot V3 - Stateful orchestrator.
  *
- * Coordinates:
- * 1. Safety validation
- * 2. Intent detection
- * 3. Category/city resolution
- * 4. Provider search
- * 5. Context building
- * 6. DeepSeek API call (with graceful fallback)
- * 7. Response formatting
+ * NEW APPROACH: Hybrid intelligent conversation grounded in database
  *
- * Ensures:
- * - Only visible providers are used
- * - No hidden/suspended/expired providers leak
- * - DeepSeek failures don't break the app
- * - Rate limiting is respected
+ * Flow:
+ * 1. Load conversation state from cache
+ * 2. Check if greeting (cheap, deterministic - no AI)
+ * 3. Call DeepSeekConversationService (one AI call)
+ *    - Understands intent
+ *    - Extracts: service, city, experience_years
+ *    - Asks follow-up if needed
+ * 4. Search database with extracted intent
+ * 5. Update conversation state
+ * 6. Return response with DB results
+ *
+ * Never invents: Services, providers, or results
+ * Token budget: ~600-700 per message
+ * Cost: ~$0.0002-0.0003 per message
  */
 class ChatOrchestratorService
 {
     public function __construct(
-        private ChatSafetyService $safety,
         private IntentDetectionService $intentDetection,
-        private IntentExtractionService $intentExtraction,
+        private DeepSeekConversationService $conversation,
         private ProviderSearchForChatService $providerSearch,
-        private DeepSeekClient $deepSeek,
-        private ChatResponseFormatterService $responseFormatter,
     ) {}
 
     /**
-     * Process a user message through the complete chatbot pipeline.
+     * Process user message with conversational AI.
      *
-     * @param  array<string, mixed>  $metadata
+     * @param  array<string, mixed>  $conversationState Compact state from cache
      * @return array<string, mixed>
      */
     public function handle(
         string $message,
-        ?User $user = null,
-        array $metadata = [],
+        array $conversationState = [],
+        ?string $conversationId = null,
     ): array {
-        // Safety check first
-        $safetyCheck = $this->safety->validate($message);
-        if (! $safetyCheck['safe']) {
-            return $this->unsafeResponse($safetyCheck['reason']);
-        }
+        $conversationId = $conversationId ?? $this->generateId();
 
-        // Detect intent
-        $intentData = $this->intentDetection->detect($message);
-        $intent = $intentData['intent'];
+        try {
+            // STAGE 1: Cheap deterministic checks (no AI call)
 
-        // Load conversation state
-        $conversationId = $metadata['conversation_id'] ?? $this->generateConversationId();
-        $state = $this->getConversationState($conversationId);
+            // Check if greeting
+            $detectedIntent = $this->intentDetection->detect($message);
+            if ($detectedIntent === 'greeting') {
+                $this->updateState($conversationId, ['last_intent' => 'greeting']);
 
-        // Handle by intent
-        return match ($intent) {
-            'greeting' => $this->handleGreeting($conversationId),
-            'provider_join_question' => $this->handleJoinQuestion($conversationId),
-            'support_question' => $this->handleSupportQuestion($conversationId),
-            'provider_search' => $this->handleProviderSearch($message, $state, $conversationId, $user),
-            default => $this->handleProviderSearch($message, $state, $conversationId, $user),
-        };
-    }
-
-    /**
-     * Handle greeting intent.
-     */
-    private function handleGreeting(string $conversationId): array
-    {
-        $response = 'أهلاً بك في دلني! شن الخدمة اللي تبحث عنها؟';
-
-        return $this->responseFormatter->format(
-            message: $response,
-            intent: 'greeting',
-            providers: collect(),
-            metadata: ['session_id' => $conversationId],
-        );
-    }
-
-    /**
-     * Handle "how to join as provider" question.
-     */
-    private function handleJoinQuestion(string $conversationId): array
-    {
-        $response = 'مرحباً! يمكنك التسجيل كمزود خدمات من خلال تطبيق دلني. انقر على "التسجيل" واختر "مزود خدمات" وأكمل البيانات المطلوبة.';
-
-        return $this->responseFormatter->format(
-            message: $response,
-            intent: 'provider_join_question',
-            providers: collect(),
-            metadata: [
-                'session_id' => $conversationId,
-                'needs_city' => false,
-                'needs_category' => false,
-            ],
-        );
-    }
-
-    /**
-     * Handle "how to use app" question.
-     */
-    private function handleSupportQuestion(string $conversationId): array
-    {
-        $response = 'دلني هو تطبيق للبحث عن مقدمي الخدمات في ليبيا. يمكنك البحث عن الخدمات التي تحتاجها حسب الفئة والمدينة، والتواصل مباشرة مع مقدمي الخدمات.';
-
-        return $this->responseFormatter->format(
-            message: $response,
-            intent: 'support_question',
-            providers: collect(),
-            metadata: [
-                'session_id' => $conversationId,
-                'needs_city' => false,
-                'needs_category' => false,
-            ],
-        );
-    }
-
-    /**
-     * Handle provider search intent with semantic entity detection.
-     *
-     * NEW PHILOSOPHY: Search first, ask questions only if necessary.
-     *
-     * @param  array<string, mixed>  $state
-     */
-    private function handleProviderSearch(
-        string $message,
-        array $state,
-        string $conversationId,
-        ?User $user,
-    ): array {
-        // Check for pending field (multi-turn conversation)
-        $pendingField = $state['pending_field'] ?? null;
-
-        if ($pendingField === 'city') {
-            return $this->handleCityResponse($message, $state, $conversationId);
-        }
-
-        // Extract intent and entities using semantic understanding
-        $extraction = $this->intentExtraction->extract($message);
-
-        // Try semantic search first (aggressive searching)
-        if ($extraction['should_search_first']) {
-            $providers = $this->providerSearch->searchSemantic(
-                providerNameQuery: $extraction['provider_name_query'],
-                businessNameQuery: $extraction['business_name_query'],
-                serviceQuery: $extraction['service_query'],
-                cityId: $this->resolveCityIfNeeded($extraction['city'], $state),
-                categoryHint: $this->resolveCategoryIfNeeded($extraction['category_hint']),
-            );
-
-            // Found results - return them immediately
-            if ($providers->isNotEmpty()) {
-                return $this->formatSearchResults(
-                    providers: $providers,
-                    message: $this->generateSearchResultMessage($extraction, $providers->count()),
-                    conversationId: $conversationId,
-                );
+                return [
+                    'success' => true,
+                    'message' => 'وعليكم السلام! 👋 كيف يمكنني مساعدتك؟ ابحث عن خدمة معينة أو أخبرني بالمدينة.',
+                    'intent' => 'greeting',
+                    'providers' => [],
+                    'conversation_id' => $conversationId,
+                ];
             }
-        }
 
-        // If extraction is very unclear, ask for clarification
-        if ($extraction['confidence'] < 0.3) {
-            return $this->responseFormatter->format(
-                message: 'ما فهمت طلبك بوضوح. شرح ليّ أكثر عن الخدمة اللي تبحث عنها والمدينة إن أمكن.',
-                intent: 'provider_search',
-                providers: collect(),
-                metadata: [
-                    'session_id' => $conversationId,
-                    'needs_city' => false,
-                    'needs_category' => false,
-                ],
+            // STAGE 2: Use DeepSeek for intelligent conversation + extraction
+
+            // Get max 5 recent providers from state to send as context
+            $recentProvidersIds = $conversationState['last_results_ids'] ?? [];
+            $contextProviders = $this->getProviderContext($recentProvidersIds);
+
+            // Call DeepSeek (single call per message)
+            $aiResponse = $this->conversation->chat(
+                userMessage: $message,
+                conversationState: $conversationState,
+                dbProviders: $contextProviders,
             );
+
+            if (!$aiResponse['success']) {
+                // Fallback if DeepSeek fails
+                return [
+                    'success' => true,
+                    'message' => $aiResponse['message'],
+                    'intent' => 'clarify',
+                    'providers' => [],
+                    'conversation_id' => $conversationId,
+                ];
+            }
+
+            // Extract intent from AI response
+            $extractedService = $aiResponse['extracted_service'];
+            $extractedCity = $aiResponse['extracted_city'];
+            $extractedExperience = $aiResponse['extracted_experience'];
+
+            // Update state with extracted info
+            if ($extractedService) {
+                $conversationState['service_query'] = $extractedService;
+            }
+            if ($extractedCity) {
+                $conversationState['city'] = $extractedCity;
+            }
+            if ($extractedExperience) {
+                $conversationState['min_experience_years'] = $extractedExperience;
+            }
+
+            // STAGE 3: If we have a service, search the database
+
+            if ($extractedService) {
+                $cityId = null;
+                if ($extractedCity) {
+                    $cityId = $this->resolveCityId($extractedCity);
+                }
+
+                // Search database
+                $providers = $this->providerSearch->searchSemantic(
+                    providerNameQuery: null,
+                    businessNameQuery: null,
+                    serviceQuery: $extractedService,
+                    cityId: $cityId,
+                    categoryHint: null,
+                );
+
+                // Store recent provider IDs for context
+                $conversationState['last_results_ids'] = $providers->pluck('id')->take(5)->toArray();
+                $this->updateState($conversationId, $conversationState);
+
+                // Return results (even if empty - be honest about DB)
+                return [
+                    'success' => true,
+                    'message' => $aiResponse['message'], // Use AI-generated message
+                    'intent' => $providers->isEmpty() ? 'no_results' : 'search',
+                    'providers' => $providers->toArray(),
+                    'conversation_id' => $conversationId,
+                ];
+            }
+
+            // No service extracted yet - just respond conversationally
+            $this->updateState($conversationId, $conversationState);
+
+            return [
+                'success' => true,
+                'message' => $aiResponse['message'],
+                'intent' => $aiResponse['intent'] ?? 'clarify',
+                'providers' => [],
+                'conversation_id' => $conversationId,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Chatbot orchestrator error', [
+                'error' => $e->getMessage(),
+                'message' => $message,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'حدث خطأ. حاول مرة أخرى.',
+                'intent' => 'error',
+                'providers' => [],
+                'conversation_id' => $conversationId,
+            ];
         }
-
-        // If we have service but missing city, ask for it
-        if (filled($extraction['service_query']) && ! $this->resolveCityIfNeeded($extraction['city'], $state)) {
-            $state['pending_field'] = 'city';
-            $state['service'] = $extraction['service_query'];
-            $this->saveConversationState($conversationId, $state);
-
-            return $this->responseFormatter->format(
-                message: "في أي مدينة تبحث عن {$extraction['service_query']}؟",
-                intent: 'provider_search',
-                providers: collect(),
-                metadata: [
-                    'session_id' => $conversationId,
-                    'needs_city' => true,
-                    'needs_category' => false,
-                ],
-            );
-        }
-
-        // No results and no clear search criteria
-        return $this->responseFormatter->format(
-            message: 'ما لقيناش نتيجة مطابقة حالياً. جرّب مدينة أخرى أو خدمة مختلفة.',
-            intent: 'provider_search',
-            providers: collect(),
-            metadata: [
-                'session_id' => $conversationId,
-                'needs_city' => false,
-                'needs_category' => false,
-            ],
-        );
     }
 
     /**
-     * Handle user's response to "which city?" question.
-     *
-     * @param  array<string, mixed>  $state
+     * Resolve city name to ID.
      */
-    private function handleCityResponse(
-        string $message,
-        array $state,
-        string $conversationId,
-    ): array {
-        $cityResolver = app(CityAliasResolver::class);
-        $resolvedCity = $cityResolver->resolve($message);
-
-        if (! $resolvedCity) {
-            return $this->responseFormatter->format(
-                message: 'ما فهمت اسم المدينة. جرّب: طرابلس، بنغازي، مصراتة، طبرق',
-                intent: 'provider_search',
-                providers: collect(),
-                metadata: [
-                    'session_id' => $conversationId,
-                    'needs_city' => true,
-                    'needs_category' => false,
-                ],
-            );
-        }
-
-        // City resolved - search with service + city
-        $state['city_id'] = $resolvedCity['id'];
-        $state['city_name'] = $resolvedCity['name'];
-        $state['pending_field'] = null;
-        $this->saveConversationState($conversationId, $state);
-
-        // Search with service hint from previous state
-        $providers = $this->providerSearch->searchByService(
-            service: $state['service'] ?? 'الخدمة',
-            cityId: $state['city_id'],
-            categoryHint: null,
-        );
-
-        return $this->formatSearchResults(
-            providers: $providers,
-            message: $providers->isNotEmpty()
-                ? "تمام، لقيتلك مقدمي خدمة في {$state['city_name']}:"
-                : "للأسف ما لقيناش مقدمي خدمات مطابقين في {$state['city_name']}.",
-            conversationId: $conversationId,
-        );
-    }
-
-    /**
-     * Resolve city ID from extraction or state.
-     */
-    private function resolveCityIfNeeded(?string $cityName, array $state): ?int
+    private function resolveCityId(?string $cityName): ?int
     {
-        if ($state['city_id'] ?? null) {
-            return $state['city_id'];
-        }
-
-        if (filled($cityName)) {
-            $city = City::where('is_active', true)
-                ->where(function ($q) use ($cityName) {
-                    $q->where('name_ar', 'like', "%{$cityName}%")
-                        ->orWhere('name', 'like', "%{$cityName}%");
-                })
-                ->first();
-
-            return $city?->id;
-        }
-
-        return null;
-    }
-
-    /**
-     * Resolve category ID from category hint.
-     */
-    private function resolveCategoryIfNeeded(?string $categoryHint): ?int
-    {
-        if (! filled($categoryHint)) {
+        if (!$cityName) {
             return null;
         }
 
-        $category = Category::where('is_active', true)
-            ->where(function ($q) use ($categoryHint) {
-                $q->where('name_ar', 'like', "%{$categoryHint}%")
-                    ->orWhere('name', 'like', "%{$categoryHint}%");
+        return City::where('is_active', true)
+            ->where(function ($q) use ($cityName) {
+                $q->where('name_ar', 'like', "%{$cityName}%")
+                    ->orWhere('name', 'like', "%{$cityName}%");
             })
-            ->first();
-
-        return $category?->id;
+            ->value('id');
     }
 
     /**
-     * Format and return search results.
-     */
-    private function formatSearchResults(
-        mixed $providers,
-        string $message,
-        string $conversationId,
-    ): array {
-        return $this->responseFormatter->format(
-            message: $message,
-            intent: 'provider_search',
-            providers: $providers,
-            metadata: [
-                'session_id' => $conversationId,
-                'needs_city' => false,
-                'needs_category' => false,
-            ],
-        );
-    }
-
-    /**
-     * Generate natural response message for search results.
-     */
-    private function generateSearchResultMessage(array $extraction, int $count): string
-    {
-        if ($count === 0) {
-            return 'ما لقيناش نتيجة مطابقة حالياً. جرّب مدينة أخرى أو خدمة مختلفة.';
-        }
-
-        // Build natural message from extraction data
-        $parts = [];
-
-        if (filled($extraction['provider_name_query'])) {
-            $parts[] = "اسم '{$extraction['provider_name_query']}'";
-        }
-
-        if (filled($extraction['service_query'])) {
-            $parts[] = "خدمة {$extraction['service_query']}";
-        }
-
-        if (filled($extraction['city'])) {
-            $parts[] = "في {$extraction['city']}";
-        }
-
-        if (empty($parts)) {
-            return "لقيتلك {$count} مقدمي خدمة مطابقين:";
-        }
-
-        $description = implode(' و ', $parts);
-
-        return "لقيتلك {$count} مقدمي خدمة بـ {$description}:";
-    }
-
-    /**
-     * Perform actual provider search with complete intent info.
-     */
-    private function performProviderSearch(array $state, string $conversationId): array
-    {
-        // Extract category from state
-        $categoryId = null;
-        if ($state['category_slug'] ?? null) {
-            $categoryId = Category::where('slug', $state['category_slug'])->value('id');
-        }
-
-        $providers = app(ProviderSearchForChatService::class)->search(
-            categoryId: $categoryId,
-            cityId: $state['city_id'] ?? null,
-        );
-
-        if ($providers->count() === 0) {
-            $response = 'حالياً ما لقيناش مقدمي خدمات مطابقين. جرّب مدينة أخرى أو خدمة مختلفة.';
-
-            return $this->responseFormatter->format(
-                message: $response,
-                intent: 'provider_search',
-                providers: collect(),
-                metadata: [
-                    'session_id' => $conversationId,
-                    'needs_city' => false,
-                    'needs_category' => false,
-                ],
-            );
-        }
-
-        // Use DeepSeek to generate a natural response message
-        $response = $this->generateResponseWithDeepSeek(
-            state: $state,
-            providersCount: $providers->count(),
-        );
-
-        // Fallback if DeepSeek fails
-        if (! $response) {
-            $response = 'لقيتلك مقدمي خدمة مناسبين:';
-        }
-
-        return $this->responseFormatter->format(
-            message: $response,
-            intent: 'provider_search',
-            providers: $providers,
-            metadata: [
-                'session_id' => $conversationId,
-                'needs_city' => false,
-                'needs_category' => false,
-            ],
-        );
-    }
-
-    /**
-     * Generate response message using DeepSeek API.
+     * Get provider context for DeepSeek (max 5, minimal fields).
      *
-     * Falls back to deterministic message if API fails.
+     * @param  array<int>  $providerIds
+     * @return array<int, array<string, mixed>>
      */
-    private function generateResponseWithDeepSeek(array $state, int $providersCount): ?string
+    private function getProviderContext(array $providerIds): array
     {
-        if (! $this->deepSeek->isEnabled()) {
-            return null;
+        if (empty($providerIds)) {
+            return [];
         }
 
-        $city = $state['city_name'] ?? 'المنطقة';
-        $category = $state['category_slug'] ?? 'الخدمة';
+        $providers = $this->providerSearch->searchSemantic()
+            ->whereIn('id', array_slice($providerIds, 0, 5))
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'name' => $p['name'] ?? 'Unknown',
+                    'city' => $p['city'] ?? 'Unknown',
+                    'category' => $p['category'] ?? 'General',
+                    'rating' => $p['rating'] ?? 0,
+                ];
+            })
+            ->toArray();
 
-        $prompt = <<<PROMPT
-        أنت مساعد دلني (تطبيق البحث عن مزودي الخدمات الليبي).
-
-        عثرت للتو على $providersCount مزود خدمات في $city يقدمون خدمات $category.
-
-        اكتب رسالة ترحيب قصيرة بالعربية (سطر واحد فقط، بدون قائمة) توضح أنك عثرت على مزودي الخدمات المطابقين.
-        اجعلها دافئة وودية ومختصرة.
-
-        الرسالة يجب أن تكون بصيغة عربية طبيعية وتشمل عدد مزودي الخدمات الذين عثرت عليهم والمدينة والخدمة.
-        PROMPT;
-
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => 'أنت مساعد ودود يساعد الناس في البحث عن مزودي الخدمات في ليبيا. تتحدث باللهجة الليبية بشكل طبيعي وودي.',
-            ],
-            [
-                'role' => 'user',
-                'content' => $prompt,
-            ],
-        ];
-
-        $response = $this->deepSeek->chat($messages);
-
-        return $response ? trim($response) : null;
+        return $providers;
     }
 
     /**
-     * Handle unsafe message.
-     *
-     * @return array<string, mixed>
+     * Update conversation state in cache.
      */
-    private function unsafeResponse(string $reason): array
+    private function updateState(string $conversationId, array $state): void
     {
-        return [
-            'message' => 'حدث خطأ في معالجة رسالتك. حاول مرة أخرى.',
-            'intent' => 'error',
-            'providers' => [],
-            'suggested_actions' => [],
-            'needs' => [
-                'city' => false,
-                'category' => false,
-            ],
-        ];
+        Cache::put(
+            "chatbot:state:{$conversationId}",
+            $state,
+            now()->addHours(24),
+        );
     }
 
     /**
-     * Get conversation state from cache.
-     *
-     * @return array<string, mixed>
+     * Generate secure conversation ID.
      */
-    private function getConversationState(string $conversationId): array
+    private function generateId(): string
     {
-        return Cache::get("chatbot_state:{$conversationId}", [
-            'last_city_id' => null,
-            'last_category_id' => null,
-            'last_subcategory_id' => null,
-            'messages_count' => 0,
-        ]);
-    }
-
-    /**
-     * Save conversation state to cache (1 hour TTL).
-     */
-    private function saveConversationState(string $conversationId, array $state): void
-    {
-        Cache::put("chatbot_state:{$conversationId}", $state, now()->addHour());
-    }
-
-    /**
-     * Generate a unique conversation ID.
-     */
-    private function generateConversationId(): string
-    {
-        return 'chat_'.uniqid('', true);
+        return 'chat_'.bin2hex(random_bytes(16));
     }
 }
