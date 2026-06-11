@@ -11,15 +11,15 @@ use Symfony\Component\HttpFoundation\Response;
  * Rate limiter for chatbot API.
  *
  * Limits:
- * - Guests: 10 messages/hour
- * - Authenticated: 50 messages/day
+ * - Guests: 30 messages/hour
+ * - Authenticated: 60 messages/day
  */
 class ChatbotRateLimit
 {
     public function handle(Request $request, Closure $next): Response
     {
         $key = $this->getKey($request);
-        $limit = auth()->check() ? 50 : 10;
+        $limit = auth()->check() ? 60 : 30;
         $window = auth()->check() ? 1440 : 60; // minutes
 
         if (RateLimiter::tooManyAttempts($key, $limit)) {
