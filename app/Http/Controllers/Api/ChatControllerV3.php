@@ -17,7 +17,7 @@ use Illuminate\Http\JsonResponse;
  * - POST /api/chat/v3/reset - Reset conversation
  *
  * Architecture:
- * - Rate limiting: ChatbotRateLimit middleware (10/hour guests, 60/day auth)
+ * - Rate limiting: ChatbotRateLimit middleware (30/hour guests, 60/day auth)
  * - State: ConversationStateRepository (24h cache)
  * - Logic: ChatOrchestratorService (one DeepSeek call per message)
  * - Validation: SendMessageRequest (auto-generates conversation_id)

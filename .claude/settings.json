@@ -39,7 +39,9 @@
       "Bash(curl -s \"http://localhost/diagnostic/admin-test\")",
       "Bash(curl -s \"http://localhost/diagnostic/admin-check\")",
       "Bash(grep -E \"\\\\.\\(md|txt\\)$\")",
-      "Bash(curl -s -X POST http://localhost:8080/api/chat/message -H 'Content-Type: application/json' -d '{\"message\":\"تكييف في طرابلس\",\"conversation_id\":\"test_123\"}')"
+      "Bash(curl -s -X POST http://localhost:8080/api/chat/message -H 'Content-Type: application/json' -d '{\"message\":\"تكييف في طرابلس\",\"conversation_id\":\"test_123\"}')",
+      "Bash(Select-String -Pattern \"mail|Mail|SetPassword|Error|Exception\" -Context 2)",
+      "Bash(vendor/bin/pint --format agent app/Filament/Resources/ProviderResource/Pages/EditProvider.php)"
     ],
     "additionalDirectories": [
       "c:\\laragon\\www\\delni\\storage"

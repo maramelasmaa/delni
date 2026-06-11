@@ -24,6 +24,7 @@ class SendMessageRequest extends FormRequest
         return [
             'message' => ['required', 'string', 'max:500'],
             'conversation_id' => ['required', 'string', 'regex:/^chat_[a-f0-9]{32}$/'],
+            'email' => ['nullable', 'email', 'max:255'],
         ];
     }
 
@@ -34,6 +35,8 @@ class SendMessageRequest extends FormRequest
             'message.max' => 'الرسالة يجب أن تكون أقل من 500 حرف',
             'conversation_id.required' => 'معرّف المحادثة مطلوب',
             'conversation_id.regex' => 'معرّف المحادثة غير صحيح',
+            'email.email' => 'البريد الإلكتروني غير صحيح',
+            'email.max' => 'البريد الإلكتروني طويل جداً',
         ];
     }
 

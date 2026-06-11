@@ -9,13 +9,44 @@ use Illuminate\Support\Collection;
  * Resolves city names from user input.
  *
  * Supports:
- * - Exact city name matching
- * - Arabic city name matching
+ * - Exact city name matching (English & Arabic)
+ * - Transliteration (benghazi → بنغازي)
  * - Case-insensitive lookup
  * - Fuzzy matching for typos
+ * - Common misspellings
  */
 class CityResolverService
 {
+    /**
+     * Transliteration mappings for common Arabic city names.
+     * Maps common English spellings to Arabic names.
+     *
+     * @var array<string, string>
+     */
+    private array $transliterations = [
+        'tripoli' => 'طرابلس',
+        'bengazi' => 'بنغازي',
+        'benghazi' => 'بنغازي',
+        'banghazi' => 'بنغازي',
+        'misrata' => 'مصراتة',
+        'misratah' => 'مصراتة',
+        'derna' => 'درنة',
+        'darnah' => 'درنة',
+        'sebha' => 'سبها',
+        'sirte' => 'سرت',
+        'surt' => 'سرت',
+        'tobruk' => 'طبرق',
+        'tubriq' => 'طبرق',
+        'zliten' => 'زليتن',
+        'garyan' => 'غريان',
+        'bani walid' => 'بني وليد',
+        'zawiya' => 'الزاوية',
+        'khoms' => 'خمس',
+        'homs' => 'خمس',
+        'ghadames' => 'غدامس',
+        'ghadamis' => 'غدامس',
+    ];
+
     /**
      * Resolve a city from text input.
      *
@@ -34,7 +65,7 @@ class CityResolverService
             return null;
         }
 
-        // Try exact match first
+        // Try exact match first (English or Arabic)
         $city = City::where('is_active', true)
             ->where(function ($q) use ($input): void {
                 $q->whereRaw('LOWER(name) = ?', [$input])
@@ -48,6 +79,22 @@ class CityResolverService
                 'confidence' => 'high',
                 'matched_name' => $city->name,
             ];
+        }
+
+        // Try transliteration lookup
+        $arabicName = $this->transliterations[$input] ?? null;
+        if ($arabicName) {
+            $city = City::where('is_active', true)
+                ->whereRaw('LOWER(name_ar) = ?', [mb_strtolower($arabicName, 'UTF-8')])
+                ->first();
+
+            if ($city) {
+                return [
+                    'city_id' => $city->id,
+                    'confidence' => 'high',
+                    'matched_name' => $city->name_ar,
+                ];
+            }
         }
 
         // Try fuzzy matching

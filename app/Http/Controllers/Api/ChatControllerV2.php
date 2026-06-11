@@ -51,44 +51,50 @@ class ChatControllerV2 extends Controller
             ]);
         }
 
-        // Extract intent from message for service search
+        // Extract intent from message using DeepSeek
         $intent = $this->extractor->extract($message);
 
-        // If extraction unclear, ask for clarification
-        if ($intent->needsClarification) {
+        // Search database regardless of confidence
+        // Database is the source of truth - show only what exists
+        $serviceQuery = $intent->specialty;
+        $cityId = $this->resolveCity($intent->city);
+
+        // If we have a service query, search the database
+        if ($serviceQuery) {
+            $providers = $this->searchService->searchSemantic(
+                providerNameQuery: null,
+                businessNameQuery: null,
+                serviceQuery: $serviceQuery,
+                cityId: $cityId,
+                categoryHint: null,
+            );
+
+            // Return results (even if empty)
+            if ($providers->isEmpty()) {
+                return response()->json([
+                    'type' => 'no_results',
+                    'message' => $cityId
+                        ? "ما لقيناش {$serviceQuery} في هذه المدينة. جرّب مدينة أخرى."
+                        : "ما لقيناش {$serviceQuery} حالياً. جرّب مدينة معينة.",
+                    'conversation_id' => $conversationId,
+                ]);
+            }
+
             return response()->json([
-                'type' => 'clarification',
-                'question' => $intent->clarificationQuestion,
+                'type' => 'results',
+                'count' => $providers->count(),
+                'message' => "لقيتلك {$providers->count()} خدمة {$serviceQuery}:",
+                'providers' => $providers->toArray(),
                 'conversation_id' => $conversationId,
             ]);
         }
 
-        // If not confident enough, ask for clarification
-        if (! $intent->isConfident()) {
-            return response()->json([
-                'type' => 'clarification',
-                'question' => 'ممكن تعطيني معلومات اكثر عن نوع الخدمة اللي تبحث عنها؟',
-                'conversation_id' => $conversationId,
-            ]);
-        }
-
-        // Search providers based on extracted intent
-        $providers = $this->searchService->searchSemantic(
-            providerNameQuery: null,
-            businessNameQuery: null,
-            serviceQuery: $intent->specialty,
-            cityId: $this->resolveCity($intent->city),
-            categoryHint: null,
-        );
-
-        // No results
-        if ($providers->isEmpty()) {
-            return response()->json([
-                'type' => 'no_results',
-                'message' => 'ما لقيناش نتائج مطابقة حالياً. جرّب مدينة أخرى أو خدمة مختلفة.',
-                'conversation_id' => $conversationId,
-            ]);
-        }
+        // No service identified yet - ask for one
+        return response()->json([
+            'type' => 'clarification',
+            'question' => 'شنو نوع الخدمة اللي تبحث عنها؟ (دكتور، محامي، كهربائي، إلخ)',
+            'conversation_id' => $conversationId,
+        ]);
 
         // Return results
         return response()->json([

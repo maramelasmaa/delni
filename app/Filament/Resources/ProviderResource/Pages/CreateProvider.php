@@ -42,9 +42,9 @@ class CreateProvider extends CreateRecord
                 'expires_at' => now()->addHours(72),
             ]);
 
-            // Queue onboarding email
+            // Queue onboarding email (SetPasswordMail implements ShouldQueue)
             $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
-            Mail::queue(new SetPasswordMail(
+            Mail::send(new SetPasswordMail(
                 email: $record->email,
                 setPasswordLink: $setPasswordLink,
                 userName: $record->name,

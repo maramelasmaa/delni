@@ -197,8 +197,11 @@ class IntentDetectionService
      */
     private function isGreeting(string $message): bool
     {
+        $lowerMessage = mb_strtolower($message, 'UTF-8');
+
         foreach ($this->greetingPatterns as $pattern) {
-            if (str_contains($message, mb_strtolower($pattern, 'UTF-8'))) {
+            $lowerPattern = mb_strtolower($pattern, 'UTF-8');
+            if (str_contains($lowerMessage, $lowerPattern)) {
                 return true;
             }
         }

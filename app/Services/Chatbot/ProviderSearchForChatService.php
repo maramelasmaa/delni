@@ -28,7 +28,206 @@ class ProviderSearchForChatService
     ) {}
 
     /**
-     * Search for providers matching optional criteria.
+     * Multi-layer semantic search for provider entity names and services.
+     *
+     * Search priority:
+     * 1. Exact provider/business name match
+     * 2. Partial provider/business name match
+     * 3. Semantic provider search (bio, descriptions)
+     * 4. Category/subcategory search
+     * 5. Fallback matches
+     *
+     * @return Collection<int, ProviderChatResultDTO>
+     */
+    public function searchSemantic(
+        ?string $providerNameQuery = null,
+        ?string $businessNameQuery = null,
+        ?string $serviceQuery = null,
+        ?int $cityId = null,
+        ?int $categoryHint = null,
+    ): Collection {
+        // Try exact provider name first
+        if (filled($providerNameQuery)) {
+            $exact = $this->searchByProviderName($providerNameQuery, $cityId);
+            if ($exact->isNotEmpty()) {
+                return $exact;
+            }
+        }
+
+        // Try exact business name
+        if (filled($businessNameQuery)) {
+            $exact = $this->searchByBusinessName($businessNameQuery, $cityId);
+            if ($exact->isNotEmpty()) {
+                return $exact;
+            }
+        }
+
+        // Try mixed entity + service search
+        if (filled($providerNameQuery) || filled($businessNameQuery)) {
+            $mixed = $this->searchProviderEntity(
+                $providerNameQuery ?? $businessNameQuery,
+                $serviceQuery,
+                $cityId,
+                $categoryHint,
+            );
+            if ($mixed->isNotEmpty()) {
+                return $mixed;
+            }
+        }
+
+        // Try service-only search with hints
+        if (filled($serviceQuery)) {
+            return $this->searchByService($serviceQuery, $cityId, $categoryHint);
+        }
+
+        return collect();
+    }
+
+    /**
+     * Search by provider name (user.name).
+     *
+     * @return Collection<int, ProviderChatResultDTO>
+     */
+    public function searchByProviderName(string $name, ?int $cityId = null): Collection
+    {
+        $query = $this->buildBaseQuery();
+
+        // Exact match first
+        $searchTerm = "%{$name}%";
+        $query->where('users.name', 'like', $searchTerm);
+
+        if ($cityId !== null) {
+            $query->where('profiles.city_id', $cityId);
+        }
+
+        $this->rankingService->applySearchRanking($query);
+
+        return $query
+            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
+            ->get()
+            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
+            ->values();
+    }
+
+    /**
+     * Search by business name.
+     *
+     * @return Collection<int, ProviderChatResultDTO>
+     */
+    public function searchByBusinessName(string $businessName, ?int $cityId = null): Collection
+    {
+        $query = $this->buildBaseQuery();
+
+        $searchTerm = "%{$businessName}%";
+        $query->where('profiles.business_name', 'like', $searchTerm);
+
+        if ($cityId !== null) {
+            $query->where('profiles.city_id', $cityId);
+        }
+
+        $this->rankingService->applySearchRanking($query);
+
+        return $query
+            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
+            ->get()
+            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
+            ->values();
+    }
+
+    /**
+     * Search provider entity (name + possible service hint).
+     *
+     * Searches across:
+     * - provider name
+     * - business name
+     * - profile slug
+     * - bio
+     * - services
+     *
+     * @return Collection<int, ProviderChatResultDTO>
+     */
+    public function searchProviderEntity(
+        string $entity,
+        ?string $serviceHint = null,
+        ?int $cityId = null,
+        ?int $categoryHint = null,
+    ): Collection {
+        $query = $this->buildBaseQuery();
+
+        $searchTerm = "%{$entity}%";
+
+        // Search entity across multiple provider fields
+        $query->where(function (Builder $q) use ($searchTerm) {
+            $q->where('users.name', 'like', $searchTerm)
+                ->orWhere('profiles.business_name', 'like', $searchTerm)
+                ->orWhere('profiles.slug', 'like', $searchTerm)
+                ->orWhere('profiles.bio', 'like', $searchTerm);
+        });
+
+        // If service hint provided, boost category match
+        if (filled($serviceHint) || $categoryHint !== null) {
+            $query->where(function (Builder $q) use ($serviceHint, $categoryHint) {
+                if ($categoryHint !== null) {
+                    $q->where('profiles.category_id', $categoryHint);
+                }
+                if (filled($serviceHint)) {
+                    $q->orWhere('profiles.bio', 'like', "%{$serviceHint}%");
+                }
+            });
+        }
+
+        if ($cityId !== null) {
+            $query->where('profiles.city_id', $cityId);
+        }
+
+        $this->rankingService->applySearchRanking($query);
+
+        return $query
+            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
+            ->get()
+            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
+            ->values();
+    }
+
+    /**
+     * Search by service type/category.
+     *
+     * @return Collection<int, ProviderChatResultDTO>
+     */
+    public function searchByService(
+        string $service,
+        ?int $cityId = null,
+        ?int $categoryHint = null,
+    ): Collection {
+        $query = $this->buildBaseQuery();
+
+        if ($categoryHint !== null) {
+            $query->where('profiles.category_id', $categoryHint);
+        } else {
+            // Fuzzy match on category names
+            $searchTerm = "%{$service}%";
+            $query->where(function (Builder $q) use ($searchTerm) {
+                $q->where('categories.name', 'like', $searchTerm)
+                    ->orWhere('categories.name_ar', 'like', $searchTerm)
+                    ->orWhere('profiles.bio', 'like', $searchTerm);
+            });
+        }
+
+        if ($cityId !== null) {
+            $query->where('profiles.city_id', $cityId);
+        }
+
+        $this->rankingService->applySearchRanking($query);
+
+        return $query
+            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
+            ->get()
+            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
+            ->values();
+    }
+
+    /**
+     * Search for providers matching optional criteria (legacy support).
      *
      * @return Collection<int, ProviderChatResultDTO>
      */

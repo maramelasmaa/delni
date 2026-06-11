@@ -11,6 +11,7 @@
         "intervention/image": "^4.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "resend/resend-laravel": "^1.4",
         "spatie/laravel-permission": "^8.0",
         "wallacemartinss/filament-icon-picker": "^2.0"
     },

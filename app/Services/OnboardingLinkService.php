@@ -36,9 +36,9 @@ class OnboardingLinkService
             ]);
         }
 
-        // Send email
+        // Send email (SetPasswordMail implements ShouldQueue + afterCommit)
         $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
-        Mail::queue(new SetPasswordMail(
+        Mail::send(new SetPasswordMail(
             email: $user->email,
             setPasswordLink: $setPasswordLink,
             userName: $user->name,

@@ -18,11 +18,11 @@ use Illuminate\Support\Collection;
 class CategoryResolverService
 {
     /**
-     * Mapping of common Arabic terms to category IDs.
+     * Mapping of common Arabic terms to category slugs.
      * Key = Arabic term, Value = category slug
      *
      * This mapping is built from actual DB categories and extended
-     * with common Libyan service terminology.
+     * with common Libyan service terminology, synonyms, and variations.
      *
      * @var array<string, string>
      */
@@ -33,37 +33,45 @@ class CategoryResolverService
         'مكيفات' => 'hvac-air-conditioning',
         'تبريد' => 'hvac-air-conditioning',
         'تدفئة' => 'hvac-air-conditioning',
+        'فني تكييف' => 'hvac-air-conditioning',
 
         // Plumbing
         'سباك' => 'plumbing-services',
         'سباكة' => 'plumbing-services',
         'صرف' => 'plumbing-services',
         'أنابيب' => 'plumbing-services',
+        'فني سباكة' => 'plumbing-services',
 
         // Electrical
         'كهربائي' => 'electrical-services',
         'كهربا' => 'electrical-services',
         'كهرباء' => 'electrical-services',
         'توصيل كهرباء' => 'electrical-services',
+        'فني كهربائي' => 'electrical-services',
 
-        // Law
+        // Law/Legal (multiple synonyms)
         'محامي' => 'law-legal-services',
         'قانون' => 'law-legal-services',
         'محاماة' => 'law-legal-services',
+        'قانوني' => 'law-legal-services',
+        'استشارات قانونية' => 'law-legal-services',
+        'قضايا' => 'law-legal-services',
 
-        // Interior Design
+        // Interior Design (multiple synonyms)
         'ديكور' => 'interior-design-decoration',
         'تصميم داخلي' => 'interior-design-decoration',
         'دهانة' => 'interior-design-decoration',
         'أثاث' => 'interior-design-decoration',
+        'مهندس ديكور' => 'interior-design-decoration',
 
-        // Photography
+        // Photography (multiple synonyms)
         'تصوير' => 'photography-videography',
         'مصور' => 'photography-videography',
         'صور' => 'photography-videography',
         'تصوير عرس' => 'photography-videography',
         'تصوير أفراح' => 'photography-videography',
         'فيديو' => 'photography-videography',
+        'تصوير فيديو' => 'photography-videography',
 
         // Education/Tutoring
         'معلم' => 'education-tutoring',
@@ -78,11 +86,13 @@ class CategoryResolverService
         'تجميل' => 'beauty-salon-services',
         'مستحضرات تجميل' => 'beauty-salon-services',
 
-        // Construction
+        // Construction (multiple synonyms)
         'بناء' => 'construction-contracting',
         'مقاول' => 'construction-contracting',
         'عمارة' => 'construction-contracting',
         'ترميم' => 'construction-contracting',
+        'مقاولات' => 'construction-contracting',
+        'تشطيب' => 'construction-contracting',
 
         // Car Services
         'سيارة' => 'automotive-car-services',
@@ -90,6 +100,13 @@ class CategoryResolverService
         'صيانة سيارات' => 'automotive-car-services',
         'تصليح سيارات' => 'automotive-car-services',
         'غسيل سيارات' => 'automotive-car-services',
+        'فني سيارات' => 'automotive-car-services',
+
+        // Dentistry (Dental/Teeth)
+        'طبيب اسنان' => 'dentistry',
+        'دكتور اسنان' => 'dentistry',
+        'اسنان' => 'dentistry',
+        'طبيب أسنان' => 'dentistry',
     ];
 
     /**
