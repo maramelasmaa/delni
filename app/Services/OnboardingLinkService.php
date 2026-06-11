@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Mail\SetPasswordMail;
 use App\Models\OnboardingToken;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -36,13 +37,26 @@ class OnboardingLinkService
             ]);
         }
 
-        // Send email (SetPasswordMail implements ShouldQueue + afterCommit)
+        // Resend actions should deliver immediately; Mail::send() queues ShouldQueue mailables.
         $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
-        Mail::send(new SetPasswordMail(
+        Log::info('Resending provider onboarding email', [
+            'provider_id' => $user->id,
+            'email' => $user->email,
+            'mail_mailer' => config('mail.default'),
+            'selected_mailer' => 'resend',
+            'queue_connection' => config('queue.default'),
+        ]);
+
+        Mail::mailer('resend')->sendNow(new SetPasswordMail(
             email: $user->email,
             setPasswordLink: $setPasswordLink,
             userName: $user->name,
         ));
+
+        Log::info('Provider onboarding email resend completed', [
+            'provider_id' => $user->id,
+            'email' => $user->email,
+        ]);
     }
 
     public function canResend(User $user): bool

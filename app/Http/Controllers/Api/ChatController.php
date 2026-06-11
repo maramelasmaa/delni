@@ -1,82 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Chatbot\SendMessageRequest;
-use App\Services\Chatbot\CategoryResolverService;
-use App\Services\Chatbot\ChatOrchestratorService;
-use App\Services\Chatbot\ProviderSearchForChatService;
+use App\Http\Requests\Chatbot\ChatMessageRequest;
+use App\Services\Chatbot\ChatbotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
     public function __construct(
-        private ChatOrchestratorService $orchestrator,
-        private ProviderSearchForChatService $searchService,
-        private CategoryResolverService $categoryResolver,
+        private readonly ChatbotService $chatbot,
     ) {}
 
-    /**
-     * Send a message to the chatbot.
-     */
-    public function message(SendMessageRequest $request): JsonResponse
+    public function init(Request $request): JsonResponse
     {
-        $message = $request->validated('message');
-        $conversationId = $request->validated('conversation_id');
+        $sessionId = $request->string('session_id')->toString() ?: (string) Str::uuid();
 
-        $response = $this->orchestrator->handle(
-            message: $message,
-            user: auth()->user(),
-            metadata: [
-                'conversation_id' => $conversationId,
-            ],
-        );
-
-        return response()->json($response);
+        return response()->json($this->chatbot->init($sessionId));
     }
 
-    /**
-     * Reset a conversation.
-     */
+    public function message(ChatMessageRequest $request): JsonResponse
+    {
+        $sessionId = $request->validated('session_id') ?: (string) Str::uuid();
+
+        return response()->json($this->chatbot->reply(
+            message: $request->validated('message'),
+            sessionId: $sessionId,
+            user: $request->user(),
+            ipAddress: $request->ip() ?: '0.0.0.0',
+        ));
+    }
+
     public function reset(Request $request): JsonResponse
     {
-        return response()->json([
-            'message' => 'Conversation reset',
-            'new_conversation_id' => $this->generateConversationId(),
-        ]);
-    }
+        $sessionId = $request->string('session_id')->toString() ?: (string) Str::uuid();
 
-    /**
-     * Get initial chat UI data (categories, featured providers).
-     */
-    public function init(): JsonResponse
-    {
-        $categories = $this->categoryResolver->getAllCategories()
-            ->map(fn ($cat) => [
-                'id' => $cat->id,
-                'name' => $cat->localized_name,
-                'icon' => $cat->icon?->file_path,
-            ])
-            ->toArray();
-
-        $featured = $this->searchService->getFeaturedProviders(6)
-            ->map(fn ($p) => $p->toArray())
-            ->toArray();
-
-        return response()->json([
-            'categories' => $categories,
-            'featured_providers' => $featured,
-            'conversation_id' => $this->generateConversationId(),
-        ]);
-    }
-
-    /**
-     * Generate a unique conversation ID.
-     */
-    private function generateConversationId(): string
-    {
-        return 'chat_'.uniqid('', true);
+        return response()->json($this->chatbot->reset($sessionId));
     }
 }

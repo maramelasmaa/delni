@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\ChatbotRateLimit;
 use App\Http\Middleware\EnsureAccountNotLocked;
 use App\Http\Middleware\EnsureAdminRole;
 use App\Http\Middleware\EnsureProviderHasProfile;
@@ -37,7 +36,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'provider.authenticate' => ProviderAuthenticate::class,
             'provider.has_profile' => EnsureProviderHasProfile::class,
             'review.eligible' => EnsureReviewEligible::class,
-            'chatbot.rate-limit' => ChatbotRateLimit::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

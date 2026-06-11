@@ -1,316 +1,125 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Chatbot;
 
-use App\Data\ProviderChatResultDTO;
 use App\Models\Profile;
+use App\Services\ArabicNormalizationService;
 use App\Services\MarketplaceRankingService;
 use App\Services\ProfileVisibilityService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
-/**
- * Safe provider search service for chatbot.
- *
- * This service ensures that:
- * 1. Only visible profiles are returned
- * 2. Ranking respects marketplace rules
- * 3. No hidden/private data leaks
- * 4. All visibility rules are enforced
- *
- * This is the SINGLE SOURCE OF TRUTH for chatbot provider search.
- */
 class ProviderSearchForChatService
 {
     public function __construct(
-        private ProfileVisibilityService $visibilityService,
-        private MarketplaceRankingService $rankingService,
+        private readonly MarketplaceRankingService $ranking,
+        private readonly ProfileVisibilityService $visibility,
+        private readonly ArabicNormalizationService $normalization,
     ) {}
 
     /**
-     * Multi-layer semantic search for provider entity names and services.
-     *
-     * Search priority:
-     * 1. Exact provider/business name match
-     * 2. Partial provider/business name match
-     * 3. Semantic provider search (bio, descriptions)
-     * 4. Category/subcategory search
-     * 5. Fallback matches
-     *
-     * @return Collection<int, ProviderChatResultDTO>
+     * @param  array<string, mixed>  $intent
+     * @return Collection<int, Profile>
      */
-    public function searchSemantic(
-        ?string $providerNameQuery = null,
-        ?string $businessNameQuery = null,
-        ?string $serviceQuery = null,
-        ?int $cityId = null,
-        ?int $categoryHint = null,
-    ): Collection {
-        // Try exact provider name first
-        if (filled($providerNameQuery)) {
-            $exact = $this->searchByProviderName($providerNameQuery, $cityId);
-            if ($exact->isNotEmpty()) {
-                return $exact;
-            }
-        }
-
-        // Try exact business name
-        if (filled($businessNameQuery)) {
-            $exact = $this->searchByBusinessName($businessNameQuery, $cityId);
-            if ($exact->isNotEmpty()) {
-                return $exact;
-            }
-        }
-
-        // Try mixed entity + service search
-        if (filled($providerNameQuery) || filled($businessNameQuery)) {
-            $mixed = $this->searchProviderEntity(
-                $providerNameQuery ?? $businessNameQuery,
-                $serviceQuery,
-                $cityId,
-                $categoryHint,
-            );
-            if ($mixed->isNotEmpty()) {
-                return $mixed;
-            }
-        }
-
-        // Try service-only search with hints
-        if (filled($serviceQuery)) {
-            return $this->searchByService($serviceQuery, $cityId, $categoryHint);
-        }
-
-        return collect();
-    }
-
-    /**
-     * Search by provider name (user.name).
-     *
-     * @return Collection<int, ProviderChatResultDTO>
-     */
-    public function searchByProviderName(string $name, ?int $cityId = null): Collection
+    public function search(array $intent): Collection
     {
-        $query = $this->buildBaseQuery();
+        $queryData = $intent['query'];
 
-        // Exact match first
-        $searchTerm = "%{$name}%";
-        $query->where('users.name', 'like', $searchTerm);
-
-        if ($cityId !== null) {
-            $query->where('profiles.city_id', $cityId);
-        }
-
-        $this->rankingService->applySearchRanking($query);
-
-        return $query
-            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
-            ->get()
-            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
-            ->values();
-    }
-
-    /**
-     * Search by business name.
-     *
-     * @return Collection<int, ProviderChatResultDTO>
-     */
-    public function searchByBusinessName(string $businessName, ?int $cityId = null): Collection
-    {
-        $query = $this->buildBaseQuery();
-
-        $searchTerm = "%{$businessName}%";
-        $query->where('profiles.business_name', 'like', $searchTerm);
-
-        if ($cityId !== null) {
-            $query->where('profiles.city_id', $cityId);
-        }
-
-        $this->rankingService->applySearchRanking($query);
-
-        return $query
-            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
-            ->get()
-            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
-            ->values();
-    }
-
-    /**
-     * Search provider entity (name + possible service hint).
-     *
-     * Searches across:
-     * - provider name
-     * - business name
-     * - profile slug
-     * - bio
-     * - services
-     *
-     * @return Collection<int, ProviderChatResultDTO>
-     */
-    public function searchProviderEntity(
-        string $entity,
-        ?string $serviceHint = null,
-        ?int $cityId = null,
-        ?int $categoryHint = null,
-    ): Collection {
-        $query = $this->buildBaseQuery();
-
-        $searchTerm = "%{$entity}%";
-
-        // Search entity across multiple provider fields
-        $query->where(function (Builder $q) use ($searchTerm) {
-            $q->where('users.name', 'like', $searchTerm)
-                ->orWhere('profiles.business_name', 'like', $searchTerm)
-                ->orWhere('profiles.slug', 'like', $searchTerm)
-                ->orWhere('profiles.bio', 'like', $searchTerm);
-        });
-
-        // If service hint provided, boost category match
-        if (filled($serviceHint) || $categoryHint !== null) {
-            $query->where(function (Builder $q) use ($serviceHint, $categoryHint) {
-                if ($categoryHint !== null) {
-                    $q->where('profiles.category_id', $categoryHint);
-                }
-                if (filled($serviceHint)) {
-                    $q->orWhere('profiles.bio', 'like', "%{$serviceHint}%");
-                }
-            });
-        }
-
-        if ($cityId !== null) {
-            $query->where('profiles.city_id', $cityId);
-        }
-
-        $this->rankingService->applySearchRanking($query);
-
-        return $query
-            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
-            ->get()
-            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
-            ->values();
-    }
-
-    /**
-     * Search by service type/category.
-     *
-     * @return Collection<int, ProviderChatResultDTO>
-     */
-    public function searchByService(
-        string $service,
-        ?int $cityId = null,
-        ?int $categoryHint = null,
-    ): Collection {
-        $query = $this->buildBaseQuery();
-
-        if ($categoryHint !== null) {
-            $query->where('profiles.category_id', $categoryHint);
-        } else {
-            // Fuzzy match on category names
-            $searchTerm = "%{$service}%";
-            $query->where(function (Builder $q) use ($searchTerm) {
-                $q->where('categories.name', 'like', $searchTerm)
-                    ->orWhere('categories.name_ar', 'like', $searchTerm)
-                    ->orWhere('profiles.bio', 'like', $searchTerm);
-            });
-        }
-
-        if ($cityId !== null) {
-            $query->where('profiles.city_id', $cityId);
-        }
-
-        $this->rankingService->applySearchRanking($query);
-
-        return $query
-            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
-            ->get()
-            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
-            ->values();
-    }
-
-    /**
-     * Search for providers matching optional criteria (legacy support).
-     *
-     * @return Collection<int, ProviderChatResultDTO>
-     */
-    public function search(
-        ?int $cityId = null,
-        ?int $categoryId = null,
-        ?int $subcategoryId = null,
-        ?string $searchQuery = null,
-        ?bool $remoteAllowed = null,
-    ): Collection {
-        $query = $this->buildBaseQuery();
-
-        if ($cityId !== null) {
-            $query->where('profiles.city_id', $cityId);
-        }
-
-        if ($categoryId !== null) {
-            $query->where('profiles.category_id', $categoryId);
-        }
-
-        if ($subcategoryId !== null) {
-            $query->whereHas('subcategories', function (Builder $q) use ($subcategoryId): void {
-                $q->where('subcategories.id', $subcategoryId);
-            });
-        }
-
-        if (filled($searchQuery)) {
-            $searchTerm = "%{$searchQuery}%";
-            $query->where(function (Builder $q) use ($searchTerm): void {
-                $q->where('profiles.business_name', 'like', $searchTerm)
-                    ->orWhere('profiles.bio', 'like', $searchTerm)
-                    ->orWhere('categories.name', 'like', $searchTerm)
-                    ->orWhere('categories.name_ar', 'like', $searchTerm);
-            });
-        }
-
-        if ($remoteAllowed === true) {
-            $query->where('profiles.offers_remote_work', true);
-        }
-
-        // Apply marketplace ranking
-        $this->rankingService->applySearchRanking($query);
-
-        return $query
-            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
-            ->get()
-            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
-            ->values();
-    }
-
-    /**
-     * Get featured providers (homepage featured or top search) for chatbot home.
-     *
-     * @return Collection<int, ProviderChatResultDTO>
-     */
-    public function getFeaturedProviders(int $limit = 6): Collection
-    {
-        $query = $this->buildBaseQuery();
-
-        $this->rankingService->applyHomepageRanking($query);
-
-        return $query
-            ->with(['user', 'category', 'city', 'subcategories', 'stats', 'approvedReviews'])
-            ->limit($limit)
-            ->get()
-            ->map(fn (Profile $profile) => ProviderChatResultDTO::from($profile))
-            ->values();
-    }
-
-    /**
-     * Build base query with all visibility conditions pre-applied.
-     *
-     * This is the foundation query that ALL search operations build on.
-     * Ensures visibility rules are NEVER bypassed.
-     */
-    private function buildBaseQuery(): Builder
-    {
-        return Profile::query()
-            ->join('users', 'profiles.user_id', '=', 'users.id')
-            ->join('profile_stats', 'profiles.id', '=', 'profile_stats.profile_id')
-            ->leftJoin('categories', 'profiles.category_id', '=', 'categories.id')
-            ->leftJoin('cities', 'profiles.city_id', '=', 'cities.id')
+        $query = Profile::query()
             ->select('profiles.*')
-            ->visible();
+            ->join('users', 'users.id', '=', 'profiles.user_id')
+            ->join('profile_stats', 'profile_stats.profile_id', '=', 'profiles.id')
+            ->leftJoin('categories', 'categories.id', '=', 'profiles.category_id')
+            ->leftJoin('cities', 'cities.id', '=', 'profiles.city_id');
+
+        $this->visibility->applyVisibleQuery($query);
+        $this->applySearchTerms($query, $queryData);
+        $this->applyRelevance($query, $queryData);
+        $this->ranking->applySearchRanking($query);
+
+        return $query->limit(5)->get()->load(['user', 'city', 'category', 'stats']);
+    }
+
+    /**
+     * @param  Builder<Profile>  $query
+     * @param  array<string, mixed>  $queryData
+     */
+    private function applySearchTerms(Builder $query, array $queryData): void
+    {
+        if ($queryData['city_id'] !== null) {
+            $query->where('profiles.city_id', $queryData['city_id']);
+        }
+
+        if ($queryData['category_id'] !== null) {
+            $query->where('profiles.category_id', $queryData['category_id']);
+        }
+
+        if ($queryData['subcategory_id'] !== null) {
+            $query->whereExists(function ($sub) use ($queryData): void {
+                $sub->select(DB::raw(1))
+                    ->from('profile_subcategory')
+                    ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
+                    ->where('profile_subcategory.subcategory_id', $queryData['subcategory_id']);
+            });
+        }
+
+        if ($queryData['min_experience_years'] !== null) {
+            $query->where('profiles.experience_years', '>=', $queryData['min_experience_years']);
+        }
+
+        $term = $queryData['provider_name'] ?: $queryData['service'];
+        if (filled($term)) {
+            $like = '%'.addcslashes($this->normalization->normalize((string) $term), '%_\\').'%';
+            $rawLike = '%'.addcslashes((string) $term, '%_\\').'%';
+
+            $query->where(function (Builder $q) use ($like, $rawLike): void {
+                $q->where('profiles.search_business_name', 'like', $like)
+                    ->orWhere('profiles.search_bio', 'like', $like)
+                    ->orWhere('profiles.business_name', 'like', $rawLike)
+                    ->orWhere('profiles.slug', 'like', $rawLike)
+                    ->orWhere('profiles.provider_type', 'like', $rawLike)
+                    ->orWhere('users.name', 'like', $rawLike)
+                    ->orWhere('categories.name', 'like', $rawLike)
+                    ->orWhere('categories.name_ar', 'like', $rawLike)
+                    ->orWhereExists(function ($sub) use ($rawLike): void {
+                        $sub->select(DB::raw(1))
+                            ->from('profile_subcategory')
+                            ->join('subcategories', 'subcategories.id', '=', 'profile_subcategory.subcategory_id')
+                            ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
+                            ->where(function ($nested) use ($rawLike): void {
+                                $nested->where('subcategories.name', 'like', $rawLike)
+                                    ->orWhere('subcategories.name_ar', 'like', $rawLike);
+                            });
+                    });
+            });
+        }
+    }
+
+    /**
+     * @param  Builder<Profile>  $query
+     * @param  array<string, mixed>  $queryData
+     */
+    private function applyRelevance(Builder $query, array $queryData): void
+    {
+        $name = $queryData['provider_name'];
+        if (! filled($name)) {
+            return;
+        }
+
+        $like = '%'.addcslashes((string) $name, '%_\\').'%';
+
+        $query->orderByRaw(
+            "CASE
+                WHEN profiles.business_name = ? THEN 100
+                WHEN users.name = ? THEN 95
+                WHEN profiles.business_name LIKE ? THEN 80
+                WHEN users.name LIKE ? THEN 75
+                ELSE 0
+            END DESC",
+            [$name, $name, $like, $like],
+        );
     }
 }

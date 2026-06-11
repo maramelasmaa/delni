@@ -302,7 +302,71 @@
             cursor: not-allowed;
         }
 
-        /* Structural Card Footer Rules */
+        /* Divider with Text */
+        .auth-divider {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin: 1.75rem 0;
+            gap: 1rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .auth-divider span {
+            color: var(--auth-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* OAuth Social Login Buttons */
+        .auth-oauth-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            height: 50px;
+            padding: 0 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--auth-radius-sm);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--auth-text);
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .auth-oauth-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .auth-oauth-button:active {
+            transform: translateY(0);
+        }
+
+        .auth-oauth-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .auth-oauth-google {
+            color: #FFFFFF;
+        }
+
+        /* Responsive Breakpoint Adaptability Rules */
         .auth-footer {
             margin-top: 1.75rem;
             padding-top: 1.25rem;

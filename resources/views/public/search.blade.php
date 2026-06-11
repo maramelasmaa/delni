@@ -22,7 +22,7 @@
     <header class="search-hero">
         <div class="container">
             <div class="search-hero__badge">بحث دلني</div>
-            <h1 class="search-hero__title">لقى مقدم الخدمة المناسب</h1>
+            <h1 class="search-hero__title">اعثر على مقدم الخدمة المناسب</h1>
             <p class="search-hero__subtitle">ابحث حسب الخدمة، الفئة، أو المدينة. النتائج واضحة ومرتبة بدون زحمة.</p>
         </div>
     </header>

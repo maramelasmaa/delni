@@ -3,9 +3,7 @@
 namespace App\Filament\Resources\ProviderResource\Pages;
 
 use App\Filament\Resources\ProviderResource;
-use App\Services\OnboardingLinkService;
 use Filament\Actions;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -18,21 +16,6 @@ class EditProvider extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('resendOnboardingEmail')
-                ->label('Resend Onboarding Email')
-                ->icon('heroicon-m-envelope')
-                ->action(function (OnboardingLinkService $service): void {
-                    $service->resend($this->record);
-                    Notification::make()
-                        ->title('Email sent')
-                        ->body('Onboarding email has been resent to '.$this->record->email)
-                        ->success()
-                        ->send();
-                })
-                ->requiresConfirmation()
-                ->modalHeading('Resend Onboarding Email')
-                ->modalDescription('This will send a new onboarding email to '.$this->record->email.'. They will receive a new password setup link.')
-                ->modalSubmitActionLabel('Resend'),
             Actions\DeleteAction::make(),
         ];
     }

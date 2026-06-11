@@ -25,8 +25,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class ProviderResource extends Resource
 {
@@ -103,7 +105,6 @@ class ProviderResource extends Resource
                     ->label(__('filament.actions.resend_onboarding_link'))
                     ->icon('heroicon-o-arrow-path')
                     ->color('info')
-                    ->requiresConfirmation()
                     ->action(function (User $record, OnboardingLinkService $service) {
                         try {
                             $service->resend($record);
@@ -116,6 +117,18 @@ class ProviderResource extends Resource
                             Notification::make()
                                 ->title(__('filament.notifications.error'))
                                 ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        } catch (Throwable $e) {
+                            Log::error('Failed to resend provider onboarding email from table action', [
+                                'provider_id' => $record->id,
+                                'email' => $record->email,
+                                'exception' => $e->getMessage(),
+                            ]);
+
+                            Notification::make()
+                                ->title(__('filament.notifications.error'))
+                                ->body('Email could not be sent. Check the Laravel logs for the Resend error.')
                                 ->danger()
                                 ->send();
                         }
