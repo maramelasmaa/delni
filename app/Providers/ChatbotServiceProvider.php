@@ -11,6 +11,7 @@ use App\Services\Chatbot\CityResolverService;
 use App\Services\Chatbot\ConversationStateManager;
 use App\Services\Chatbot\CostTracker;
 use App\Services\Chatbot\DeepSeekClient;
+use App\Services\Chatbot\DeepSeekConversationService;
 use App\Services\Chatbot\Dialects\DialectNormalizer;
 use App\Services\Chatbot\IntentDetectionService;
 use App\Services\Chatbot\IntentExtractionService;
@@ -35,6 +36,7 @@ class ChatbotServiceProvider extends ServiceProvider
         $this->app->singleton(OutputValidator::class);
         $this->app->singleton(ProviderSearchForChatService::class);
         $this->app->singleton(DeepSeekClient::class);
+        $this->app->singleton(DeepSeekConversationService::class);
         $this->app->singleton(ChatResponseFormatterService::class);
         $this->app->singleton(ConversationStateManager::class);
         $this->app->singleton(ChatOrchestratorService::class);
