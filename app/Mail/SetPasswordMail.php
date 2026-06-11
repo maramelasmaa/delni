@@ -10,6 +10,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SetPasswordMail extends Mailable implements ShouldQueue
 {
@@ -21,6 +23,7 @@ class SetPasswordMail extends Mailable implements ShouldQueue
         private readonly string $userName,
     ) {
         $this->onQueue('default');
+        $this->afterCommit();
     }
 
     public function envelope(): Envelope
@@ -40,5 +43,15 @@ class SetPasswordMail extends Mailable implements ShouldQueue
                 'userName' => $this->userName,
             ],
         );
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        Log::error('SetPasswordMail failed to send', [
+            'email' => $this->email,
+            'userName' => $this->userName,
+            'exception' => $exception?->getMessage(),
+            'trace' => $exception?->getTraceAsString(),
+        ]);
     }
 }

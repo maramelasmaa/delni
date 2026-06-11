@@ -10,6 +10,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PasswordResetMail extends Mailable implements ShouldQueue
 {
@@ -41,5 +43,15 @@ class PasswordResetMail extends Mailable implements ShouldQueue
                 'userName' => $this->userName,
             ],
         );
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        Log::error('PasswordResetMail failed to send', [
+            'email' => $this->email,
+            'userName' => $this->userName,
+            'exception' => $exception?->getMessage(),
+            'trace' => $exception?->getTraceAsString(),
+        ]);
     }
 }
