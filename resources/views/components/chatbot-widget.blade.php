@@ -512,8 +512,26 @@
                 const data = await response.json();
                 this.conversationId = data.conversation_id || this.conversationId;
 
-                // Safe access to message field
-                const botMessage = data?.message ?? 'حدث خطأ مؤقت في المساعد.';
+                // Handle different response types
+                let botMessage = '';
+
+                if (data.type === 'greeting') {
+                    // Greeting response
+                    botMessage = data.message || 'وعليكم السلام!';
+                } else if (data.type === 'clarification') {
+                    // Clarification needed response
+                    botMessage = data.question || 'هل يمكنك توضيح أكثر؟';
+                } else if (data.type === 'no_results') {
+                    // No results found
+                    botMessage = data.message || 'لم نجد نتائج مطابقة.';
+                } else if (data.type === 'results') {
+                    // Results found
+                    botMessage = data.message || `لقيتلك ${data.count} مقدمي خدمة:`;
+                } else {
+                    // Fallback for unknown response type
+                    botMessage = data.message || 'حدث خطأ مؤقت في المساعد.';
+                }
+
                 this.addMessage(botMessage, 'bot');
 
                 // Render provider cards if available
