@@ -3,6 +3,7 @@
 namespace App\Services\Chatbot;
 
 use App\Models\Category;
+use App\Models\City;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
@@ -29,9 +30,8 @@ class ChatOrchestratorService
     public function __construct(
         private ChatSafetyService $safety,
         private IntentDetectionService $intentDetection,
-        private SmartProviderMatcher $smartMatcher,
-        private ChatContextBuilderService $contextBuilder,
-        private ChatPromptBuilderService $promptBuilder,
+        private IntentExtractionService $intentExtraction,
+        private ProviderSearchForChatService $providerSearch,
         private DeepSeekClient $deepSeek,
         private ChatResponseFormatterService $responseFormatter,
     ) {}
@@ -125,7 +125,9 @@ class ChatOrchestratorService
     }
 
     /**
-     * Handle provider search intent using smart matching.
+     * Handle provider search intent with semantic entity detection.
+     *
+     * NEW PHILOSOPHY: Search first, ask questions only if necessary.
      *
      * @param  array<string, mixed>  $state
      */
@@ -135,25 +137,95 @@ class ChatOrchestratorService
         string $conversationId,
         ?User $user,
     ): array {
-        // CRITICAL: Check for pending field first (multi-turn conversation)
+        // Check for pending field (multi-turn conversation)
         $pendingField = $state['pending_field'] ?? null;
 
         if ($pendingField === 'city') {
-            // User is answering "which city?" question
-            $cityResolver = app(CityAliasResolver::class);
-            $resolvedCity = $cityResolver->resolve($message);
+            return $this->handleCityResponse($message, $state, $conversationId);
+        }
 
-            if ($resolvedCity) {
-                // City successfully resolved!
-                $state['city_id'] = $resolvedCity['id'];
-                $state['pending_field'] = null;
-                $this->saveConversationState($conversationId, $state);
+        // Extract intent and entities using semantic understanding
+        $extraction = $this->intentExtraction->extract($message);
 
-                // Continue with provider search using resolved city
-                return $this->performProviderSearch($state, $conversationId);
+        // Try semantic search first (aggressive searching)
+        if ($extraction['should_search_first']) {
+            $providers = $this->providerSearch->searchSemantic(
+                providerNameQuery: $extraction['provider_name_query'],
+                businessNameQuery: $extraction['business_name_query'],
+                serviceQuery: $extraction['service_query'],
+                cityId: $this->resolveCityIfNeeded($extraction['city'], $state),
+                categoryHint: $this->resolveCategoryIfNeeded($extraction['category_hint']),
+            );
+
+            // Found results - return them immediately
+            if ($providers->isNotEmpty()) {
+                return $this->formatSearchResults(
+                    providers: $providers,
+                    message: $this->generateSearchResultMessage($extraction, $providers->count()),
+                    conversationId: $conversationId,
+                );
             }
+        }
 
-            // City not understood
+        // If extraction is very unclear, ask for clarification
+        if ($extraction['confidence'] < 0.3) {
+            return $this->responseFormatter->format(
+                message: 'ما فهمت طلبك بوضوح. شرح ليّ أكثر عن الخدمة اللي تبحث عنها والمدينة إن أمكن.',
+                intent: 'provider_search',
+                providers: collect(),
+                metadata: [
+                    'session_id' => $conversationId,
+                    'needs_city' => false,
+                    'needs_category' => false,
+                ],
+            );
+        }
+
+        // If we have service but missing city, ask for it
+        if (filled($extraction['service_query']) && ! $this->resolveCityIfNeeded($extraction['city'], $state)) {
+            $state['pending_field'] = 'city';
+            $state['service'] = $extraction['service_query'];
+            $this->saveConversationState($conversationId, $state);
+
+            return $this->responseFormatter->format(
+                message: "في أي مدينة تبحث عن {$extraction['service_query']}؟",
+                intent: 'provider_search',
+                providers: collect(),
+                metadata: [
+                    'session_id' => $conversationId,
+                    'needs_city' => true,
+                    'needs_category' => false,
+                ],
+            );
+        }
+
+        // No results and no clear search criteria
+        return $this->responseFormatter->format(
+            message: 'ما لقيناش نتيجة مطابقة حالياً. جرّب مدينة أخرى أو خدمة مختلفة.',
+            intent: 'provider_search',
+            providers: collect(),
+            metadata: [
+                'session_id' => $conversationId,
+                'needs_city' => false,
+                'needs_category' => false,
+            ],
+        );
+    }
+
+    /**
+     * Handle user's response to "which city?" question.
+     *
+     * @param  array<string, mixed>  $state
+     */
+    private function handleCityResponse(
+        string $message,
+        array $state,
+        string $conversationId,
+    ): array {
+        $cityResolver = app(CityAliasResolver::class);
+        $resolvedCity = $cityResolver->resolve($message);
+
+        if (! $resolvedCity) {
             return $this->responseFormatter->format(
                 message: 'ما فهمت اسم المدينة. جرّب: طرابلس، بنغازي، مصراتة، طبرق',
                 intent: 'provider_search',
@@ -166,52 +238,121 @@ class ChatOrchestratorService
             );
         }
 
-        // No pending field - fresh intent detection
-        $match = $this->smartMatcher->match($message);
-
-        // Save detected intent to state
-        if ($match['intent']['category_slug'] ?? null) {
-            $state['category_slug'] = $match['intent']['category_slug'];
-        }
-        if ($match['intent']['city_id'] ?? null) {
-            $state['city_id'] = $match['intent']['city_id'];
-        }
-        $state['message_count'] = ($state['message_count'] ?? 0) + 1;
+        // City resolved - search with service + city
+        $state['city_id'] = $resolvedCity['id'];
+        $state['city_name'] = $resolvedCity['name'];
+        $state['pending_field'] = null;
         $this->saveConversationState($conversationId, $state);
 
-        // Clarification needed (service unclear)
-        if ($match['needs_clarification']) {
-            return $this->responseFormatter->format(
-                message: $match['clarification_message'],
-                intent: 'provider_search',
-                providers: collect(),
-                metadata: [
-                    'session_id' => $conversationId,
-                    'needs_city' => false,
-                    'needs_category' => false,
-                ],
-            );
+        // Search with service hint from previous state
+        $providers = $this->providerSearch->searchByService(
+            service: $state['service'] ?? 'الخدمة',
+            cityId: $state['city_id'],
+            categoryHint: null,
+        );
+
+        return $this->formatSearchResults(
+            providers: $providers,
+            message: $providers->isNotEmpty()
+                ? "تمام، لقيتلك مقدمي خدمة في {$state['city_name']}:"
+                : "للأسف ما لقيناش مقدمي خدمات مطابقين في {$state['city_name']}.",
+            conversationId: $conversationId,
+        );
+    }
+
+    /**
+     * Resolve city ID from extraction or state.
+     */
+    private function resolveCityIfNeeded(?string $cityName, array $state): ?int
+    {
+        if ($state['city_id'] ?? null) {
+            return $state['city_id'];
         }
 
-        // City needed - set as pending and ask
-        if ($match['needs_city']) {
-            $state['pending_field'] = 'city';
-            $this->saveConversationState($conversationId, $state);
+        if (filled($cityName)) {
+            $city = City::where('is_active', true)
+                ->where(function ($q) use ($cityName) {
+                    $q->where('name_ar', 'like', "%{$cityName}%")
+                        ->orWhere('name', 'like', "%{$cityName}%");
+                })
+                ->first();
 
-            return $this->responseFormatter->format(
-                message: $match['clarification_message'],
-                intent: 'provider_search',
-                providers: collect(),
-                metadata: [
-                    'session_id' => $conversationId,
-                    'needs_city' => true,
-                    'needs_category' => false,
-                ],
-            );
+            return $city?->id;
         }
 
-        // All required fields present - search providers
-        return $this->performProviderSearch($state, $conversationId);
+        return null;
+    }
+
+    /**
+     * Resolve category ID from category hint.
+     */
+    private function resolveCategoryIfNeeded(?string $categoryHint): ?int
+    {
+        if (! filled($categoryHint)) {
+            return null;
+        }
+
+        $category = Category::where('is_active', true)
+            ->where(function ($q) use ($categoryHint) {
+                $q->where('name_ar', 'like', "%{$categoryHint}%")
+                    ->orWhere('name', 'like', "%{$categoryHint}%");
+            })
+            ->first();
+
+        return $category?->id;
+    }
+
+    /**
+     * Format and return search results.
+     */
+    private function formatSearchResults(
+        mixed $providers,
+        string $message,
+        string $conversationId,
+    ): array {
+        return $this->responseFormatter->format(
+            message: $message,
+            intent: 'provider_search',
+            providers: $providers,
+            metadata: [
+                'session_id' => $conversationId,
+                'needs_city' => false,
+                'needs_category' => false,
+            ],
+        );
+    }
+
+    /**
+     * Generate natural response message for search results.
+     */
+    private function generateSearchResultMessage(array $extraction, int $count): string
+    {
+        if ($count === 0) {
+            return 'ما لقيناش نتيجة مطابقة حالياً. جرّب مدينة أخرى أو خدمة مختلفة.';
+        }
+
+        // Build natural message from extraction data
+        $parts = [];
+
+        if (filled($extraction['provider_name_query'])) {
+            $parts[] = "اسم '{$extraction['provider_name_query']}'";
+        }
+
+        if (filled($extraction['service_query'])) {
+            $parts[] = "خدمة {$extraction['service_query']}";
+        }
+
+        if (filled($extraction['city'])) {
+            $parts[] = "في {$extraction['city']}";
+        }
+
+        if (empty($parts)) {
+            return "لقيتلك {$count} مقدمي خدمة مطابقين:";
+        }
+
+        $description = implode(' و ', $parts);
+
+        return "لقيتلك {$count} مقدمي خدمة بـ {$description}:";
     }
 
     /**

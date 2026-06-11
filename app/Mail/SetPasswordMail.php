@@ -37,7 +37,7 @@ class SetPasswordMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.set-password',
+            markdown: 'emails.set-password',
             with: [
                 'setPasswordLink' => $this->setPasswordLink,
                 'userName' => $this->userName,

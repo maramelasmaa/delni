@@ -37,7 +37,7 @@ class PasswordResetMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.password-reset',
+            markdown: 'emails.password-reset',
             with: [
                 'resetLink' => $this->resetLink,
                 'userName' => $this->userName,
