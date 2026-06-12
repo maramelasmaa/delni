@@ -6,12 +6,13 @@
 @php
     $businessName = $provider->business_name ?? __('messages.public.provider');
 
-    $cardImage = null;
-    if ($provider->cover_image) {
-        $cardImage = \Illuminate\Support\Facades\Storage::disk('public')->url($provider->cover_image);
-    } elseif ($provider->logo) {
-        $cardImage = \Illuminate\Support\Facades\Storage::disk('public')->url($provider->logo);
-    }
+    $coverImage = $provider->cover_image
+        ? \Illuminate\Support\Facades\Storage::disk('public')->url($provider->cover_image)
+        : null;
+
+    $logoImage = $provider->logo
+        ? \Illuminate\Support\Facades\Storage::disk('public')->url($provider->logo)
+        : null;
 
     $rating = (float) ($provider->stats?->rating_avg ?? 0);
     $reviewsCount = (int) ($provider->stats?->reviews_count ?? 0);
@@ -30,69 +31,78 @@
 
     $whatsappNumber = $provider->whatsapp ? preg_replace('/[^0-9]/', '', $provider->whatsapp) : null;
     $whatsappMessage = rawurlencode('السلام عليكم، وجدتك عبر دلني وأرغب بالاستفسار عن الخدمة.');
+
+    $initials = mb_substr($businessName, 0, 1);
 @endphp
 
-<article class="pwa-native-card">
-    {{-- Left side image/fallback circle --}}
-    <a href="{{ route('public.provider', $provider->slug) }}" class="pwa-card-media-circle">
-        @if($cardImage)
-            <img src="{{ $cardImage }}" alt="{{ $businessName }}" loading="lazy" class="pwa-circle-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="pwa-circle-fallback" style="display:none;">{{ mb_substr($businessName, 0, 1) }}</div>
+<article class="pc-card">
+    {{-- Image banner with logo badge --}}
+    <a href="{{ route('public.provider', $provider->slug) }}" class="pc-banner" aria-label="{{ $businessName }}">
+        @if($coverImage)
+            <img src="{{ $coverImage }}" alt="{{ $businessName }}" loading="lazy" class="pc-banner-img">
+        @elseif($logoImage)
+            <img src="{{ $logoImage }}" alt="{{ $businessName }}" loading="lazy" class="pc-banner-img pc-banner-img--logo">
         @else
-            <div class="pwa-circle-fallback">{{ mb_substr($businessName, 0, 1) }}</div>
+            <div class="pc-banner-empty">
+                <span>{{ $initials }}</span>
+            </div>
+        @endif
+
+        {{-- Logo badge floating at bottom-left of banner --}}
+        @if($coverImage && $logoImage)
+            <div class="pc-logo-badge">
+                <img src="{{ $logoImage }}" alt="{{ $businessName }}">
+            </div>
+        @endif
+
+        {{-- Rating badge floating top-right --}}
+        @if($rating > 0)
+            <div class="pc-rating-badge">
+                <span class="pc-star">★</span>
+                <span>{{ number_format($rating, 1) }}</span>
+            </div>
         @endif
     </a>
 
-    {{-- Center Body Content --}}
-    <div class="pwa-card-core-content">
-        <div class="pwa-card-top-row">
-            <h4 class="pwa-card-title">
-                <a href="{{ route('public.provider', $provider->slug) }}">{{ $businessName }}</a>
-            </h4>
-            <div class="pwa-card-badge-rating">
-                <span class="pwa-star-mini">★</span>
-                <span class="pwa-rating-val">{{ number_format($rating, 1) }}</span>
-            </div>
-        </div>
+    {{-- Card body --}}
+    <div class="pc-body">
+        <h4 class="pc-name">
+            <a href="{{ route('public.provider', $provider->slug) }}">{{ $businessName }}</a>
+        </h4>
 
-        <div class="pwa-card-sub-meta">
+        <div class="pc-meta">
             @if($categoryName)
-                <span class="pwa-meta-pill">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px;">
-                        <path d="M20.25 6.375c0-1.035-.84-1.875-1.875-1.875H5.625c-1.036 0-1.875.84-1.875 1.875v11.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V6.375Z" />
-                        <path fill-rule="evenodd" d="M12 2.25c-1.036 0-1.875.84-1.875 1.875v.75c0 .414.336.75.75.75h2.25c.414 0 .75-.336.75-.75v-.75c0-1.035-.84-1.875-1.875-1.875Zm-9 6a.75.75 0 0 0-.75.75v7.5c0 .414.336.75.75.75H21a.75.75 0 0 0 .75-.75v-7.5a.75.75 0 0 0-.75-.75H3Z" clip-rule="evenodd" />
-                    </svg>
+                <span class="pc-meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" /><path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" /></svg>
                     {{ $categoryName }}
                 </span>
             @endif
             @if($cityName)
-                <span class="pwa-meta-pill">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px;">
-                        <path fill-rule="evenodd" d="M11.54 1.265a.75.75 0 0 1 .92 0l9 7.5a.75.75 0 1 1-.98 1.15L12 2.687l-8.48 7.078a.75.75 0 0 1-.98-1.15l9-7.5ZM3.75 12a.75.75 0 0 0-.75.75v7.5a.75.75 0 0 0 .75.75h3v-7h6v7h3a.75.75 0 0 0 .75-.75v-7.5a.75.75 0 0 0-.75-.75H3.75Zm7.5 5.25v-5h-3v5h3Z" clip-rule="evenodd" />
-                    </svg>
+                <span class="pc-meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                     {{ $cityName }}
                 </span>
             @endif
         </div>
 
         @if($serviceTags->isNotEmpty())
-            <div class="pwa-card-service-tags">
+            <div class="pc-tags">
                 @foreach($serviceTags as $subcategory)
-                    <a href="{{ route('public.subcategory', $subcategory->slug) }}" class="pwa-service-tag">
+                    <a href="{{ route('public.subcategory', $subcategory->slug) }}" class="pc-tag">
                         {{ $subcategory->localized_name ?? $subcategory->name }}
                     </a>
                 @endforeach
             </div>
         @endif
 
-        {{-- High-priority Thumb Actions Container --}}
-        <div class="pwa-card-actions-wrapper">
-            <a href="{{ route('public.provider', $provider->slug) }}" class="pwa-btn-action pwa-btn-view">
+        <div class="pc-actions">
+            <a href="{{ route('public.provider', $provider->slug) }}" class="pc-btn pc-btn--primary">
                 عرض الملف
             </a>
             @if($whatsappNumber)
-                <a href="https://wa.me/{{ $whatsappNumber }}?text={{ $whatsappMessage }}" target="_blank" rel="noopener noreferrer" class="pwa-btn-action pwa-btn-wa">
-                    واتساب مباشرة
+                <a href="https://wa.me/{{ $whatsappNumber }}?text={{ $whatsappMessage }}" target="_blank" rel="noopener noreferrer" class="pc-btn pc-btn--wa">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.557 4.122 1.529 5.857L0 24l6.335-1.507A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.788 9.788 0 01-5.027-1.384l-.36-.214-3.762.895.952-3.659-.235-.375A9.786 9.786 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+                    واتساب
                 </a>
             @endif
         </div>
@@ -102,180 +112,217 @@
 @once
 @push('styles')
 <style>
-    .pwa-native-card {
+    .pc-card {
         display: flex;
-        gap: 0.85rem;
+        flex-direction: column;
         background: #ffffff;
         border: 1px solid #E8EDF4;
-        border-radius: 18px;
-        padding: 0.85rem;
-        box-shadow: 0 4px 12px rgba(11, 26, 52, 0.02);
-        align-items: center;
-        transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-
-    .pwa-native-card:hover {
-        border-color: rgba(241, 98, 15, 0.25);
-    }
-
-    /* Compact Avatar Circle */
-    .pwa-card-media-circle {
-        flex-shrink: 0;
-        width: 64px;
-        height: 64px;
-        border-radius: 14px;
+        border-radius: 20px;
         overflow: hidden;
-        background: #0B1A34;
-        position: relative;
+        box-shadow: 0 2px 12px rgba(11,26,52,.05);
+        transition: box-shadow .2s ease, border-color .2s ease;
     }
-    .pwa-circle-img {
+
+    .pc-card:hover {
+        box-shadow: 0 8px 28px rgba(11,26,52,.1);
+        border-color: rgba(241,98,15,.2);
+    }
+
+    /* Banner */
+    .pc-banner {
+        position: relative;
+        display: block;
+        height: 160px;
+        background: linear-gradient(135deg, #0B1A34 0%, #1a3259 100%);
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .pc-banner-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .35s ease;
+    }
+
+    .pc-card:hover .pc-banner-img {
+        transform: scale(1.04);
+    }
+
+    .pc-banner-img--logo {
+        object-fit: contain;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #0B1A34 0%, #1a3259 100%);
+    }
+
+    .pc-banner-empty {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+    }
+
+    .pc-banner-empty span {
+        font-size: 3rem;
+        font-weight: 950;
+        color: #F1620F;
+        opacity: .6;
+    }
+
+    /* Logo badge */
+    .pc-logo-badge {
+        position: absolute;
+        bottom: .75rem;
+        inset-inline-start: .75rem;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2.5px solid rgba(255,255,255,.9);
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,.18);
+    }
+
+    .pc-logo-badge img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    .pwa-circle-fallback {
-        width: 100%;
-        height: 100%;
-        display: flex;
+
+    /* Rating badge */
+    .pc-rating-badge {
+        position: absolute;
+        top: .65rem;
+        inset-inline-end: .65rem;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #0B1A34, #1E3A8A);
-        color: #F1620F;
+        gap: .2rem;
+        padding: .3rem .55rem;
+        border-radius: 999px;
+        background: rgba(11,26,52,.72);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        font-size: .75rem;
         font-weight: 900;
-        font-size: 1.4rem;
     }
 
-    /* Core Content Grid Engine */
-    .pwa-card-core-content {
-        flex: 1;
-        min-width: 0;
+    .pc-star {
+        color: #F59E0B;
+        font-size: .8rem;
+    }
+
+    /* Body */
+    .pc-body {
+        padding: .9rem;
         display: flex;
         flex-direction: column;
+        gap: .55rem;
+        flex: 1;
     }
-    .pwa-card-top-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 0.5rem;
-        margin-bottom: 0.25rem;
-    }
-    .pwa-card-title {
+
+    .pc-name {
         margin: 0;
-        font-size: 0.94rem;
-        font-weight: 800;
+        font-size: .94rem;
+        font-weight: 900;
         color: #0B1A34;
-        line-height: 1.3;
-        min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        line-height: 1.35;
     }
-    .pwa-card-title a {
+
+    .pc-name a {
         color: inherit;
         text-decoration: none;
     }
-    .pwa-card-badge-rating {
-        display: flex;
-        align-items: center;
-        gap: 0.15rem;
-        background: #FEF3C7;
-        padding: 0.15rem 0.4rem;
-        border-radius: 6px;
-        flex-shrink: 0;
-    }
-    .pwa-star-mini {
-        color: #D97706;
-        font-size: 0.75rem;
-    }
-    .pwa-rating-val {
-        font-size: 0.72rem;
-        font-weight: 800;
-        color: #92400E;
-    }
 
-    /* Meta Details Layout */
-    .pwa-card-sub-meta {
+    /* Meta row */
+    .pc-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.4rem;
-        margin-bottom: 0.5rem;
+        gap: .4rem;
     }
-    .pwa-meta-pill {
+
+    .pc-meta-item {
         display: inline-flex;
         align-items: center;
-        gap: 0.2rem;
-        font-size: 0.74rem;
+        gap: .25rem;
         color: #64748B;
-        font-weight: 600;
+        font-size: .74rem;
+        font-weight: 700;
     }
-    .pwa-meta-pill svg {
+
+    .pc-meta-item svg {
         width: 13px;
         height: 13px;
+        flex-shrink: 0;
         color: #94A3B8;
     }
 
-    .pwa-card-service-tags {
+    /* Tags */
+    .pc-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem;
-        margin-bottom: 0.65rem;
+        gap: .35rem;
     }
 
-    .pwa-service-tag {
+    .pc-tag {
         display: inline-flex;
         align-items: center;
-        max-width: 100%;
-        min-height: 24px;
-        padding: 0.2rem 0.45rem;
+        padding: .22rem .55rem;
         border-radius: 999px;
         background: #FFF7ED;
         color: #C2410C;
-        font-size: 0.68rem;
+        font-size: .7rem;
         font-weight: 800;
-        line-height: 1.2;
         text-decoration: none;
         white-space: nowrap;
+        transition: background .15s ease;
     }
 
-    .pwa-service-tag:hover {
+    .pc-tag:hover {
         background: #FFEDD5;
     }
 
-    /* Quick Action Micro Row */
-    .pwa-card-actions-wrapper {
+    /* Actions */
+    .pc-actions {
         display: flex;
-        gap: 0.45rem;
+        gap: .5rem;
+        margin-top: auto;
+        padding-top: .35rem;
     }
-    .pwa-btn-action {
+
+    .pc-btn {
         flex: 1;
-        height: 34px;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 10px;
-        font-size: 0.78rem;
-        font-weight: 800;
+        gap: .3rem;
+        border-radius: 12px;
+        font-size: .78rem;
+        font-weight: 900;
         text-decoration: none;
-        transition: opacity 0.15s ease;
+        transition: opacity .15s ease, transform .15s ease;
     }
-    .pwa-btn-action:active {
-        opacity: 0.85;
+
+    .pc-btn:active {
+        opacity: .85;
+        transform: scale(.98);
     }
-    .pwa-btn-view {
+
+    .pc-btn--primary {
         background: #F1620F;
-        color: #ffffff;
+        color: #fff;
     }
-    .pwa-btn-wa {
+
+    .pc-btn--wa {
         background: #DCFCE7;
         color: #15803D;
         border: 1px solid #BBF7D0;
     }
 
-    /* Responsive Reset Override */
-    @media (max-width: 640px) {
-        .delni-provider-card {
-            display: none !important;
-        }
+    .pc-btn--wa svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
     }
 </style>
 @endpush

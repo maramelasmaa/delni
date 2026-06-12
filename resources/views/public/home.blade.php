@@ -426,18 +426,24 @@
     }
 
     .directory-category {
-        width: 116px;
-        min-width: 116px;
-        min-height: 116px;
+        width: 108px;
+        min-width: 108px;
+        min-height: 108px;
         display: grid;
         align-content: space-between;
-        gap: .55rem;
+        gap: .5rem;
         scroll-snap-align: start;
-        padding: .85rem;
+        padding: .8rem;
         border: 1px solid #E8EDF4;
         border-radius: 18px;
         background: #FFFFFF;
-        box-shadow: 0 8px 22px rgba(11, 26, 52, .04);
+        box-shadow: 0 4px 16px rgba(11, 26, 52, .04);
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .directory-category:hover {
+        border-color: rgba(241,98,15,.25);
+        box-shadow: 0 8px 24px rgba(241,98,15,.1);
     }
 
     .directory-category span {
@@ -484,6 +490,13 @@
         color: #475569;
         font-size: .76rem;
         font-weight: 800;
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
+    }
+
+    .directory-service-chips a:hover {
+        background: #FFF7ED;
+        color: #C2410C;
+        border-color: rgba(241,98,15,.2);
     }
 
     .directory-provider-cta {

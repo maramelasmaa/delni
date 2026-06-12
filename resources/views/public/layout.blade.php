@@ -166,9 +166,9 @@
         }
 
         .pwa-view-boundary {
-            width: min(100% - 2rem, 1240px);
+            width: min(100% - 1.5rem, 1240px);
             margin-inline: auto;
-            padding-top: 1rem;
+            padding-top: .85rem;
         }
 
         /* Top Desktop View Navigation Items Link List Wrapper */
@@ -338,6 +338,32 @@
     </script>
 
     <div class="pwa-shell">
+
+        <header class="delni-header">
+            <div class="delni-header__inner">
+                <a href="{{ route('home') }}" class="delni-logo">
+                    <div class="delni-logo__mark">
+                        <img src="{{ asset('images/icon-192.png') }}" alt="دلني" width="36" height="36">
+                    </div>
+                    <span style="color: var(--delni-navy);">دلني</span>
+                </a>
+
+                <nav class="delni-nav">
+                    <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'is-active' : '' }}">الرئيسية</a>
+                    <a href="{{ route('public.categories') }}" class="{{ request()->routeIs('public.categories') ? 'is-active' : '' }}">الفئات</a>
+                    <a href="{{ route('public.top-rated') }}" class="{{ request()->routeIs('public.top-rated') ? 'is-active' : '' }}">الأعلى تقييماً</a>
+                </nav>
+
+                <div class="delni-actions">
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="delni-btn delni-btn--ghost">لوحتي</a>
+                    @else
+                        <a href="{{ route('login') }}" class="delni-btn delni-btn--ghost">دخول</a>
+                        <a href="{{ route('register') }}" class="delni-btn delni-btn--primary">سجّل مجاناً</a>
+                    @endauth
+                </div>
+            </div>
+        </header>
 
         <main class="delni-main">
             <div class="pwa-view-boundary">

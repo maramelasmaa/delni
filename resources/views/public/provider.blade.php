@@ -30,10 +30,10 @@
 
     <div class="profile-hero__overlay">
         <div class="container">
-            <div class="profile-head" style="align-items: flex-start;">
+            <div class="profile-head">
                 <div class="profile-logo" style="flex-shrink: 0;">
                     @if($logo)
-                        <img src="{{ $logo }}" alt="{{ $businessName }}" style="width: 400px; height: 400px; object-fit: cover;">
+                        <img src="{{ $logo }}" alt="{{ $businessName }}">
                     @else
                         <span>{{ mb_substr($businessName, 0, 1) }}</span>
                     @endif

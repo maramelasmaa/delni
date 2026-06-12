@@ -1,6 +1,6 @@
 @props([
     'providers',
-    'columns' => 3,
+    'columns' => 2,
     'title' => null,
     'subtitle' => null,
 ])
@@ -9,21 +9,21 @@
     $count = method_exists($providers, 'count') ? $providers->count() : count($providers);
 @endphp
 
-<section class="pwa-grid-section">
+<section class="pg-section">
     @if($title || $subtitle)
-        <header class="pwa-grid-head">
+        <header class="pg-head">
             <div>
-                @if($title) <h2 class="pwa-grid-title">{{ $title }}</h2> @endif
-                @if($subtitle) <p class="pwa-grid-subtitle">{{ $subtitle }}</p> @endif
+                @if($title) <h2 class="pg-title">{{ $title }}</h2> @endif
+                @if($subtitle) <p class="pg-subtitle">{{ $subtitle }}</p> @endif
             </div>
             @if($count > 0)
-                <span class="pwa-grid-count-badge">{{ $count }} مزود</span>
+                <span class="pg-count">{{ $count }} مزود</span>
             @endif
         </header>
     @endif
 
     @if($count > 0)
-        <div class="pwa-clean-grid-container">
+        <div class="pg-grid" data-columns="{{ $columns }}">
             @foreach($providers as $provider)
                 <x-provider-card :provider="$provider" :showBio="false" />
             @endforeach
@@ -36,48 +36,54 @@
 @once
 @push('styles')
 <style>
-    .pwa-grid-section {
-        width: 100%;
-        margin-top: 1rem;
-    }
-    .pwa-grid-head {
+    .pg-section { width: 100%; }
+
+    .pg-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 0.85rem;
-        padding: 0 0.25rem;
+        margin-bottom: .85rem;
+        padding: 0 .2rem;
     }
-    .pwa-grid-title {
-        font-size: 1.1rem;
-        font-weight: 800;
+
+    .pg-title {
+        font-size: 1.05rem;
+        font-weight: 900;
         color: #0B1A34;
         margin: 0;
     }
-    .pwa-grid-subtitle {
-        font-size: 0.8rem;
+
+    .pg-subtitle {
+        font-size: .78rem;
         color: #64748B;
-        margin: 0.2rem 0 0 0;
+        margin: .15rem 0 0;
     }
-    .pwa-grid-count-badge {
-        font-size: 0.75rem;
+
+    .pg-count {
+        font-size: .73rem;
         font-weight: 700;
         background: #F1F5F9;
         color: #475569;
-        padding: 0.25rem 0.6rem;
+        padding: .25rem .6rem;
         border-radius: 999px;
-    }
-    .pwa-clean-grid-container {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+        white-space: nowrap;
     }
 
-    /* Desktop Enhancement Override */
-    @media (min-width: 768px) {
-        .pwa-clean-grid-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+    .pg-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+    }
+
+    @media (min-width: 900px) {
+        .pg-grid[data-columns="3"] {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 380px) {
+        .pg-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
