@@ -1,0 +1,47 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --detach
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Verify deployment
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway logs --limit 50
+          echo "Checking database connection..."
+          railway run php artisan tinker --execute "DB::connection()->getPdo(); echo 'Database OK';"
+
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "✅ Deployment to Railway successful!"
+          echo "App URL: https://delni-production.railway.app"
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed. Check logs above."
+          exit 1

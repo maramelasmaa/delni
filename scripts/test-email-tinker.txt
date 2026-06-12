@@ -1,0 +1,103 @@
+# Tinker Test Commands for Email Actions
+
+# Start tinker
+php artisan tinker
+
+# ============================================
+# TEST 1: Test SetPasswordMail (Onboarding)
+# ============================================
+
+# Get a real user (or create one)
+$user = App\Models\User::first();
+
+# Create onboarding token
+$token = Str::random(60);
+$onboardingToken = App\Models\OnboardingToken::create([
+    'user_id' => $user->id,
+    'token' => $token,
+    'expires_at' => now()->addHours(72),
+]);
+
+# Generate setup link
+$setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
+
+# Send the email (this will be queued)
+Mail::send(new App\Mail\SetPasswordMail(
+    email: $user->email,
+    setPasswordLink: $setPasswordLink,
+    userName: $user->name,
+));
+
+# Expected output: (No output means success - email was queued)
+
+# ============================================
+# TEST 2: Test PasswordResetMail (Reset)
+# ============================================
+
+# Generate password reset token
+$resetToken = Str::random(64);
+DB::table('password_reset_tokens')->updateOrInsert(
+    ['email' => $user->email],
+    [
+        'token' => hash('sha256', $resetToken),
+        'created_at' => now(),
+    ]
+);
+
+# Generate reset link
+$resetLink = route('password.reset', [
+    'token' => $resetToken,
+    'email' => $user->email,
+]);
+
+# Send the email
+Mail::send(new App\Mail\PasswordResetMail(
+    email: $user->email,
+    resetLink: $resetLink,
+    userName: $user->name,
+));
+
+# Expected output: (No output means success - email was queued)
+
+# ============================================
+# TEST 3: Check Queue Jobs
+# ============================================
+
+# See all queued jobs
+DB::table('jobs')->get();
+
+# Count queued jobs
+DB::table('jobs')->count();
+
+# Get jobs details (shows email being processed)
+DB::table('jobs')->select('id', 'queue', 'created_at')->get();
+
+# ============================================
+# TEST 4: Test Raw Mail Send (Simple)
+# ============================================
+
+# Test basic SMTP connection
+Mail::raw('This is a test email from Brevo via tinker!', function ($m) {
+    $m->to('your-test@gmail.com')
+      ->subject('🧪 Brevo Tinker Test - Delni');
+});
+
+# Expected output: (No output means queued)
+
+# ============================================
+# EXIT TINKER
+# ============================================
+
+exit
+
+# ============================================
+# NEXT STEP: Monitor Queue Processing
+# ============================================
+
+# In another terminal, run:
+php artisan queue:work -vv
+
+# This will process the queued emails and show:
+# "Processing: App\Mail\SetPasswordMail"
+# "Processed: Illuminate\Mail\SendMailableMessage"
+# etc.

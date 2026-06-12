@@ -22,6 +22,7 @@ class PublicFrontendService
         private readonly ProfileSearchService $searchService,
         private readonly MarketplaceRankingService $rankingService,
         private readonly ProfileVisibilityService $visibilityService,
+        private readonly ArabicNormalizationService $normalization,
     ) {}
 
     /** @return array{data: array<string, mixed>, queryStats: array<string, mixed>} */
@@ -47,11 +48,17 @@ class PublicFrontendService
 
             $featuredProviders = $this->rankingService
                 ->applyHomepageRanking($this->discoverableProfilesQuery())
+                ->limit(8)
                 ->get();
 
             $loadedProviders = $this->loadHomepageProviderRelations(
                 $featuredProviders->values(),
                 $categoryMap
+            );
+
+            $loadedFeaturedProviders = $this->reuseLoadedProviders(
+                $featuredProviders->values(),
+                $loadedProviders
             );
 
             return [
@@ -62,7 +69,9 @@ class PublicFrontendService
                     ->orderBy('name')
                     ->get()
                     ->each(fn (City $city) => $city->setAttribute('discoverable_profiles_count', (int) ($cityCounts[$city->id] ?? 0))),
-                'featuredProviders' => $this->reuseLoadedProviders($featuredProviders, $loadedProviders),
+                'providerTypes' => ProviderType::options(),
+                'featuredProviders' => $loadedFeaturedProviders,
+                'suggestedProviders' => $loadedFeaturedProviders->take(6)->values(),
             ];
         });
     }
@@ -78,6 +87,7 @@ class PublicFrontendService
                 'provider_type' => $validated['provider_type'] ?? null,
                 'remote' => $validated['remote'] ?? false,
                 'keyword' => $validated['keyword'] ?? null,
+                'sort' => $validated['sort'] ?? null,
                 'page' => (int) ($validated['page'] ?? 1),
                 'per_page' => (int) ($validated['per_page'] ?? 15),
             ]);
@@ -102,13 +112,18 @@ class PublicFrontendService
         return $this->inspectQueries(function () use ($category, $request): array {
             $profiles = $this->paginateProfiles(
                 $this->rankingService
-                    ->applyCategoryRanking($this->discoverableProfilesQuery()->where('profiles.category_id', $category->id)),
+                    ->applyCategoryRanking(
+                        $this->applyArchiveFilters(
+                            $this->discoverableProfilesQuery()->where('profiles.category_id', $category->id),
+                            $request
+                        )
+                    ),
                 $request
             );
 
             $subcategoryCounts = $this->profileCountsBySubcategory();
             $category->load('icon');
-            $category->load(['subcategories' => fn ($query) => $query->where('is_active', true)->with('icon')]);
+            $category->load(['subcategories' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')->with('icon')]);
             $category->subcategories->each(
                 fn (Subcategory $subcategory) => $subcategory->setAttribute(
                     'discoverable_profiles_count',
@@ -120,6 +135,7 @@ class PublicFrontendService
                 'category' => $category,
                 'profiles' => $profiles,
                 'providerCount' => $profiles->total(),
+                'cities' => $this->activeCities(),
             ];
         });
     }
@@ -132,13 +148,16 @@ class PublicFrontendService
             $profiles = $this->paginateProfiles(
                 $this->rankingService
                     ->applySubcategoryRanking(
-                        $this->discoverableProfilesQuery()
-                            ->whereExists(function ($query) use ($subcategory): void {
-                                $query->select(DB::raw(1))
-                                    ->from('profile_subcategory')
-                                    ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
-                                    ->where('profile_subcategory.subcategory_id', $subcategory->id);
-                            })
+                        $this->applyArchiveFilters(
+                            $this->discoverableProfilesQuery()
+                                ->whereExists(function ($query) use ($subcategory): void {
+                                    $query->select(DB::raw(1))
+                                        ->from('profile_subcategory')
+                                        ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
+                                        ->where('profile_subcategory.subcategory_id', $subcategory->id);
+                                }),
+                            $request
+                        )
                     ),
                 $request,
                 ['stats', 'city', 'subcategories']
@@ -151,6 +170,7 @@ class PublicFrontendService
                 'subcategory' => $subcategory,
                 'profiles' => $profiles,
                 'providerCount' => $profiles->total(),
+                'cities' => $this->activeCities(),
             ];
         });
     }
@@ -186,11 +206,13 @@ class PublicFrontendService
                 $query->where('profiles.category_id', $request->integer('category_id'));
             }
 
+            $this->applyKeywordFilter($query, (string) $request->query('keyword', ''));
+
             $profiles = $this->paginateProfiles(
                 $this->rankingService
                     ->applyTopRatedEligibility($query),
                 $request,
-                ['stats', 'city', 'category']
+                ['stats', 'city', 'category', 'subcategories']
             );
 
             return [
@@ -198,7 +220,7 @@ class PublicFrontendService
                 'providerCount' => $profiles->total(),
                 'categories' => $this->activeCategories(),
                 'cities' => $this->activeCities(),
-                'filters' => $request->only(['city_id', 'category_id']),
+                'filters' => $request->only(['city_id', 'category_id', 'keyword']),
             ];
         });
     }
@@ -274,12 +296,43 @@ class PublicFrontendService
     }
 
     /** @param Builder<Profile> $query */
+    private function applyArchiveFilters(Builder $query, Request $request): Builder
+    {
+        if ($request->filled('city_id')) {
+            $query->where('profiles.city_id', $request->integer('city_id'));
+        }
+
+        return $query;
+    }
+
+    /** @param Builder<Profile> $query */
+    private function applyKeywordFilter(Builder $query, string $keyword): void
+    {
+        $keyword = trim(strip_tags($keyword));
+
+        if (mb_strlen($keyword) < 2) {
+            return;
+        }
+
+        $normalizedKeyword = $this->normalization->normalize($keyword);
+        $likeKeyword = '%'.addcslashes($normalizedKeyword, '%_\\').'%';
+
+        $query->where(function (Builder $query) use ($likeKeyword): void {
+            $query
+                ->where('profiles.search_business_name', 'like', $likeKeyword)
+                ->orWhere('profiles.search_bio', 'like', $likeKeyword);
+        });
+    }
+
+    /** @param Builder<Profile> $query */
     /** @param array<int, string> $relations */
     private function paginateProfiles(
         Builder $query,
         Request $request,
         array $relations = ['stats', 'city', 'category', 'subcategories']
     ): LengthAwarePaginator {
+        $this->applyArchiveSort($query, (string) $request->query('sort', ''));
+
         $profiles = $query->paginate(
             perPage: min(max($request->integer('per_page', 15), 5), 50),
             page: max($request->integer('page', 1), 1)
@@ -288,6 +341,25 @@ class PublicFrontendService
         $profiles->getCollection()->loadMissing($relations);
 
         return $profiles;
+    }
+
+    /** @param Builder<Profile> $query */
+    private function applyArchiveSort(Builder $query, string $sort): void
+    {
+        match ($sort) {
+            'rating' => $query
+                ->reorder('profile_stats.rating_avg', 'desc')
+                ->orderByDesc('profile_stats.reviews_count')
+                ->orderByDesc('profiles.id'),
+            'reviews' => $query
+                ->reorder('profile_stats.reviews_count', 'desc')
+                ->orderByDesc('profile_stats.rating_avg')
+                ->orderByDesc('profiles.id'),
+            'newest' => $query
+                ->reorder('profiles.created_at', 'desc')
+                ->orderByDesc('profiles.id'),
+            default => null,
+        };
     }
 
     /** @param EloquentCollection<int, Profile> $profiles */

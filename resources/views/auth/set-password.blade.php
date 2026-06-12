@@ -1,6 +1,7 @@
 @extends('layouts.auth')
 
 @section('title', __('auth.set_password_title') . ' - ' . config('app.name'))
+@section('hide_home_back', true)
 
 @section('auth_title')
     {{ __('auth.set_password_title') }}

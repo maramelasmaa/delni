@@ -29,7 +29,12 @@ class ProfileSearchService
         $query = $this->visibilityService->applyVisibleQuery($query);
 
         $this->applyFilters($query, $filters);
-        $query = $this->rankingService->applySearchRanking($query);
+
+        if ($filters->sort !== null) {
+            $this->applySort($query, $filters->sort);
+        } else {
+            $query = $this->rankingService->applySearchRanking($query);
+        }
 
         $paginator = $query->paginate(
             perPage: $filters->perPage,
@@ -84,5 +89,27 @@ class ProfileSearchService
                     ->orWhere('profiles.search_bio', 'like', $keyword);
             });
         }
+    }
+
+    private function applySort(Builder $query, string $sort): void
+    {
+        match ($sort) {
+            'rating' => $query
+                ->orderByDesc('profile_stats.rating_avg')
+                ->orderByDesc('profile_stats.reviews_count')
+                ->orderByDesc('profiles.id'),
+            'reviews' => $query
+                ->orderByDesc('profile_stats.reviews_count')
+                ->orderByDesc('profile_stats.rating_avg')
+                ->orderByDesc('profiles.id'),
+            'newest' => $query
+                ->orderByDesc('profiles.created_at')
+                ->orderByDesc('profiles.id'),
+            'featured' => $query
+                ->orderByDesc('profile_stats.is_featured')
+                ->orderByDesc('profile_stats.rating_avg')
+                ->orderByDesc('profiles.id'),
+            default => null,
+        };
     }
 }

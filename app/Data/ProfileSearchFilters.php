@@ -13,6 +13,7 @@ class ProfileSearchFilters
         public readonly ?string $providerType = null,
         public readonly bool $remote = false,
         public readonly ?string $keyword = null,
+        public readonly ?string $sort = null,
         public readonly int $perPage = 15,
         public readonly int $page = 1,
     ) {}
@@ -29,6 +30,9 @@ class ProfileSearchFilters
             remote: filter_var($data['remote'] ?? false, FILTER_VALIDATE_BOOL),
             keyword: isset($data['keyword']) && strlen(trim($data['keyword'])) >= 2
                 ? trim($data['keyword'])
+                : null,
+            sort: isset($data['sort']) && $data['sort'] !== ''
+                ? (string) $data['sort']
                 : null,
             perPage: isset($data['per_page']) ? (int) $data['per_page'] : 15,
             page: isset($data['page']) ? (int) $data['page'] : 1,

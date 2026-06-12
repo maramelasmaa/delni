@@ -31,11 +31,12 @@ class FrontendController extends Controller
 
     public function search(SearchProfilesRequest $request): View
     {
-        $payload = $this->frontendService->search($request->validated());
+        $searchPayload = $this->frontendService->search($request->validated());
+        $homePayload = $this->frontendService->homepage();
 
-        return view('public.search', $payload['data'] + [
-            'queryStats' => $payload['queryStats'],
-        ]);
+        return view('public.home', array_merge($homePayload['data'], $searchPayload['data'], [
+            'queryStats' => $searchPayload['queryStats'],
+        ]));
     }
 
     public function topRated(Request $request): View

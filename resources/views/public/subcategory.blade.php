@@ -21,7 +21,13 @@
     <div class="container">
         <div class="workspace-layout-grid">
             <aside class="workspace-sidebar-sticky">
-                <x-search-filters :cities="$cities ?? null" />
+                <x-search-filters
+                    :action="url()->current()"
+                    :clear-url="route('public.subcategory', $subcategory->slug)"
+                    :cities="$cities ?? null"
+                    :show-keyword="false"
+                    :show-remote="false"
+                />
             </aside>
 
             <main class="workspace-main-content">

@@ -82,6 +82,40 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             width: 100%;
+            position: relative;
+        }
+
+        .auth-home-back {
+            position: absolute;
+            top: 1rem;
+            inset-inline-start: 1rem;
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(241, 98, 15, 0.35);
+            border-radius: 999px;
+            background: rgba(241, 98, 15, 0.12);
+            color: var(--auth-primary);
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .auth-home-back:hover {
+            background: rgba(241, 98, 15, 0.18);
+            border-color: rgba(241, 98, 15, 0.6);
+            color: var(--auth-primary-2);
+            transform: translateY(-1px);
+        }
+
+        .auth-home-back svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        html[dir="rtl"] .auth-home-back svg {
+            transform: scaleX(-1);
         }
 
         /* Brand Identity Node Layout */
@@ -302,71 +336,7 @@
             cursor: not-allowed;
         }
 
-        /* Divider with Text */
-        .auth-divider {
-            position: relative;
-            display: flex;
-            align-items: center;
-            margin: 1.75rem 0;
-            gap: 1rem;
-        }
-
-        .auth-divider::before,
-        .auth-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .auth-divider span {
-            color: var(--auth-muted);
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        /* OAuth Social Login Buttons */
-        .auth-oauth-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            width: 100%;
-            height: 50px;
-            padding: 0 1.25rem;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: var(--auth-radius-sm);
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--auth-text);
-            font: inherit;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .auth-oauth-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.25);
-            transform: translateY(-1px);
-        }
-
-        .auth-oauth-button:active {
-            transform: translateY(0);
-        }
-
-        .auth-oauth-icon {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .auth-oauth-google {
-            color: #FFFFFF;
-        }
-
-        /* Responsive Breakpoint Adaptability Rules */
+        /* Structural Card Footer Rules */
         .auth-footer {
             margin-top: 1.75rem;
             padding-top: 1.25rem;
@@ -414,10 +384,71 @@
             transform: scaleX(-1) translateX(3px);
         }
 
+        /* OAuth Social Login Buttons */
+        .auth-oauth-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            height: 50px;
+            padding: 0 1.25rem;
+            margin-top: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--auth-radius-sm);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--auth-text);
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .auth-oauth-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .auth-oauth-button:active {
+            transform: translateY(0);
+        }
+
+        .auth-oauth-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            color: var(--auth-muted);
+            font-size: 0.85rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
         /* Responsive Breakpoint Adaptability Rules */
         @media (max-width: 480px) {
             .auth-page {
                 padding: 1rem;
+            }
+            .auth-home-back {
+                top: 0.85rem;
+                inset-inline-start: 0.85rem;
+                width: 38px;
+                height: 38px;
             }
             .auth-card {
                 padding: 1.5rem 1.25rem;
@@ -434,6 +465,15 @@
     <main class="auth-page">
         <section class="auth-shell">
             <div class="auth-card">
+                @unless(View::hasSection('hide_home_back'))
+                    <a
+                        href="@if(Route::has('home')){{ route('home') }}@else{{ url('/') }}@endif"
+                        class="auth-home-back"
+                        aria-label="الرجوع للرئيسية"
+                    >
+                        <x-render-icon icon="app-back" />
+                    </a>
+                @endunless
 
                 {{-- Dynamic Routing Framework Header Node --}}
                 <div class="auth-brand">

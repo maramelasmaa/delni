@@ -1,887 +1,582 @@
 @extends('public.layout')
 
-@section('title', __('messages.public.home') . ' - ' . config('app.name'))
+@section('title', config('app.name') . ' - خدمات قريبة منك')
 
-@section('content')
 @php
-    $categories = $categories ?? collect();
-    $cities = $cities ?? collect();
-
-    $featuredProviders = $featuredProviders ?? collect();
-
-    $providersCount = $categories->sum(fn ($category) => (int) ($category->discoverable_profiles_count ?? 0));
-    $categoriesCount = $categories->count();
-    $citiesCount = $cities->count();
+    $isSearchView = isset($profiles);
+    $resultCount = $isSearchView ? ($profiles?->total() ?? $profiles?->count() ?? 0) : 0;
+    $suggestedCount = isset($suggestedProviders) ? $suggestedProviders->count() : 0;
+    $serviceChips = isset($subcategories) ? $subcategories->take(12) : collect();
 @endphp
 
-{{-- Main Landing Hero Section --}}
-<section class="home-hero-viewport">
-    <div class="container">
-        <div class="hero-content-wrapper">
-            <h1 class="hero-main-title">
-                دور على الخدمة<br>
-                اللي تحتاجها <span class="highlight">بسهولة</span>
-            </h1>
+@section('content')
+<main class="directory-home">
+    <section class="directory-hero">
+        <div class="directory-hero__top">
+            <div>
+                <p class="directory-eyebrow">شن تبي تنجز اليوم؟</p>
+                <h1>لقى الخدمة اللي تحتاجها</h1>
+            </div>
 
-            {{-- Floating Combined Search Engine Form --}}
-            <form action="{{ route('public.search') }}" method="GET" class="hero-search-card" id="searchForm">
+            <a href="{{ route('public.top-rated') }}" class="directory-icon-link" aria-label="الأعلى تقييماً">
+                <x-render-icon icon="heroicon-o-star" />
+            </a>
+        </div>
 
-                {{-- Global Search Bar Input Field --}}
-                <div class="hero-input-field field-keyword">
-                    <x-render-icon icon="heroicon-o-magnifying-glass" class="field-icon" />
+        <form method="GET" action="{{ route('public.search') }}" class="directory-search">
+            <label class="directory-search__input">
+                <span>اكتب الخدمة أو اسم المزود</span>
+                <div>
+                    <x-render-icon icon="heroicon-o-magnifying-glass" />
                     <input
-                        type="text"
+                        type="search"
                         name="keyword"
-                        placeholder="ابحث عن خدمة، مقدم خدمة أو كلمة مفتاحية..."
+                        value="{{ request('keyword') }}"
                         maxlength="100"
-                        autocomplete="off"
+                        placeholder="مثال: تكييف، محامي، تصوير..."
                     >
                 </div>
+            </label>
 
-                {{-- Desktop Filters Block Layout Nodes --}}
-                <div class="desktop-filters-group">
-                    <div class="hero-input-field">
-                        <x-render-icon icon="heroicon-o-briefcase" class="field-icon" />
-                        <select name="category_id" id="desktopCategory">
-                            <option value="">كل الفئات</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}">
-                                    {{ $category->localized_name ?? $category->name }}
+            <div class="directory-search__filters">
+                <label>
+                    <span>الفئة</span>
+                    <select name="category_id">
+                        <option value="">كل الفئات</option>
+                        @foreach(($categories ?? collect()) as $category)
+                            <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>
+                                {{ $category->localized_name ?? $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label>
+                    <span>الخدمة</span>
+                    <select name="subcategory_id">
+                        <option value="">كل الخدمات</option>
+                        @foreach(($subcategories ?? collect())->groupBy('category_id') as $group)
+                            @php($parentCategory = $group->first()?->category)
+                            <optgroup label="{{ $parentCategory?->localized_name ?? $parentCategory?->name ?? 'خدمات' }}">
+                                @foreach($group as $subcategory)
+                                    <option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}" @selected((string) request('subcategory_id') === (string) $subcategory->id)>
+                                        {{ $subcategory->localized_name ?? $subcategory->name }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label>
+                    <span>المدينة</span>
+                    <select name="city_id">
+                        <option value="">كل المدن</option>
+                        @foreach(($cities ?? collect()) as $city)
+                            <option value="{{ $city->id }}" @selected((string) request('city_id') === (string) $city->id)>
+                                {{ $city->localized_name ?? $city->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+
+                @if(isset($providerTypes))
+                    <label>
+                        <span>نوع المزود</span>
+                        <select name="provider_type">
+                            <option value="">كل الأنواع</option>
+                            @foreach($providerTypes as $code => $name)
+                                <option value="{{ $code }}" @selected((string) request('provider_type') === (string) $code)>
+                                    {{ is_object($name) ? ($name->localized_name ?? $name->name) : $name }}
                                 </option>
                             @endforeach
                         </select>
-                    </div>
-
-                    <div class="hero-input-field">
-                        <x-render-icon icon="heroicon-o-map-pin" class="field-icon" />
-                        <select name="city_id" id="desktopCity">
-                            <option value="">كل المدن</option>
-                            @foreach($cities as $city)
-                                <option value="{{ $city->id }}">
-                                    {{ $city->localized_name ?? $city->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                {{-- Mobile Drawer Trigger Action Button Control --}}
-                <button type="button" class="mobile-filter-pill-trigger" id="openMobileFilters">
-                    <x-render-icon icon="heroicon-o-funnel" class="mobile-pill-icon" />
-                    <span id="filterPillText">تحديد الفئة والمدينة</span>
-                </button>
-
-                {{-- Core Action Search Submit Button --}}
-                <button type="submit" class="btn-hero-submit">
-                    <x-render-icon icon="heroicon-o-magnifying-glass" />
-                    <span>بحث</span>
-                </button>
-
-                {{-- PWA Mobile Sliding Bottom Sheet Filter Drawer Module --}}
-                <div class="mobile-filter-drawer-overlay" id="drawerOverlay">
-                    <div class="mobile-filter-drawer-card">
-                        <div class="drawer-drag-handle"></div>
-                        <div class="drawer-header">
-                            <h3 class="drawer-title">تخصيص البحث</h3>
-                            <button type="button" class="drawer-close-btn" id="closeMobileFilters">✕</button>
-                        </div>
-
-                        <div class="drawer-body-inputs">
-                            <div class="drawer-input-group">
-                                <label class="drawer-field-label">مجال الخدمة المطلوب</label>
-                                <div class="drawer-select-wrapper">
-                                    <x-render-icon icon="heroicon-o-briefcase" class="drawer-select-icon" />
-                                    <select id="mobileCategory" class="drawer-custom-select">
-                                        <option value="">كل الفئات والمجالات</option>
-                                        @foreach($categories as $category)
-                                            <option value="{{ $category->id }}">
-                                                {{ $category->localized_name ?? $category->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="drawer-input-group">
-                                <label class="drawer-field-label">المدينة / المنطقة</label>
-                                <div class="drawer-select-wrapper">
-                                    <x-render-icon icon="heroicon-o-map-pin" class="drawer-select-icon" />
-                                    <select id="mobileCity" class="drawer-custom-select">
-                                        <option value="">كل المدن والمناطق</option>
-                                        @foreach($cities as $city)
-                                            <option value="{{ $city->id }}">
-                                                {{ $city->localized_name ?? $city->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="drawer-footer-actions">
-                            <button type="button" class="btn-drawer-apply-trigger" id="applyMobileFilters">
-                                تأكيد الاختيارات
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-
-            {{-- Modern Platform Live Metric Statistics Counter Nodes --}}
-            <div class="hero-stats-row">
-                <div class="stat-metric-card">
-                    <div class="stat-icon-box">
-                        <x-render-icon icon="heroicon-o-briefcase" />
-                    </div>
-                    <div class="stat-info-text">
-                        <strong class="stat-number">{{ number_format($categoriesCount) }}+</strong>
-                        <span class="stat-label">فئة متنوعة</span>
-                    </div>
-                </div>
-
-                <div class="stat-metric-card">
-                    <div class="stat-icon-box">
-                        <x-render-icon icon="heroicon-o-map-pin" />
-                    </div>
-                    <div class="stat-info-text">
-                        <strong class="stat-number">{{ number_format($citiesCount) }}</strong>
-                        <span class="stat-label">مدينة في ليبيا</span>
-                    </div>
-                </div>
-
-                <div class="stat-metric-card">
-                    <div class="stat-icon-box">
-                        <x-render-icon icon="heroicon-o-check-circle" />
-                    </div>
-                    <div class="stat-info-text">
-                        <strong class="stat-number">{{ number_format($providersCount) }}+</strong>
-                        <span class="stat-label">مقدم خدمة موثوق</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-{{-- Ultra-Compact Horizontal Categories Carousel Selector Section --}}
-@if($categories->count() > 0)
-    <section class="categories-explorer-section">
-        <div class="container">
-            <div class="section-header-inline">
-                <div class="header-text-side">
-                    <span class="section-tagline">تصفح حسب الفئة</span>
-                    <h2 class="section-main-title">الخدمات المتاحة على المنصة</h2>
-                </div>
-                <a href="{{ route('public.categories') }}" class="btn-link-all">
-                    <span>عرض الكل</span>
-                    <x-render-icon icon="heroicon-o-arrow-left" class="icon-flip-rtl" />
-                </a>
+                    </label>
+                @endif
             </div>
 
-            <div class="modern-categories-slider">
-                @foreach($categories->take(8) as $category)
-                    <a href="{{ route('public.category', $category->slug) }}" class="category-interactive-card">
-                        <div class="category-icon-wrapper">
-                            <x-svg-icon :icon="$category->getRelation('icon')" size="24" />
-                        </div>
-                        <div class="category-meta-text">
-                            <strong class="category-card-name">{{ $category->localized_name ?? $category->name }}</strong>
-                            <span class="category-card-count">
-                                {{ $category->discoverable_profiles_count ?? 0 }} مزود
-                            </span>
-                        </div>
+            <button type="submit" class="directory-search__button">
+                <x-render-icon icon="heroicon-o-magnifying-glass" />
+                <span>بحث</span>
+            </button>
+        </form>
+    </section>
+
+    @if($isSearchView)
+        <section class="directory-section">
+            <div class="directory-section__head">
+                <div>
+                    <span>نتائج البحث</span>
+                    <h2>{{ number_format($resultCount) }} نتيجة</h2>
+                </div>
+
+                <a href="{{ route('home') }}">مسح</a>
+            </div>
+
+            @if($profiles && $profiles->count() > 0)
+                <x-provider-grid :providers="$profiles" :columns="2" />
+
+                @if(method_exists($profiles, 'hasPages') && $profiles->hasPages())
+                    <nav class="directory-pagination" aria-label="Pagination">
+                        @if($profiles->onFirstPage())
+                            <span class="is-disabled">السابق</span>
+                        @else
+                            <a href="{{ $profiles->previousPageUrl() }}">السابق</a>
+                        @endif
+
+                        <strong>صفحة {{ $profiles->currentPage() }} من {{ $profiles->lastPage() }}</strong>
+
+                        @if($profiles->hasMorePages())
+                            <a href="{{ $profiles->nextPageUrl() }}">التالي</a>
+                        @else
+                            <span class="is-disabled">التالي</span>
+                        @endif
+                    </nav>
+                @endif
+            @else
+                <x-empty-state
+                    icon="heroicon-o-magnifying-glass"
+                    title="ما لقيناش نتائج"
+                    message="جرّب كلمة أبسط، أو اختار مدينة ثانية."
+                    actionLabel="مسح البحث"
+                    actionUrl="{{ route('home') }}"
+                />
+            @endif
+        </section>
+    @else
+        <section class="directory-section">
+            <div class="directory-section__head">
+                <div>
+                    <span>تصفح</span>
+                    <h2>الفئات</h2>
+                </div>
+
+                <a href="{{ route('public.categories') }}">عرض الكل</a>
+            </div>
+
+            <div class="directory-category-row">
+                @foreach(($categories ?? collect())->take(10) as $category)
+                    <a href="{{ route('public.category', $category->slug ?? $category->id) }}" class="directory-category">
+                        <span>
+                            @if($category->icon)
+                                <x-svg-icon :icon="$category->icon" size="20" />
+                            @else
+                                <x-render-icon icon="heroicon-o-briefcase" />
+                            @endif
+                        </span>
+                        <strong>{{ $category->localized_name ?? $category->name }}</strong>
+                        <small>{{ number_format((int) ($category->discoverable_profiles_count ?? 0)) }}</small>
                     </a>
                 @endforeach
             </div>
+
+            @if($serviceChips->isNotEmpty())
+                <div class="directory-service-chips" aria-label="خدمات">
+                    @foreach($serviceChips as $subcategory)
+                        <a href="{{ route('public.subcategory', $subcategory->slug) }}">
+                            {{ $subcategory->localized_name ?? $subcategory->name }}
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </section>
+
+        <section class="directory-section">
+            <div class="directory-section__head">
+                <div>
+                    <span>من الدليل</span>
+                    <h2>مزودين قريبين منك</h2>
+                </div>
+            </div>
+
+            @if($suggestedCount > 0)
+                <x-provider-grid :providers="$suggestedProviders" :columns="2" />
+            @elseif(isset($featuredProviders) && $featuredProviders->count() > 0)
+                <x-provider-grid :providers="$featuredProviders->take(6)" :columns="2" />
+            @else
+                <x-empty-state
+                    icon="heroicon-o-briefcase"
+                    title="ما فيش مزودين حالياً"
+                    message="ارجع بعد شوية، أو جرّب تبحث باسم خدمة محددة."
+                />
+            @endif
+        </section>
+    @endif
+
+    <section class="directory-provider-cta">
+        <div>
+            <span>تقدم خدمة؟</span>
+            <h2>خلّي ملفك يظهر للناس</h2>
+            <p>افتح حساب مزود وخلي خدماتك تطلع في البحث والفئات.</p>
         </div>
+
+        <a href="{{ route('register') }}">
+            سجل كمزود
+        </a>
     </section>
-@endif
+</main>
+@endsection
 
-{{-- Featured Providers Custom Layout Slot Node --}}
-@if($featuredProviders->count() > 0)
-    <section class="featured-providers-section text-center">
-        <div class="container">
-            <x-provider-grid
-                :providers="$featuredProviders"
-                :columns="3"
-                title="الخدمات الموثوقة"
-                subtitle="مقدمو خدمات برتبة عالية وتقييمات إيجابية من العملاء."
-                compact="true"
-            />
-        </div>
-    </section>
-@endif
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchForm = document.querySelector('.directory-search');
+        const categorySelect = searchForm?.querySelector('select[name="category_id"]');
+        const subcategorySelect = searchForm?.querySelector('select[name="subcategory_id"]');
 
-{{-- Provider CTA Section --}}
-<section class="provider-cta-section">
-    <div class="container">
-        <div class="provider-cta-card">
-            <h2 class="cta-title">{{ __('messages.public.are_you_professional') }}</h2>
-            <p class="cta-description">{{ __('messages.public.join_marketplace_description') }}</p>
-            <a href="{{ route('contact') }}" class="cta-button">{{ __('messages.public.contact_us') }}</a>
-        </div>
-    </div>
-</section>
+        const syncSubcategories = () => {
+            if (!categorySelect || !subcategorySelect) return;
 
+            const categoryId = categorySelect.value;
+
+            Array.from(subcategorySelect.options).forEach((option) => {
+                if (!option.value) {
+                    option.hidden = false;
+                    option.disabled = false;
+                    return;
+                }
+
+                const matches = !categoryId || option.dataset.categoryId === categoryId;
+                option.hidden = !matches;
+                option.disabled = !matches;
+            });
+
+            const selected = subcategorySelect.selectedOptions[0];
+            if (selected && selected.disabled) {
+                subcategorySelect.value = '';
+            }
+        };
+
+        categorySelect?.addEventListener('change', syncSubcategories);
+        syncSubcategories();
+    });
+</script>
+@endpush
+
+@push('styles')
 <style>
-    /* Premium Application Variables Setup */
-    :root {
-        --brand-primary: #F1620F;
-        --brand-primary-hover: #D7530A;
-        --brand-dark: #0B1A34;
-        --brand-dark-gradient: #14284D;
-        --bg-surface: #FFFFFF;
-        --bg-subtle: #F8FAFC;
-        --text-primary: #0B1A34;
-        --text-secondary: #475569;
-        --text-light-muted: #94A3B8;
-        --border-color: #E2E8F0;
-        --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    .directory-home {
+        width: min(100% - 1.25rem, 1120px);
+        margin-inline: auto;
+        padding: .85rem 0 2rem;
     }
 
-    /* Modern Minimalist Layout Settings */
-    .home-hero-viewport {
-        position: relative;
-        background: linear-gradient(135deg, rgba(11, 26, 52, 0.93), rgba(20, 40, 77, 0.97)),
-                    url('{{ asset('images/herobackground2.png') }}') center/cover no-repeat;
-        padding: 5rem 0 4rem;
-        color: #FFFFFF;
-        overflow: hidden;
-    }
-
-    .hero-content-wrapper {
-        max-width: 1040px;
-        margin: 0 auto;
-        text-align: center;
-    }
-
-    .hero-main-title {
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        font-weight: 800;
-        line-height: 1.3;
-        letter-spacing: -0.03em;
-        margin: 0 0 2.25rem;
-    }
-
-    .hero-main-title .highlight {
-        color: var(--brand-primary);
-        position: relative;
-    }
-
-    /* Redesign of Search Card Container */
-    .hero-search-card {
-        background: var(--bg-surface);
-        padding: 0.65rem;
-        border-radius: 20px;
-        box-shadow: 0 25px 60px -15px rgba(11, 26, 52, 0.35);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+    .directory-hero {
         display: grid;
-        grid-template-columns: 1.5fr 2fr auto;
-        gap: 0.75rem;
-        align-items: center;
-        margin-bottom: 3rem;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid #E8EDF4;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+        box-shadow: 0 12px 32px rgba(11, 26, 52, .06);
     }
 
-    .desktop-filters-group {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-        width: 100%;
-    }
-
-    .hero-input-field {
-        background: var(--bg-subtle);
-        border: 1px solid var(--border-color);
-        height: 54px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        padding: 0 1.15rem;
-        gap: 0.65rem;
-        transition: var(--transition-smooth);
-    }
-
-    .hero-input-field:focus-within {
-        border-color: var(--brand-primary);
-        box-shadow: 0 0 0 3px rgba(241, 98, 15, 0.12);
-        background: #FFFFFF;
-    }
-
-    .hero-input-field .field-icon {
-        width: 18px;
-        height: 18px;
-        color: #64748B;
-        flex-shrink: 0;
-    }
-
-    .hero-input-field input,
-    .hero-input-field select {
-        width: 100%;
-        border: none;
-        outline: none;
-        background: transparent;
-        color: var(--brand-dark);
-        font-size: 0.95rem;
-        font-weight: 600;
-    }
-
-    .hero-input-field input::placeholder {
-        color: var(--text-light-muted);
-    }
-
-    /* Mobile Filter Touch-pill trigger UI */
-    .mobile-filter-pill-trigger {
-        display: none;
-        align-items: center;
-        gap: 0.5rem;
-        background: var(--bg-subtle);
-        border: 1px solid var(--border-color);
-        height: 44px;
-        padding: 0 1rem;
-        border-radius: 10px;
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        font-weight: 700;
-        cursor: pointer;
-        width: 100%;
-        text-align: right;
-    }
-
-    .mobile-pill-icon {
-        width: 15px;
-        height: 15px;
-        color: var(--brand-primary);
-    }
-
-    /* Redesigned Clean Action Submit Node Button */
-    .btn-hero-submit {
-        background: var(--brand-primary);
-        color: #FFFFFF;
-        border: none;
-        height: 54px;
-        padding: 0 2.25rem;
-        border-radius: 12px;
-        font-size: 1rem;
-        font-weight: 700;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        transition: var(--transition-smooth);
-        box-shadow: 0 8px 18px -4px rgba(241, 98, 15, 0.3);
-    }
-
-    .btn-hero-submit:hover {
-        background: var(--brand-primary-hover);
-        transform: translateY(-1px);
-    }
-
-    .btn-hero-submit svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    /* Native App Flyout-Drawer System Framework (Mobile PWA) */
-    .mobile-filter-drawer-overlay {
-        position: fixed;
-        inset: 0;
-        background-color: rgba(11, 26, 52, 0.5);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        z-index: 200;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.25s ease;
-        display: flex;
-        align-items: flex-end;
-    }
-
-    .mobile-filter-drawer-overlay.drawer-open {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .mobile-filter-drawer-card {
-        background: var(--bg-surface);
-        width: 100%;
-        border-radius: 24px 24px 0 0;
-        padding: 1.25rem 1.5rem 2.5rem;
-        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
-        transform: translateY(100%);
-        transition: transform 0.28s cubic-bezier(0.32, 0.94, 0.6, 1);
-        box-sizing: border-box;
-    }
-
-    .mobile-filter-drawer-overlay.drawer-open .mobile-filter-drawer-card {
-        transform: translateY(0);
-    }
-
-    .drawer-drag-handle {
-        width: 40px;
-        height: 5px;
-        background-color: var(--border-color);
-        border-radius: 3px;
-        margin: 0 auto 1.25rem;
-    }
-
-    .drawer-header {
+    .directory-hero__top,
+    .directory-section__head,
+    .directory-provider-cta {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.75rem;
-    }
-
-    .drawer-title {
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: var(--brand-dark);
-        margin: 0;
-    }
-
-    .drawer-close-btn {
-        background: var(--bg-subtle);
-        border: none;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .drawer-body-inputs {
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-        margin-bottom: 1.75rem;
-    }
-
-    .drawer-input-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        text-align: right;
-    }
-
-    .drawer-field-label {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--text-secondary);
-    }
-
-    .drawer-select-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .drawer-select-icon {
-        position: absolute;
-        right: 1rem;
-        width: 18px;
-        height: 18px;
-        color: var(--text-light-muted);
-        pointer-events: none;
-    }
-
-    .drawer-custom-select {
-        width: 100%;
-        height: 50px;
-        background: var(--bg-subtle);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 0 2.75rem 0 1.25rem;
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--brand-dark);
-        outline: none;
-        appearance: none;
-        -webkit-appearance: none;
-    }
-
-    .drawer-footer-actions {
-        width: 100%;
-    }
-
-    .btn-drawer-apply-trigger {
-        width: 100%;
-        background-color: var(--brand-dark);
-        color: #FFFFFF;
-        border: none;
-        height: 50px;
-        border-radius: 12px;
-        font-size: 1rem;
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    /* Professional Floating Metric Counter Layout Row */
-    .hero-stats-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.25rem;
-    }
-
-    .stat-metric-card {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        padding: 1rem 1.25rem;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
         gap: 1rem;
-        text-align: right;
     }
 
-    .stat-icon-box {
+    .directory-eyebrow,
+    .directory-section__head span,
+    .directory-provider-cta span {
+        margin: 0 0 .18rem;
+        color: #F1620F;
+        font-size: .75rem;
+        font-weight: 900;
+    }
+
+    .directory-hero h1,
+    .directory-section__head h2,
+    .directory-provider-cta h2 {
+        margin: 0;
+        color: #0B1A34;
+        font-weight: 950;
+        letter-spacing: 0;
+        line-height: 1.25;
+    }
+
+    .directory-hero h1 {
+        font-size: 1.45rem;
+    }
+
+    .directory-icon-link {
         width: 42px;
         height: 42px;
-        border-radius: 10px;
-        background: rgba(241, 98, 15, 0.12);
-        color: #FF9D66;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .stat-icon-box svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .stat-info-text {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .stat-number {
-        font-size: 1.35rem;
-        font-weight: 800;
-        color: #FFFFFF;
-        line-height: 1.2;
-    }
-
-    .stat-label {
-        font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.65);
-        font-weight: 500;
-        margin-top: 0.15rem;
-    }
-
-    /* Ultra-Compact Categories Section Styling */
-    .categories-explorer-section {
-        padding: 2.5rem 0;
-        background-color: var(--bg-surface);
-    }
-
-    .section-header-inline {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        margin-bottom: 1.5rem;
-    }
-
-    .section-tagline {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--brand-primary);
-        text-transform: uppercase;
-        margin-bottom: 0.25rem;
-    }
-
-    .section-main-title {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--brand-dark);
-        margin: 0;
-    }
-
-    .btn-link-all {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        color: var(--brand-primary);
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 700;
-        transition: var(--transition-smooth);
-    }
-
-    .btn-link-all:hover {
-        color: var(--brand-primary-hover);
-    }
-
-    .btn-link-all svg {
-        width: 16px;
-        height: 16px;
-        transition: transform 0.25s ease;
-    }
-
-    .btn-link-all:hover .icon-flip-rtl {
-        transform: translateX(-4px);
-    }
-
-    /* Horizontal Carousel Grid Mechanics */
-    .modern-categories-slider {
-        display: flex;
-        gap: 1rem;
-        overflow-x: auto;
-        padding-bottom: 0.75rem;
-        scroll-behavior: smooth;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .modern-categories-slider::-webkit-scrollbar {
-        display: none;
-    }
-
-    .category-interactive-card {
+        justify-content: center;
         flex: 0 0 auto;
-        width: 240px;
-        background: var(--bg-subtle);
-        border: 1px solid var(--border-color);
         border-radius: 14px;
-        padding: 0.85rem 1rem;
+        color: #F1620F;
+        background: #FFF7ED;
+        border: 1px solid #FED7AA;
+    }
+
+    .directory-icon-link svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .directory-search {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .directory-search label {
+        display: grid;
+        gap: .32rem;
+        color: #334155;
+        font-size: .74rem;
+        font-weight: 850;
+    }
+
+    .directory-search__input div,
+    .directory-search select,
+    .directory-search__button {
+        min-height: 48px;
+        border-radius: 14px;
+        border: 1px solid #E2E8F0;
+        background: #FFFFFF;
+    }
+
+    .directory-search__input div {
         display: flex;
         align-items: center;
-        gap: 0.85rem;
-        text-decoration: none;
-        transition: var(--transition-smooth);
+        gap: .55rem;
+        padding: 0 .8rem;
     }
 
-    .category-interactive-card:hover {
-        background: #FFFFFF;
-        border-color: var(--brand-primary);
-        transform: translateY(-2px);
+    .directory-search__input svg {
+        width: 19px;
+        height: 19px;
+        color: #94A3B8;
+        flex: 0 0 auto;
     }
 
-    .category-icon-wrapper {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        background: rgba(241, 98, 15, 0.06);
-        color: var(--brand-primary);
-        display: flex;
+    .directory-search input,
+    .directory-search select {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        color: #0B1A34;
+        background: transparent;
+        font-size: .92rem;
+        font-weight: 750;
+    }
+
+    .directory-search select {
+        padding: 0 .75rem;
+    }
+
+    .directory-search__filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .65rem;
+    }
+
+    .directory-search__button {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
-        transition: var(--transition-smooth);
-    }
-
-    .category-interactive-card:hover .category-icon-wrapper {
-        background: var(--brand-primary);
+        gap: .45rem;
         color: #FFFFFF;
+        background: #F1620F;
+        border-color: #F1620F;
+        font-weight: 950;
+        cursor: pointer;
     }
 
-    .category-icon-wrapper svg {
+    .directory-search__button svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .directory-section {
+        margin-top: 1.15rem;
+    }
+
+    .directory-section__head {
+        margin-bottom: .8rem;
+        padding-inline: .2rem;
+    }
+
+    .directory-section__head h2,
+    .directory-provider-cta h2 {
+        font-size: 1.08rem;
+    }
+
+    .directory-section__head a {
+        flex: 0 0 auto;
+        color: #F1620F;
+        font-size: .78rem;
+        font-weight: 900;
+    }
+
+    .directory-category-row {
+        display: flex;
+        gap: .7rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: .1rem .1rem .35rem;
+    }
+
+    .directory-category {
+        width: 116px;
+        min-width: 116px;
+        min-height: 116px;
+        display: grid;
+        align-content: space-between;
+        gap: .55rem;
+        scroll-snap-align: start;
+        padding: .85rem;
+        border: 1px solid #E8EDF4;
+        border-radius: 18px;
+        background: #FFFFFF;
+        box-shadow: 0 8px 22px rgba(11, 26, 52, .04);
+    }
+
+    .directory-category span {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: #F1620F;
+        background: #FFF7ED;
+    }
+
+    .directory-category svg {
         width: 20px;
         height: 20px;
     }
 
-    .category-meta-text {
+    .directory-category strong {
+        color: #0B1A34;
+        font-size: .82rem;
+        line-height: 1.45;
+    }
+
+    .directory-category small {
+        color: #64748B;
+        font-size: .72rem;
+        font-weight: 800;
+    }
+
+    .directory-service-chips {
         display: flex;
-        flex-direction: column;
-        overflow: hidden;
+        gap: .5rem;
+        overflow-x: auto;
+        padding: .45rem .1rem .2rem;
     }
 
-    .category-card-name {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--brand-dark);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .directory-service-chips a {
+        flex: 0 0 auto;
+        padding: .42rem .72rem;
+        border-radius: 999px;
+        border: 1px solid #E2E8F0;
+        background: #FFFFFF;
+        color: #475569;
+        font-size: .76rem;
+        font-weight: 800;
     }
 
-    .category-card-count {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-        margin-top: 0.1rem;
-    }
-
-    .featured-providers-section {
-        padding: 4rem 0;
-        background-color: var(--bg-subtle);
-        border-top: 1px solid var(--border-color);
-    }
-
-    /* Screen Breakpoint Adaptations Viewport Adjustments */
-    @media (max-width: 991px) {
-        .hero-search-card {
-            grid-template-columns: 1fr auto;
-        }
-        .desktop-filters-group {
-            display: none;
-        }
-        .mobile-filter-pill-trigger {
-            display: inline-flex;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .hero-stats-row {
-            grid-template-columns: 1fr;
-            gap: 0.75rem;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .home-hero-viewport {
-            padding: 3.5rem 0 3rem;
-        }
-        .hero-search-card {
-            grid-template-columns: 1fr;
-            padding: 0.75rem;
-            border-radius: 18px;
-            gap: 0.65rem;
-        }
-        .btn-hero-submit {
-            width: 100%;
-            height: 48px;
-        }
-        .hero-input-field {
-            height: 48px;
-        }
-        .category-interactive-card {
-            width: 210px;
-        }
-    }
-
-    /* Provider CTA Section */
-    .provider-cta-section {
-        padding: 3rem 0;
-        background: linear-gradient(135deg, rgba(241, 98, 15, 0.08), rgba(241, 98, 15, 0.04));
-    }
-
-    .provider-cta-card {
-        background: var(--bg-surface);
-        border: 2px solid var(--brand-primary);
+    .directory-provider-cta {
+        margin-top: 1.2rem;
+        padding: 1rem;
         border-radius: 20px;
-        padding: clamp(2rem, 5vw, 3rem);
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(241, 98, 15, 0.1);
+        border: 1px solid #E8EDF4;
+        background: #0B1A34;
+        color: #FFFFFF;
     }
 
-    .cta-title {
-        font-size: clamp(1.5rem, 4vw, 2.2rem);
-        font-weight: 900;
-        color: var(--brand-dark);
-        margin-bottom: 1rem;
-        letter-spacing: -0.03em;
+    .directory-provider-cta h2 {
+        color: #FFFFFF;
     }
 
-    .cta-description {
-        font-size: clamp(0.9rem, 2vw, 1.05rem);
-        color: var(--text-secondary);
-        margin-bottom: 1.5rem;
+    .directory-provider-cta p {
+        margin: .25rem 0 0;
+        color: rgba(255, 255, 255, .72);
+        font-size: .82rem;
+        font-weight: 650;
         line-height: 1.7;
-        max-width: 500px;
-        margin-inline: auto;
     }
 
-    .cta-button {
-        display: inline-block;
-        background: var(--brand-primary);
-        color: white;
-        padding: 0.85rem 2rem;
+    .directory-provider-cta a,
+    .directory-pagination a,
+    .directory-pagination span {
+        flex: 0 0 auto;
+        padding: .55rem .85rem;
         border-radius: 12px;
-        text-decoration: none;
-        font-size: 0.95rem;
-        font-weight: 700;
-        transition: var(--transition-smooth);
-        border: 2px solid var(--brand-primary);
+        background: #FFFFFF;
+        color: #0B1A34;
+        font-size: .78rem;
+        font-weight: 950;
     }
 
-    .cta-button:hover {
-        background: transparent;
-        color: var(--brand-primary);
-        transform: translateY(-2px);
+    .directory-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .65rem;
+        margin-top: 1rem;
     }
 
-    @media (max-width: 768px) {
-        .provider-cta-section {
-            padding: 2rem 0;
+    .directory-pagination strong {
+        color: #64748B;
+        font-size: .78rem;
+    }
+
+    .directory-pagination .is-disabled {
+        color: #94A3B8;
+        background: #F1F5F9;
+    }
+
+    @media (min-width: 760px) {
+        .directory-home {
+            padding-top: 1.25rem;
         }
 
-        .provider-cta-card {
-            padding: 1.5rem;
+        .directory-hero {
+            padding: 1.25rem;
         }
 
-        .cta-title {
-            margin-bottom: 0.75rem;
+        .directory-hero h1 {
+            font-size: 2rem;
         }
 
-        .cta-description {
-            margin-bottom: 1.25rem;
-            font-size: 0.9rem;
+        .directory-search {
+            grid-template-columns: minmax(260px, 1fr) auto;
+            align-items: end;
         }
 
-        .cta-button {
-            padding: 0.75rem 1.5rem;
-            font-size: 0.9rem;
+        .directory-search__input {
+            grid-column: 1 / -1;
+        }
+
+        .directory-search__filters {
+            grid-template-columns: repeat(4, minmax(150px, 1fr));
+        }
+
+        .directory-search__button {
+            min-width: 132px;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .directory-search__filters {
+            grid-template-columns: 1fr;
+        }
+
+        .directory-provider-cta {
+            align-items: flex-start;
+            flex-direction: column;
         }
     }
 </style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const openBtn = document.getElementById('openMobileFilters');
-        const closeBtn = document.getElementById('closeMobileFilters');
-        const applyBtn = document.getElementById('applyMobileFilters');
-        const drawerOverlay = document.getElementById('drawerOverlay');
-
-        const mobileCategory = document.getElementById('mobileCategory');
-        const mobileCity = document.getElementById('mobileCity');
-        const desktopCategory = document.getElementById('desktopCategory');
-        const desktopCity = document.getElementById('desktopCity');
-        const filterPillText = document.getElementById('filterPillText');
-
-        if (!openBtn || !drawerOverlay) return;
-
-        // Open bottom drawer overlay card
-        openBtn.addEventListener('click', () => {
-            drawerOverlay.classList.add('drawer-open');
-            document.body.style.overflow = 'hidden';
-        });
-
-        // Close drawer overlay card helper
-        const closeDrawer = () => {
-            drawerOverlay.classList.remove('drawer-open');
-            document.body.style.overflow = '';
-        };
-
-        closeBtn.addEventListener('click', closeDrawer);
-        drawerOverlay.addEventListener('click', (e) => {
-            if (e.target === drawerOverlay) closeDrawer();
-        });
-
-        // Map values chosen inside mobile view back to underlying inputs
-        applyBtn.addEventListener('click', () => {
-            desktopCategory.value = mobileCategory.value;
-            desktopCity.value = mobileCity.value;
-
-            // Change pill text label state color contextually
-            if (mobileCategory.value || mobileCity.value) {
-                filterPillText.textContent = "تمت تصفية الاختيارات ✓";
-                filterPillText.style.color = "var(--brand-primary)";
-            } else {
-                filterPillText.textContent = "تحديد الفئة والمدينة";
-                filterPillText.style.color = "";
-            }
-            closeDrawer();
-        });
-    });
-</script>
-@endsection
+@endpush

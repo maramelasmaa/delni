@@ -24,93 +24,75 @@
         ? ($provider->city->localized_name ?? $provider->city->name)
         : null;
 
+    $serviceTags = $provider->relationLoaded('subcategories')
+        ? $provider->subcategories->take(3)
+        : collect();
+
     $whatsappNumber = $provider->whatsapp ? preg_replace('/[^0-9]/', '', $provider->whatsapp) : null;
     $whatsappMessage = rawurlencode('السلام عليكم، وجدتك عبر دلني وأرغب بالاستفسار عن الخدمة.');
 @endphp
 
-<article class="delni-provider-card">
-    <a href="{{ route('public.provider', $provider->slug) }}" class="delni-provider-card__media">
+<article class="pwa-native-card">
+    {{-- Left side image/fallback circle --}}
+    <a href="{{ route('public.provider', $provider->slug) }}" class="pwa-card-media-circle">
         @if($cardImage)
-            <img
-                src="{{ $cardImage }}"
-                alt="{{ $businessName }}"
-                loading="lazy"
-                class="delni-provider-card__image"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-            >
-            <div class="delni-provider-card__fallback" style="display:none;">
-                {{ mb_substr($businessName, 0, 1) }}
-            </div>
+            <img src="{{ $cardImage }}" alt="{{ $businessName }}" loading="lazy" class="pwa-circle-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="pwa-circle-fallback" style="display:none;">{{ mb_substr($businessName, 0, 1) }}</div>
         @else
-            <div class="delni-provider-card__fallback">
-                {{ mb_substr($businessName, 0, 1) }}
-            </div>
-        @endif
-
-        @if($rating >= 4.5 && $reviewsCount >= 5)
-            <span class="delni-provider-card__badge">
-                الأعلى تقييماً
-            </span>
+            <div class="pwa-circle-fallback">{{ mb_substr($businessName, 0, 1) }}</div>
         @endif
     </a>
 
-    <div class="delni-provider-card__body">
-        <div class="delni-provider-card__top">
-            <h3 class="delni-provider-card__title">
-                <a href="{{ route('public.provider', $provider->slug) }}">
-                    {{ $businessName }}
-                </a>
-            </h3>
-
-            <div class="delni-provider-card__rating">
-                <span class="delni-provider-card__star">★</span>
-                <strong>{{ number_format($rating, 1) }}</strong>
-                <span>({{ $reviewsCount }})</span>
+    {{-- Center Body Content --}}
+    <div class="pwa-card-core-content">
+        <div class="pwa-card-top-row">
+            <h4 class="pwa-card-title">
+                <a href="{{ route('public.provider', $provider->slug) }}">{{ $businessName }}</a>
+            </h4>
+            <div class="pwa-card-badge-rating">
+                <span class="pwa-star-mini">★</span>
+                <span class="pwa-rating-val">{{ number_format($rating, 1) }}</span>
             </div>
         </div>
 
-        <div class="delni-provider-card__meta">
+        <div class="pwa-card-sub-meta">
             @if($categoryName)
-                <span>
-                    <x-render-icon icon="heroicon-o-briefcase" />
+                <span class="pwa-meta-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px;">
+                        <path d="M20.25 6.375c0-1.035-.84-1.875-1.875-1.875H5.625c-1.036 0-1.875.84-1.875 1.875v11.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V6.375Z" />
+                        <path fill-rule="evenodd" d="M12 2.25c-1.036 0-1.875.84-1.875 1.875v.75c0 .414.336.75.75.75h2.25c.414 0 .75-.336.75-.75v-.75c0-1.035-.84-1.875-1.875-1.875Zm-9 6a.75.75 0 0 0-.75.75v7.5c0 .414.336.75.75.75H21a.75.75 0 0 0 .75-.75v-7.5a.75.75 0 0 0-.75-.75H3Z" clip-rule="evenodd" />
+                    </svg>
                     {{ $categoryName }}
                 </span>
             @endif
-
             @if($cityName)
-                <span>
-                    <x-render-icon icon="heroicon-o-map-pin" />
+                <span class="pwa-meta-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px;">
+                        <path fill-rule="evenodd" d="M11.54 1.265a.75.75 0 0 1 .92 0l9 7.5a.75.75 0 1 1-.98 1.15L12 2.687l-8.48 7.078a.75.75 0 0 1-.98-1.15l9-7.5ZM3.75 12a.75.75 0 0 0-.75.75v7.5a.75.75 0 0 0 .75.75h3v-7h6v7h3a.75.75 0 0 0 .75-.75v-7.5a.75.75 0 0 0-.75-.75H3.75Zm7.5 5.25v-5h-3v5h3Z" clip-rule="evenodd" />
+                    </svg>
                     {{ $cityName }}
-                </span>
-            @endif
-
-            @if($provider->offers_remote_work)
-                <span>
-                    <x-render-icon icon="heroicon-o-globe-alt" />
-                    عن بعد
                 </span>
             @endif
         </div>
 
-        @if($showBio && filled($provider->bio))
-            <p class="delni-provider-card__bio">
-                {{ Str::limit(strip_tags($provider->bio), 110) }}
-            </p>
+        @if($serviceTags->isNotEmpty())
+            <div class="pwa-card-service-tags">
+                @foreach($serviceTags as $subcategory)
+                    <a href="{{ route('public.subcategory', $subcategory->slug) }}" class="pwa-service-tag">
+                        {{ $subcategory->localized_name ?? $subcategory->name }}
+                    </a>
+                @endforeach
+            </div>
         @endif
 
-        <div class="delni-provider-card__actions">
-            <a href="{{ route('public.provider', $provider->slug) }}" class="delni-provider-card__primary">
+        {{-- High-priority Thumb Actions Container --}}
+        <div class="pwa-card-actions-wrapper">
+            <a href="{{ route('public.provider', $provider->slug) }}" class="pwa-btn-action pwa-btn-view">
                 عرض الملف
             </a>
-
             @if($whatsappNumber)
-                <a
-                    href="https://wa.me/{{ $whatsappNumber }}?text={{ $whatsappMessage }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="delni-provider-card__whatsapp"
-                >
-                    واتساب
+                <a href="https://wa.me/{{ $whatsappNumber }}?text={{ $whatsappMessage }}" target="_blank" rel="noopener noreferrer" class="pwa-btn-action pwa-btn-wa">
+                    واتساب مباشرة
                 </a>
             @endif
         </div>
@@ -118,231 +100,183 @@
 </article>
 
 @once
-    @push('styles')
-        <style>
-            .delni-provider-card {
-                min-width: 0;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                border-radius: 24px;
-                background: #fff;
-                border: 1px solid #E7E7E7;
-                box-shadow: 0 12px 28px rgba(11, 26, 52, .06);
-                transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-            }
+@push('styles')
+<style>
+    .pwa-native-card {
+        display: flex;
+        gap: 0.85rem;
+        background: #ffffff;
+        border: 1px solid #E8EDF4;
+        border-radius: 18px;
+        padding: 0.85rem;
+        box-shadow: 0 4px 12px rgba(11, 26, 52, 0.02);
+        align-items: center;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }
 
-            .delni-provider-card:hover {
-                transform: translateY(-3px);
-                border-color: rgba(241, 98, 15, .22);
-                box-shadow: 0 18px 40px rgba(11, 26, 52, .1);
-            }
+    .pwa-native-card:hover {
+        border-color: rgba(241, 98, 15, 0.25);
+    }
 
-            .delni-provider-card__media {
-                position: relative;
-                display: block;
-                height: 170px;
-                overflow: hidden;
-                background: #0B1A34;
-                text-decoration: none;
-            }
+    /* Compact Avatar Circle */
+    .pwa-card-media-circle {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #0B1A34;
+        position: relative;
+    }
+    .pwa-circle-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .pwa-circle-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0B1A34, #1E3A8A);
+        color: #F1620F;
+        font-weight: 900;
+        font-size: 1.4rem;
+    }
 
-            .delni-provider-card__image,
-            .delni-provider-card__fallback {
-                width: 100%;
-                height: 100%;
-            }
+    /* Core Content Grid Engine */
+    .pwa-card-core-content {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .pwa-card-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+    .pwa-card-title {
+        margin: 0;
+        font-size: 0.94rem;
+        font-weight: 800;
+        color: #0B1A34;
+        line-height: 1.3;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .pwa-card-title a {
+        color: inherit;
+        text-decoration: none;
+    }
+    .pwa-card-badge-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.15rem;
+        background: #FEF3C7;
+        padding: 0.15rem 0.4rem;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+    .pwa-star-mini {
+        color: #D97706;
+        font-size: 0.75rem;
+    }
+    .pwa-rating-val {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: #92400E;
+    }
 
-            .delni-provider-card__image {
-                display: block;
-                object-fit: cover;
-                transition: transform .28s ease;
-            }
+    /* Meta Details Layout */
+    .pwa-card-sub-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.5rem;
+    }
+    .pwa-meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-size: 0.74rem;
+        color: #64748B;
+        font-weight: 600;
+    }
+    .pwa-meta-pill svg {
+        width: 13px;
+        height: 13px;
+        color: #94A3B8;
+    }
 
-            .delni-provider-card:hover .delni-provider-card__image {
-                transform: scale(1.035);
-            }
+    .pwa-card-service-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.65rem;
+    }
 
-            .delni-provider-card__fallback {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background:
-                    radial-gradient(circle at 30% 22%, rgba(241, 98, 15, .32), transparent 32%),
-                    linear-gradient(135deg, #0B1A34, #13264A);
-                color: #F1620F;
-                font-size: 3rem;
-                font-weight: 950;
-            }
+    .pwa-service-tag {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        min-height: 24px;
+        padding: 0.2rem 0.45rem;
+        border-radius: 999px;
+        background: #FFF7ED;
+        color: #C2410C;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-decoration: none;
+        white-space: nowrap;
+    }
 
-            .delni-provider-card__badge {
-                position: absolute;
-                top: .8rem;
-                inset-inline-start: .8rem;
-                min-height: 34px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: .45rem .75rem;
-                border-radius: 999px;
-                background: #22C55E;
-                color: #fff;
-                font-size: .78rem;
-                font-weight: 900;
-                box-shadow: 0 10px 20px rgba(34, 197, 94, .25);
-            }
+    .pwa-service-tag:hover {
+        background: #FFEDD5;
+    }
 
-            .delni-provider-card__body {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                padding: 1rem;
-            }
+    /* Quick Action Micro Row */
+    .pwa-card-actions-wrapper {
+        display: flex;
+        gap: 0.45rem;
+    }
+    .pwa-btn-action {
+        flex: 1;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-decoration: none;
+        transition: opacity 0.15s ease;
+    }
+    .pwa-btn-action:active {
+        opacity: 0.85;
+    }
+    .pwa-btn-view {
+        background: #F1620F;
+        color: #ffffff;
+    }
+    .pwa-btn-wa {
+        background: #DCFCE7;
+        color: #15803D;
+        border: 1px solid #BBF7D0;
+    }
 
-            .delni-provider-card__top {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: .8rem;
-                margin-bottom: .85rem;
-            }
-
-            .delni-provider-card__title {
-                margin: 0;
-                min-width: 0;
-                color: #0B1A34;
-                font-size: 1.02rem;
-                line-height: 1.45;
-                font-weight: 950;
-                letter-spacing: -.025em;
-            }
-
-            .delni-provider-card__title a {
-                color: inherit;
-                text-decoration: none;
-            }
-
-            .delni-provider-card__title a:hover {
-                color: #F1620F;
-            }
-
-            .delni-provider-card__rating {
-                flex-shrink: 0;
-                display: inline-flex;
-                align-items: center;
-                gap: .25rem;
-                color: #5D5959;
-                font-size: .78rem;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .delni-provider-card__rating strong {
-                color: #0B1A34;
-                font-weight: 950;
-            }
-
-            .delni-provider-card__star {
-                color: #F59E0B;
-            }
-
-            .delni-provider-card__meta {
-                display: flex;
-                flex-wrap: wrap;
-                gap: .45rem;
-                margin-bottom: .85rem;
-            }
-
-            .delni-provider-card__meta span {
-                min-height: 32px;
-                display: inline-flex;
-                align-items: center;
-                gap: .35rem;
-                padding: .38rem .6rem;
-                border-radius: 999px;
-                background: #FCFBFB;
-                border: 1px solid #E7E7E7;
-                color: #5D5959;
-                font-size: .76rem;
-                font-weight: 850;
-                max-width: 100%;
-            }
-
-            .delni-provider-card__meta svg {
-                width: 15px;
-                height: 15px;
-                color: #F1620F;
-                flex-shrink: 0;
-            }
-
-            .delni-provider-card__bio {
-                margin: 0 0 1rem;
-                color: #5D5959;
-                font-size: .87rem;
-                line-height: 1.8;
-                font-weight: 500;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-            }
-
-            .delni-provider-card__actions {
-                margin-top: auto;
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: .55rem;
-            }
-
-            .delni-provider-card__primary,
-            .delni-provider-card__whatsapp {
-                min-height: 42px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 14px;
-                text-decoration: none;
-                font-size: .86rem;
-                font-weight: 950;
-                transition: .18s ease;
-            }
-
-            .delni-provider-card__primary {
-                background: #F1620F;
-                color: #fff;
-                box-shadow: 0 10px 18px rgba(241, 98, 15, .18);
-            }
-
-            .delni-provider-card__primary:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 14px 26px rgba(241, 98, 15, .24);
-            }
-
-            .delni-provider-card__whatsapp {
-                background: rgba(34, 197, 94, .1);
-                color: #128C4A;
-                border: 1px solid rgba(34, 197, 94, .18);
-            }
-
-            .delni-provider-card__whatsapp:hover {
-                background: rgba(34, 197, 94, .16);
-            }
-
-            @media (max-width: 640px) {
-                .delni-provider-card__media {
-                    height: 164px;
-                }
-
-                .delni-provider-card__body {
-                    padding: .9rem;
-                }
-
-                .delni-provider-card__top {
-                    flex-direction: column;
-                    gap: .35rem;
-                }
-            }
-        </style>
-    @endpush
+    /* Responsive Reset Override */
+    @media (max-width: 640px) {
+        .delni-provider-card {
+            display: none !important;
+        }
+    }
+</style>
+@endpush
 @endonce

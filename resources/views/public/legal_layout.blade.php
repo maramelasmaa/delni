@@ -8,7 +8,7 @@
     <meta name="description" content="@yield('meta_description', '')">
 
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo.jpg') }}" sizes="any">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/icon-192.png') }}">
     <link rel="shortcut icon" href="{{ asset('images/logo.jpg') }}">
     <meta name="theme-color" content="#F1620F">
 

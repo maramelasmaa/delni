@@ -41,6 +41,31 @@
     </div>
 </section>
 
+@if($category->subcategories->isNotEmpty())
+    <section class="category-service-strip">
+        <div class="container">
+            <div class="category-service-head">
+                <span>الخدمات داخل {{ $category->localized_name }}</span>
+                <small>{{ $category->subcategories->count() }} خدمة</small>
+            </div>
+
+            <div class="category-service-list">
+                <a href="{{ route('public.category', $category->slug) }}" class="category-service-chip is-active">
+                    كل المزودين
+                    <small>{{ $providerCount ?? $profiles->total() ?? 0 }}</small>
+                </a>
+
+                @foreach($category->subcategories as $subcategory)
+                    <a href="{{ route('public.subcategory', $subcategory->slug) }}" class="category-service-chip">
+                        {{ $subcategory->localized_name ?? $subcategory->name }}
+                        <small>{{ $subcategory->discoverable_profiles_count ?? 0 }}</small>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+@endif
+
 {{-- Mobile Quick Action Bar Component --}}
 <div class="mobile-action-bar-hub">
     <div class="container mobile-action-flex-container">
@@ -188,6 +213,76 @@
         color: var(--text-secondary);
         text-decoration: none;
         transition: var(--transition-smooth);
+    }
+
+    .category-service-strip {
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 0;
+    }
+
+    .category-service-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: .75rem;
+        color: var(--text-primary);
+        font-weight: 900;
+    }
+
+    .category-service-head small {
+        color: var(--text-secondary);
+        font-size: .78rem;
+        font-weight: 800;
+    }
+
+    .category-service-list {
+        display: flex;
+        gap: .55rem;
+        overflow-x: auto;
+        padding-bottom: .15rem;
+        scrollbar-width: none;
+    }
+
+    .category-service-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-service-chip {
+        min-height: 40px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .5rem .75rem;
+        border-radius: 999px;
+        border: 1px solid var(--border-color);
+        background: #fff;
+        color: var(--text-primary);
+        font-size: .84rem;
+        font-weight: 900;
+        text-decoration: none;
+    }
+
+    .category-service-chip small {
+        min-width: 24px;
+        min-height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: var(--bg-subtle);
+        color: var(--text-secondary);
+        font-size: .72rem;
+        font-weight: 900;
+    }
+
+    .category-service-chip:hover,
+    .category-service-chip.is-active {
+        border-color: rgba(241, 98, 15, .28);
+        background: #FFF7ED;
+        color: var(--brand-primary);
     }
 
     .breadcrumb-link:hover {
