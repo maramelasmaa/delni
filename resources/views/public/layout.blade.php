@@ -248,6 +248,209 @@
             color: var(--delni-primary);
         }
 
+        /* ── Shared listing-page (lp-*) design system ───────────────────── */
+        /* Used by: category, subcategory, city, top-rated, categories      */
+
+        .lp-wrapper {
+            padding: .65rem 0 2rem;
+        }
+
+        /* App-bar style page header */
+        .lp-header {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .85rem 1rem;
+            background: #fff;
+            border: 1px solid var(--delni-border);
+            border-radius: 20px;
+            box-shadow: var(--delni-shadow-sm);
+        }
+
+        .lp-back {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #F8FAFC;
+            border: 1px solid var(--delni-border);
+            color: var(--delni-navy);
+        }
+
+        .lp-back svg { width: 20px; height: 20px; }
+
+        .lp-header-body { flex: 1; min-width: 0; }
+
+        .lp-label {
+            display: block;
+            color: var(--delni-primary);
+            font-size: .7rem;
+            font-weight: 900;
+            margin-bottom: .1rem;
+        }
+
+        .lp-title {
+            margin: 0;
+            color: var(--delni-navy);
+            font-size: 1.15rem;
+            font-weight: 950;
+            line-height: 1.2;
+        }
+
+        .lp-count {
+            display: block;
+            margin-top: .15rem;
+            color: #64748B;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+        /* Horizontal chip strip (subcategories, filter tabs) */
+        .lp-chips {
+            display: flex;
+            gap: .5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding: .75rem .1rem .35rem;
+        }
+        .lp-chips::-webkit-scrollbar { display: none; }
+
+        .lp-chip {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: .38rem;
+            min-height: 38px;
+            padding: .45rem .85rem;
+            border-radius: 999px;
+            border: 1px solid var(--delni-border);
+            background: #fff;
+            color: var(--delni-navy);
+            font-size: .82rem;
+            font-weight: 900;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background .15s, border-color .15s, color .15s;
+        }
+
+        .lp-chip small {
+            min-width: 22px;
+            min-height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #F1F5F9;
+            color: #64748B;
+            font-size: .68rem;
+            font-weight: 900;
+        }
+
+        .lp-chip:active,
+        .lp-chip.is-active {
+            border-color: rgba(241,98,15,.3);
+            background: #FFF7ED;
+            color: var(--delni-primary);
+        }
+
+        .lp-chip.is-active small {
+            background: rgba(241,98,15,.15);
+            color: var(--delni-primary);
+        }
+
+        /* Inline filter selects */
+        .lp-filter-row {
+            display: flex;
+            gap: .5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding: .3rem .1rem .5rem;
+        }
+        .lp-filter-row::-webkit-scrollbar { display: none; }
+
+        .lp-filter-select {
+            flex: 0 0 auto;
+            min-height: 38px;
+            padding: 0 .75rem;
+            border-radius: 999px;
+            border: 1px solid var(--delni-border);
+            background: #fff;
+            color: var(--delni-navy);
+            font: inherit;
+            font-size: .78rem;
+            font-weight: 850;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .lp-filter-select:focus {
+            border-color: rgba(241,98,15,.4);
+        }
+
+        /* Results section */
+        .lp-results { margin-top: .65rem; }
+
+        .lp-results-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 .2rem .65rem;
+        }
+
+        .lp-results-head span {
+            color: var(--delni-primary);
+            font-size: .7rem;
+            font-weight: 900;
+        }
+
+        .lp-results-head h2 {
+            margin: .1rem 0 0;
+            color: var(--delni-navy);
+            font-size: 1.02rem;
+            font-weight: 950;
+        }
+
+        /* Pagination */
+        .lp-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            margin-top: 1rem;
+        }
+
+        .lp-pagination a,
+        .lp-pagination span {
+            flex: 0 0 auto;
+            min-height: 40px;
+            padding: .5rem .85rem;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid var(--delni-border);
+            color: var(--delni-navy);
+            font-size: .78rem;
+            font-weight: 950;
+        }
+
+        .lp-pagination strong {
+            color: #64748B;
+            font-size: .78rem;
+        }
+
+        .lp-pagination .is-disabled {
+            color: #94A3B8;
+            background: #F1F5F9;
+        }
+
+        @media (min-width: 640px) {
+            .lp-wrapper { padding-top: 1rem; }
+            .lp-title { font-size: 1.35rem; }
+        }
+        /* ── end shared listing-page ──────────────────────────────────────── */
+
         /* Wide Screen Layout Desktop Enhancements */
         @media (min-width: 1025px) {
             html, body { overflow: visible; }
@@ -338,32 +541,6 @@
     </script>
 
     <div class="pwa-shell">
-
-        <header class="delni-header">
-            <div class="delni-header__inner">
-                <a href="{{ route('home') }}" class="delni-logo">
-                    <div class="delni-logo__mark">
-                        <img src="{{ asset('images/icon-192.png') }}" alt="دلني" width="36" height="36">
-                    </div>
-                    <span style="color: var(--delni-navy);">دلني</span>
-                </a>
-
-                <nav class="delni-nav">
-                    <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'is-active' : '' }}">الرئيسية</a>
-                    <a href="{{ route('public.categories') }}" class="{{ request()->routeIs('public.categories') ? 'is-active' : '' }}">الفئات</a>
-                    <a href="{{ route('public.top-rated') }}" class="{{ request()->routeIs('public.top-rated') ? 'is-active' : '' }}">الأعلى تقييماً</a>
-                </nav>
-
-                <div class="delni-actions">
-                    @auth
-                        <a href="{{ route('dashboard') }}" class="delni-btn delni-btn--ghost">لوحتي</a>
-                    @else
-                        <a href="{{ route('login') }}" class="delni-btn delni-btn--ghost">دخول</a>
-                        <a href="{{ route('register') }}" class="delni-btn delni-btn--primary">سجّل مجاناً</a>
-                    @endauth
-                </div>
-            </div>
-        </header>
 
         <main class="delni-main">
             <div class="pwa-view-boundary">

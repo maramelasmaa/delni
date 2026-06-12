@@ -113,6 +113,24 @@
             </div>
         </div>
 
+        <label class="auth-terms-label">
+            <input
+                type="checkbox"
+                name="terms_accepted"
+                class="auth-terms-check @error('terms_accepted') is-invalid @enderror"
+                {{ old('terms_accepted') ? 'checked' : '' }}
+            >
+            <span>
+                أوافق على
+                <a href="{{ route('terms') }}" target="_blank" rel="noopener">شروط الاستخدام</a>
+                و
+                <a href="{{ route('privacy') }}" target="_blank" rel="noopener">سياسة الخصوصية</a>
+            </span>
+        </label>
+        @error('terms_accepted')
+            <span class="auth-error-text" style="margin-top: -.5rem;">{{ $message }}</span>
+        @enderror
+
         <button type="submit" class="auth-submit">
             إنشاء حساب
         </button>

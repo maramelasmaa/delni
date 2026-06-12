@@ -3,107 +3,105 @@
 @section('title', $city->localized_name . ' - ' . config('app.name'))
 
 @section('content')
+@php
+    $totalCount = $profiles->total() ?? $profiles->count() ?? 0;
+@endphp
 
-<!-- Breadcrumb -->
-<div class="container pt-3">
-    <nav aria-label="breadcrumb" class="breadcrumb">
-        <a href="{{ route('home') }}" class="hover:text-primary-500">{{ __('messages.public.home') }}</a>
-        <span class="mx-2 text-gray-400">/</span>
-        <span class="text-gray-600">{{ $city->localized_name }}</span>
-    </nav>
+<div class="lp-wrapper">
+
+    {{-- App page header --}}
+    <header class="lp-header">
+        <a href="{{ route('home') }}" class="lp-back" aria-label="الرئيسية">
+            <x-render-icon icon="heroicon-o-arrow-right" />
+        </a>
+        <div class="lp-header-body">
+            <span class="lp-label">مزودون في</span>
+            <h1 class="lp-title">{{ $city->localized_name }}</h1>
+            <span class="lp-count">{{ number_format($totalCount) }} مزود</span>
+        </div>
+        <div class="lp-header-icon">
+            <x-render-icon icon="heroicon-o-map-pin" />
+        </div>
+    </header>
+
+    {{-- Inline filter row --}}
+    <form method="GET" action="{{ url()->current() }}" class="lp-filter-row">
+        @if(isset($categories) && $categories->isNotEmpty())
+            <select name="category_id" class="lp-filter-select" onchange="this.form.submit()">
+                <option value="">كل الفئات</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>
+                        {{ $category->localized_name ?? $category->name }}
+                    </option>
+                @endforeach
+            </select>
+        @endif
+
+        <select name="sort" class="lp-filter-select" onchange="this.form.submit()">
+            <option value="" @selected(!request('sort'))>الأحدث</option>
+            <option value="rating" @selected(request('sort') === 'rating')>الأعلى تقييماً</option>
+            <option value="reviews" @selected(request('sort') === 'reviews')>الأكثر تقييماً</option>
+        </select>
+
+        @if(request()->anyFilled(['category_id', 'sort']))
+            <a href="{{ route('public.city', $city->slug) }}"
+               class="lp-chip"
+               style="border-color:rgba(241,98,15,.25);background:#FFF7ED;color:#F1620F;">
+                <x-render-icon icon="heroicon-o-x-mark" />
+                مسح
+            </a>
+        @endif
+    </form>
+
+    {{-- Results --}}
+    <div class="lp-results">
+        @if($profiles && $profiles->count() > 0)
+            <x-provider-grid :providers="$profiles" :columns="2" />
+
+            @if($profiles->hasPages())
+                <nav class="lp-pagination" aria-label="Pagination">
+                    @if($profiles->onFirstPage())
+                        <span class="is-disabled">السابق</span>
+                    @else
+                        <a href="{{ $profiles->appends(request()->query())->previousPageUrl() }}">السابق</a>
+                    @endif
+
+                    <strong>{{ $profiles->currentPage() }} / {{ $profiles->lastPage() }}</strong>
+
+                    @if($profiles->hasMorePages())
+                        <a href="{{ $profiles->appends(request()->query())->nextPageUrl() }}">التالي</a>
+                    @else
+                        <span class="is-disabled">التالي</span>
+                    @endif
+                </nav>
+            @endif
+        @else
+            <x-empty-state
+                icon="heroicon-o-map-pin"
+                title="ما لقيناش مزودين"
+                message="ما فيش مزودين في هذه المدينة حالياً. جرّب مدينة أخرى."
+                actionLabel="تصفح الكل"
+                actionUrl="{{ route('public.search') }}"
+            />
+        @endif
+    </div>
+
 </div>
 
-<!-- Hero Section -->
-<section class="bg-navy-800 text-white section-compact">
-    <div class="container">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <div class="lg:col-span-2">
-                <h1 class="text-4xl font-black mb-4">
-                    {{ $city->localized_name }}
-                </h1>
-                @if($city->description)
-                    <p class="text-lg text-white/75 mb-3">{{ $city->description }}</p>
-                @endif
-                <p class="text-white/70">
-                    {{ $profiles->total() ?? 0 }} {{ __('messages.public.professionals') }}
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="section">
-    <div class="container">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <!-- Filters Sidebar -->
-        <div class="lg:col-span-1">
-            <div class="sticky top-24">
-                <div class="search-filters">
-                    <form method="GET" class="space-y-4">
-                        @if(isset($categories))
-                            <div>
-                                <label for="category_id" class="form-label">{{ __('messages.public.category') }}</label>
-                                <select id="category_id" name="category_id" class="form-select">
-                                    <option value="">{{ __('messages.public.all_categories') }}</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>
-                                            {{ $category->localized_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endif
-
-                        <div>
-                            <label for="sort" class="form-label">{{ __('messages.public.sort_by') }}</label>
-                            <select id="sort" name="sort" class="form-select">
-                                <option value="" @selected(!request('sort'))>{{ __('messages.public.relevance') }}</option>
-                                <option value="rating" @selected(request('sort') === 'rating')>{{ __('messages.public.highest_rated') }}</option>
-                                <option value="reviews" @selected(request('sort') === 'reviews')>{{ __('messages.public.most_reviewed') }}</option>
-                                <option value="newest" @selected(request('sort') === 'newest')>{{ __('messages.public.newest') }}</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-sm w-full flex items-center justify-center gap-2">
-                            <x-render-icon icon="heroicon-o-funnel" class="w-4 h-4" />
-                            {{ __('messages.public.filter') }}
-                        </button>
-                    </form>
-                </div>
-
-                @if(request()->anyFilled(['category_id', 'sort']))
-                    <div class="mt-4">
-                        <a href="{{ route('public.city', $city->slug) }}" class="btn btn-outline btn-sm w-full flex items-center justify-center gap-2">
-                            <x-render-icon icon="heroicon-o-arrow-path" class="w-4 h-4" />
-                            {{ __('messages.public.clear_filters') }}
-                        </a>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        <!-- Results Section -->
-        <div class="lg:col-span-3">
-            @if($profiles && $profiles->count() > 0)
-                <x-provider-grid :providers="$profiles" :columns="1" />
-
-                @if($profiles->hasPages())
-                    <nav aria-label="Page navigation" class="mt-8">
-                        {{ $profiles->links('pagination::tailwind') }}
-                    </nav>
-                @endif
-            @else
-                <x-empty-state
-                    icon="heroicon-o-magnifying-glass"
-                    title="{{ __('messages.public.no_providers_found') }}"
-                    message="{{ __('messages.public.no_providers_in_city') }}"
-                    action-label="{{ __('messages.public.browse_all') }}"
-                    action-url="{{ route('public.search') }}"
-                />
-            @endif
-        </div>
-    </div>
-</section>
-
+@push('styles')
+<style>
+    .lp-header-icon {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(241,98,15,.08);
+        color: var(--delni-primary);
+    }
+    .lp-header-icon svg { width: 22px; height: 22px; }
+</style>
+@endpush
 @endsection
-

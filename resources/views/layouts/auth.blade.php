@@ -453,6 +453,36 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        /* Terms checkbox */
+        .auth-terms-label {
+            display: flex;
+            align-items: flex-start;
+            gap: .65rem;
+            cursor: pointer;
+        }
+
+        .auth-terms-check {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: .15rem;
+            accent-color: var(--auth-primary);
+            cursor: pointer;
+        }
+
+        .auth-terms-label span {
+            color: var(--auth-soft-text);
+            font-size: .84rem;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .auth-terms-label a {
+            color: var(--auth-primary);
+            text-decoration: underline;
+            font-weight: 700;
+        }
+
         /* Responsive Breakpoint Adaptability Rules */
         @media (max-width: 480px) {
             .auth-page {

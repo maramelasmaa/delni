@@ -38,6 +38,7 @@ class RegisterUserRequest extends FormRequest
                     ->symbols()
                     ->uncompromised(),
             ],
+            'terms_accepted' => ['required', 'accepted'],
         ];
     }
 
@@ -48,6 +49,8 @@ class RegisterUserRequest extends FormRequest
             'email.unique' => __('validation.custom.email.unique'),
             'phone.regex' => __('validation.custom.phone.regex'),
             'password.confirmed' => __('validation.custom.password.confirmed'),
+            'terms_accepted.required' => 'يجب الموافقة على شروط الاستخدام وسياسة الخصوصية للمتابعة.',
+            'terms_accepted.accepted' => 'يجب الموافقة على شروط الاستخدام وسياسة الخصوصية للمتابعة.',
         ];
     }
 

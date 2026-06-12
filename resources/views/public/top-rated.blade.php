@@ -4,111 +4,106 @@
 
 @php
     $providerCount = $providerCount ?? ($profiles?->total() ?? $profiles?->count() ?? 0);
-    $activeCategory = request('category_id') ? $categories->find(request('category_id')) : null;
-    $activeCity = request('city_id') ? $cities->find(request('city_id')) : null;
+    $activeCategory = request('category_id') ? ($categories->find(request('category_id'))) : null;
+    $activeCity = request('city_id') ? ($cities->find(request('city_id'))) : null;
     $hasFilters = request()->filled('category_id') || request()->filled('city_id') || request()->filled('keyword');
 @endphp
 
 @section('content')
-<main class="directory-tab">
-    <header class="directory-tab__header">
-        <a href="{{ route('home') }}" class="directory-tab__back" aria-label="الرئيسية">
+<div class="lp-wrapper">
+
+    {{-- App page header --}}
+    <header class="lp-header">
+        <a href="{{ route('home') }}" class="lp-back" aria-label="الرئيسية">
             <x-render-icon icon="heroicon-o-arrow-right" />
         </a>
-
-        <div>
-            <span>الأعلى تقييماً</span>
-            <h1>مزودين عليهم تقييمات قوية</h1>
-            <p>{{ number_format($providerCount) }} مزود</p>
+        <div class="lp-header-body">
+            <span class="lp-label">دلني</span>
+            <h1 class="lp-title">الأعلى تقييماً</h1>
+            <span class="lp-count">{{ number_format($providerCount) }} مزود مؤهل</span>
         </div>
+        <div class="lp-star-icon">★</div>
     </header>
 
-    <form action="{{ route('public.top-rated') }}" method="GET" class="directory-tab__filters">
-        <label class="directory-tab__keyword">
-            <span>ابحث هنا</span>
-            <div>
-                <x-render-icon icon="heroicon-o-magnifying-glass" />
-                <input
-                    type="search"
-                    name="keyword"
-                    value="{{ request('keyword') }}"
-                    maxlength="100"
-                    placeholder="اسم خدمة أو مزود..."
-                >
-            </div>
-        </label>
+    {{-- Filter row --}}
+    <form action="{{ route('public.top-rated') }}" method="GET" class="lp-filter-row" id="trFilterForm">
+        <div class="lp-search-wrap">
+            <x-render-icon icon="heroicon-o-magnifying-glass" />
+            <input
+                type="search"
+                name="keyword"
+                value="{{ request('keyword') }}"
+                maxlength="100"
+                placeholder="ابحث..."
+                class="lp-search-input"
+                onchange="this.form.submit()"
+            >
+        </div>
 
-        <label>
-            <span>الفئة</span>
-            <select name="category_id">
+        @if($categories->isNotEmpty())
+            <select name="category_id" class="lp-filter-select" onchange="this.form.submit()">
                 <option value="">كل الفئات</option>
                 @foreach($categories as $category)
-                    <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>
+                    <option value="{{ $category->id }}" @selected((string)request('category_id') === (string)$category->id)>
                         {{ $category->localized_name ?? $category->name }}
                     </option>
                 @endforeach
             </select>
-        </label>
+        @endif
 
-        <label>
-            <span>المدينة</span>
-            <select name="city_id">
+        @if($cities->isNotEmpty())
+            <select name="city_id" class="lp-filter-select" onchange="this.form.submit()">
                 <option value="">كل المدن</option>
                 @foreach($cities as $city)
-                    <option value="{{ $city->id }}" @selected((string) request('city_id') === (string) $city->id)>
+                    <option value="{{ $city->id }}" @selected((string)request('city_id') === (string)$city->id)>
                         {{ $city->localized_name ?? $city->name }}
                     </option>
                 @endforeach
             </select>
-        </label>
+        @endif
 
-        <button type="submit">
-            <x-render-icon icon="heroicon-o-funnel" />
-            <span>تصفية</span>
-        </button>
+        @if($hasFilters)
+            <a href="{{ route('public.top-rated') }}"
+               class="lp-chip"
+               style="border-color:rgba(241,98,15,.25);background:#FFF7ED;color:#F1620F;">
+                <x-render-icon icon="heroicon-o-x-mark" />
+                مسح
+            </a>
+        @endif
     </form>
 
+    {{-- Active filter chips --}}
     @if($hasFilters)
-        <div class="directory-tab__chips">
+        <div class="lp-chips" style="padding-top:.3rem;">
             @if(request('keyword'))
-                <span>{{ request('keyword') }}</span>
+                <span class="lp-chip is-active">{{ request('keyword') }}</span>
             @endif
-
             @if($activeCategory)
-                <span>{{ $activeCategory->localized_name ?? $activeCategory->name }}</span>
+                <span class="lp-chip is-active">{{ $activeCategory->localized_name ?? $activeCategory->name }}</span>
             @endif
-
             @if($activeCity)
-                <span>{{ $activeCity->localized_name ?? $activeCity->name }}</span>
+                <span class="lp-chip is-active">{{ $activeCity->localized_name ?? $activeCity->name }}</span>
             @endif
-
-            <a href="{{ route('public.top-rated') }}">مسح</a>
         </div>
     @endif
 
-    <section class="directory-tab__results">
-        <div class="directory-tab__section-head">
-            <div>
-                <span>حسب تقييمات المستخدمين</span>
-                <h2>كل المزودين المؤهلين</h2>
-            </div>
-        </div>
-
+    {{-- Results --}}
+    <div class="lp-results">
         @if($profiles && $profiles->count() > 0)
             <x-provider-grid :providers="$profiles" :columns="2" />
 
             @if($profiles->hasPages())
-                <nav class="directory-tab__pagination" aria-label="Pagination">
+                <nav class="lp-pagination" aria-label="Pagination">
                     @if($profiles->onFirstPage())
                         <span class="is-disabled">السابق</span>
                     @else
-                        <a href="{{ $profiles->previousPageUrl() }}">السابق</a>
+                        <a href="{{ $profiles->appends(request()->query())->previousPageUrl() }}">السابق</a>
                     @endif
 
-                    <strong>صفحة {{ $profiles->currentPage() }} من {{ $profiles->lastPage() }}</strong>
+                    <strong>{{ $profiles->currentPage() }} / {{ $profiles->lastPage() }}</strong>
 
                     @if($profiles->hasMorePages())
-                        <a href="{{ $profiles->nextPageUrl() }}">التالي</a>
+                        <a href="{{ $profiles->appends(request()->query())->nextPageUrl() }}">التالي</a>
                     @else
                         <span class="is-disabled">التالي</span>
                     @endif
@@ -118,247 +113,61 @@
             <x-empty-state
                 icon="heroicon-o-star"
                 title="ما لقيناش نتائج"
-                message="ما فيش مزودين مطابقين للمرشحات الحالية. جرّب مدينة أو فئة ثانية."
+                message="ما فيش مزودين مطابقين للمرشحات الحالية."
                 actionLabel="مسح المرشحات"
                 actionUrl="{{ route('public.top-rated') }}"
             />
         @endif
-    </section>
-</main>
-@endsection
+    </div>
+
+</div>
 
 @push('styles')
 <style>
-    .directory-tab {
-        width: min(100% - 1.25rem, 1120px);
-        margin-inline: auto;
-        padding: .85rem 0 2rem;
-    }
-
-    .directory-tab__header {
-        display: flex;
-        align-items: center;
-        gap: .85rem;
-        padding: 1rem;
-        border: 1px solid #E8EDF4;
-        border-radius: 22px;
-        background: #FFFFFF;
-        box-shadow: 0 12px 32px rgba(11, 26, 52, .06);
-    }
-
-    .directory-tab__back {
-        width: 42px;
-        height: 42px;
+    .lp-star-icon {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        border-radius: 14px;
+        background: #FEF3C7;
+        color: #D97706;
+        font-size: 1.25rem;
+    }
+
+    .lp-search-wrap {
         flex: 0 0 auto;
-        border-radius: 14px;
-        color: #0B1A34;
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-    }
-
-    .directory-tab__back svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .directory-tab__header span,
-    .directory-tab__section-head span {
-        display: block;
-        margin-bottom: .18rem;
-        color: #F1620F;
-        font-size: .75rem;
-        font-weight: 900;
-    }
-
-    .directory-tab__header h1,
-    .directory-tab__section-head h2 {
-        margin: 0;
-        color: #0B1A34;
-        font-weight: 950;
-        letter-spacing: 0;
-        line-height: 1.25;
-    }
-
-    .directory-tab__header h1 {
-        font-size: 1.35rem;
-    }
-
-    .directory-tab__header p {
-        margin: .2rem 0 0;
-        color: #64748B;
-        font-size: .82rem;
-        font-weight: 800;
-    }
-
-    .directory-tab__filters {
-        display: grid;
-        gap: .65rem;
-        margin-top: .85rem;
-        padding: .85rem;
-        border: 1px solid #E8EDF4;
-        border-radius: 20px;
-        background: #FFFFFF;
-    }
-
-    .directory-tab__filters label {
-        display: grid;
-        gap: .32rem;
-        color: #334155;
-        font-size: .74rem;
-        font-weight: 850;
-    }
-
-    .directory-tab__keyword div,
-    .directory-tab__filters select,
-    .directory-tab__filters button {
-        min-height: 48px;
-        border-radius: 14px;
-        border: 1px solid #E2E8F0;
-        background: #FFFFFF;
-    }
-
-    .directory-tab__keyword div {
         display: flex;
         align-items: center;
-        gap: .55rem;
-        padding: 0 .8rem;
+        gap: .45rem;
+        min-height: 38px;
+        padding: 0 .75rem;
+        border-radius: 999px;
+        border: 1px solid var(--delni-border);
+        background: #fff;
+        min-width: 140px;
     }
 
-    .directory-tab__keyword svg {
-        width: 19px;
-        height: 19px;
+    .lp-search-wrap svg {
+        width: 16px;
+        height: 16px;
         color: #94A3B8;
+        flex-shrink: 0;
     }
 
-    .directory-tab__filters input,
-    .directory-tab__filters select {
-        width: 100%;
-        min-width: 0;
+    .lp-search-input {
         border: 0;
         outline: 0;
-        color: #0B1A34;
         background: transparent;
-        font-size: .92rem;
+        color: var(--delni-navy);
+        font: inherit;
+        font-size: .78rem;
         font-weight: 750;
-    }
-
-    .directory-tab__filters select {
-        padding: 0 .75rem;
-    }
-
-    .directory-tab__filters button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .45rem;
-        color: #FFFFFF;
-        background: #F1620F;
-        border-color: #F1620F;
-        font-weight: 950;
-        cursor: pointer;
-    }
-
-    .directory-tab__filters button svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    .directory-tab__chips {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        overflow-x: auto;
-        margin-top: .75rem;
-    }
-
-    .directory-tab__chips span,
-    .directory-tab__chips a {
-        flex: 0 0 auto;
-        padding: .42rem .72rem;
-        border-radius: 999px;
-        border: 1px solid #E2E8F0;
-        background: #FFFFFF;
-        color: #475569;
-        font-size: .76rem;
-        font-weight: 850;
-    }
-
-    .directory-tab__chips a {
-        color: #F1620F;
-        border-color: #FED7AA;
-        background: #FFF7ED;
-    }
-
-    .directory-tab__results {
-        margin-top: 1.15rem;
-    }
-
-    .directory-tab__section-head {
-        margin-bottom: .8rem;
-        padding-inline: .2rem;
-    }
-
-    .directory-tab__section-head h2 {
-        font-size: 1.08rem;
-    }
-
-    .directory-tab__pagination {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .65rem;
-        margin-top: 1rem;
-    }
-
-    .directory-tab__pagination a,
-    .directory-tab__pagination span {
-        flex: 0 0 auto;
-        padding: .55rem .85rem;
-        border-radius: 12px;
-        background: #FFFFFF;
-        color: #0B1A34;
-        border: 1px solid #E2E8F0;
-        font-size: .78rem;
-        font-weight: 950;
-    }
-
-    .directory-tab__pagination strong {
-        color: #64748B;
-        font-size: .78rem;
-    }
-
-    .directory-tab__pagination .is-disabled {
-        color: #94A3B8;
-        background: #F1F5F9;
-    }
-
-    @media (min-width: 760px) {
-        .directory-tab {
-            padding-top: 1.25rem;
-        }
-
-        .directory-tab__header h1 {
-            font-size: 1.8rem;
-        }
-
-        .directory-tab__filters {
-            grid-template-columns: minmax(260px, 1fr) minmax(160px, .45fr) minmax(160px, .45fr) 132px;
-            align-items: end;
-        }
-    }
-
-    @media (max-width: 520px) {
-        .directory-tab__pagination {
-            gap: .45rem;
-        }
-
-        .directory-tab__pagination a,
-        .directory-tab__pagination span {
-            padding-inline: .65rem;
-        }
+        width: 100%;
+        min-width: 0;
     }
 </style>
 @endpush
+@endsection

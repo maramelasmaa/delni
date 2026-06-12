@@ -5,97 +5,83 @@
 @php
     $isSearchView = isset($profiles);
     $resultCount = $isSearchView ? ($profiles?->total() ?? $profiles?->count() ?? 0) : 0;
-    $suggestedCount = isset($suggestedProviders) ? $suggestedProviders->count() : 0;
     $serviceChips = isset($subcategories) ? $subcategories->take(12) : collect();
 @endphp
 
 @section('content')
-<main class="directory-home">
-    <section class="directory-hero">
-        <div class="directory-hero__top">
-            <div>
-                <p class="directory-eyebrow">شن تبي تنجز اليوم؟</p>
-                <h1>لقى الخدمة اللي تحتاجها</h1>
-            </div>
+<div class="lp-wrapper">
 
-            <a href="{{ route('public.top-rated') }}" class="directory-icon-link" aria-label="الأعلى تقييماً">
+    {{-- Search hero --}}
+    <section class="hp-hero">
+        <div class="hp-hero__top">
+            <div>
+                <p class="hp-eyebrow">شن تبي تنجز اليوم؟</p>
+                <h1 class="hp-title">لقى الخدمة اللي تحتاجها</h1>
+            </div>
+            <a href="{{ route('public.top-rated') }}" class="hp-star-btn" aria-label="الأعلى تقييماً">
                 <x-render-icon icon="heroicon-o-star" />
             </a>
         </div>
 
-        <form method="GET" action="{{ route('public.search') }}" class="directory-search">
-            <label class="directory-search__input">
-                <span>اكتب الخدمة أو اسم المزود</span>
-                <div>
-                    <x-render-icon icon="heroicon-o-magnifying-glass" />
-                    <input
-                        type="search"
-                        name="keyword"
-                        value="{{ request('keyword') }}"
-                        maxlength="100"
-                        placeholder="مثال: تكييف، محامي، تصوير..."
-                    >
-                </div>
+        <form method="GET" action="{{ route('public.search') }}" class="hp-search" id="homeSearchForm">
+            <label class="hp-search__field">
+                <x-render-icon icon="heroicon-o-magnifying-glass" />
+                <input
+                    type="search"
+                    name="keyword"
+                    value="{{ request('keyword') }}"
+                    maxlength="100"
+                    placeholder="مثال: تكييف، محامي، تصوير..."
+                    autocomplete="off"
+                >
             </label>
 
-            <div class="directory-search__filters">
-                <label>
-                    <span>الفئة</span>
-                    <select name="category_id">
-                        <option value="">كل الفئات</option>
-                        @foreach(($categories ?? collect()) as $category)
-                            <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>
-                                {{ $category->localized_name ?? $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </label>
+            <div class="hp-search__selects">
+                <select name="category_id" class="lp-filter-select" onchange="">
+                    <option value="">كل الفئات</option>
+                    @foreach(($categories ?? collect()) as $category)
+                        <option value="{{ $category->id }}" @selected((string)request('category_id') === (string)$category->id)>
+                            {{ $category->localized_name ?? $category->name }}
+                        </option>
+                    @endforeach
+                </select>
 
-                <label>
-                    <span>الخدمة</span>
-                    <select name="subcategory_id">
-                        <option value="">كل الخدمات</option>
-                        @foreach(($subcategories ?? collect())->groupBy('category_id') as $group)
-                            @php($parentCategory = $group->first()?->category)
-                            <optgroup label="{{ $parentCategory?->localized_name ?? $parentCategory?->name ?? 'خدمات' }}">
-                                @foreach($group as $subcategory)
-                                    <option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}" @selected((string) request('subcategory_id') === (string) $subcategory->id)>
-                                        {{ $subcategory->localized_name ?? $subcategory->name }}
-                                    </option>
-                                @endforeach
-                            </optgroup>
-                        @endforeach
-                    </select>
-                </label>
-
-                <label>
-                    <span>المدينة</span>
-                    <select name="city_id">
-                        <option value="">كل المدن</option>
-                        @foreach(($cities ?? collect()) as $city)
-                            <option value="{{ $city->id }}" @selected((string) request('city_id') === (string) $city->id)>
-                                {{ $city->localized_name ?? $city->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </label>
-
-                @if(isset($providerTypes))
-                    <label>
-                        <span>نوع المزود</span>
-                        <select name="provider_type">
-                            <option value="">كل الأنواع</option>
-                            @foreach($providerTypes as $code => $name)
-                                <option value="{{ $code }}" @selected((string) request('provider_type') === (string) $code)>
-                                    {{ is_object($name) ? ($name->localized_name ?? $name->name) : $name }}
+                <select name="subcategory_id" class="lp-filter-select">
+                    <option value="">كل الخدمات</option>
+                    @foreach(($subcategories ?? collect())->groupBy('category_id') as $group)
+                        @php($parentCategory = $group->first()?->category)
+                        <optgroup label="{{ $parentCategory?->localized_name ?? $parentCategory?->name ?? 'خدمات' }}">
+                            @foreach($group as $subcategory)
+                                <option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}" @selected((string)request('subcategory_id') === (string)$subcategory->id)>
+                                    {{ $subcategory->localized_name ?? $subcategory->name }}
                                 </option>
                             @endforeach
-                        </select>
-                    </label>
+                        </optgroup>
+                    @endforeach
+                </select>
+
+                <select name="city_id" class="lp-filter-select">
+                    <option value="">كل المدن</option>
+                    @foreach(($cities ?? collect()) as $city)
+                        <option value="{{ $city->id }}" @selected((string)request('city_id') === (string)$city->id)>
+                            {{ $city->localized_name ?? $city->name }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @if(isset($providerTypes))
+                    <select name="provider_type" class="lp-filter-select">
+                        <option value="">كل الأنواع</option>
+                        @foreach($providerTypes as $code => $name)
+                            <option value="{{ $code }}" @selected((string)request('provider_type') === (string)$code)>
+                                {{ is_object($name) ? ($name->localized_name ?? $name->name) : $name }}
+                            </option>
+                        @endforeach
+                    </select>
                 @endif
             </div>
 
-            <button type="submit" class="directory-search__button">
+            <button type="submit" class="hp-search__btn">
                 <x-render-icon icon="heroicon-o-magnifying-glass" />
                 <span>بحث</span>
             </button>
@@ -103,29 +89,27 @@
     </section>
 
     @if($isSearchView)
-        <section class="directory-section">
-            <div class="directory-section__head">
+        {{-- Search results --}}
+        <div class="lp-results" style="margin-top:.85rem;">
+            <div class="lp-results-head">
                 <div>
                     <span>نتائج البحث</span>
                     <h2>{{ number_format($resultCount) }} نتيجة</h2>
                 </div>
-
-                <a href="{{ route('home') }}">مسح</a>
+                <a href="{{ route('home') }}" class="hp-clear-link">مسح</a>
             </div>
 
             @if($profiles && $profiles->count() > 0)
                 <x-provider-grid :providers="$profiles" :columns="2" />
 
                 @if(method_exists($profiles, 'hasPages') && $profiles->hasPages())
-                    <nav class="directory-pagination" aria-label="Pagination">
+                    <nav class="lp-pagination" aria-label="Pagination">
                         @if($profiles->onFirstPage())
                             <span class="is-disabled">السابق</span>
                         @else
                             <a href="{{ $profiles->previousPageUrl() }}">السابق</a>
                         @endif
-
-                        <strong>صفحة {{ $profiles->currentPage() }} من {{ $profiles->lastPage() }}</strong>
-
+                        <strong>{{ $profiles->currentPage() }} / {{ $profiles->lastPage() }}</strong>
                         @if($profiles->hasMorePages())
                             <a href="{{ $profiles->nextPageUrl() }}">التالي</a>
                         @else
@@ -142,22 +126,23 @@
                     actionUrl="{{ route('home') }}"
                 />
             @endif
-        </section>
-    @else
-        <section class="directory-section">
-            <div class="directory-section__head">
-                <div>
-                    <span>تصفح</span>
-                    <h2>الفئات</h2>
-                </div>
+        </div>
 
-                <a href="{{ route('public.categories') }}">عرض الكل</a>
+    @else
+        {{-- Browse: categories --}}
+        <section class="hp-section">
+            <div class="hp-section__head">
+                <div>
+                    <span class="hp-section__label">تصفح</span>
+                    <h2 class="hp-section__title">الفئات</h2>
+                </div>
+                <a href="{{ route('public.categories') }}" class="hp-section__more">عرض الكل</a>
             </div>
 
-            <div class="directory-category-row">
+            <div class="hp-cat-row">
                 @foreach(($categories ?? collect())->take(10) as $category)
-                    <a href="{{ route('public.category', $category->slug ?? $category->id) }}" class="directory-category">
-                        <span>
+                    <a href="{{ route('public.category', $category->slug ?? $category->id) }}" class="hp-cat">
+                        <span class="hp-cat__icon">
                             @if($category->icon)
                                 <x-svg-icon :icon="$category->icon" size="20" />
                             @else
@@ -165,15 +150,15 @@
                             @endif
                         </span>
                         <strong>{{ $category->localized_name ?? $category->name }}</strong>
-                        <small>{{ number_format((int) ($category->discoverable_profiles_count ?? 0)) }}</small>
+                        <small>{{ number_format((int)($category->discoverable_profiles_count ?? 0)) }}</small>
                     </a>
                 @endforeach
             </div>
 
             @if($serviceChips->isNotEmpty())
-                <div class="directory-service-chips" aria-label="خدمات">
+                <div class="lp-chips" aria-label="خدمات" style="padding-top:.55rem;">
                     @foreach($serviceChips as $subcategory)
-                        <a href="{{ route('public.subcategory', $subcategory->slug) }}">
+                        <a href="{{ route('public.subcategory', $subcategory->slug) }}" class="lp-chip">
                             {{ $subcategory->localized_name ?? $subcategory->name }}
                         </a>
                     @endforeach
@@ -181,18 +166,23 @@
             @endif
         </section>
 
-        <section class="directory-section">
-            <div class="directory-section__head">
+        {{-- Featured providers --}}
+        <section class="hp-section">
+            <div class="hp-section__head">
                 <div>
-                    <span>من الدليل</span>
-                    <h2>مزودين قريبين منك</h2>
+                    <span class="hp-section__label">من الدليل</span>
+                    <h2 class="hp-section__title">مزودين مميزين</h2>
                 </div>
             </div>
 
-            @if($suggestedCount > 0)
-                <x-provider-grid :providers="$suggestedProviders" :columns="2" />
-            @elseif(isset($featuredProviders) && $featuredProviders->count() > 0)
-                <x-provider-grid :providers="$featuredProviders->take(6)" :columns="2" />
+            @php
+                $displayProviders = isset($suggestedProviders) && $suggestedProviders->count() > 0
+                    ? $suggestedProviders
+                    : (isset($featuredProviders) ? $featuredProviders->take(6) : collect());
+            @endphp
+
+            @if($displayProviders->count() > 0)
+                <x-provider-grid :providers="$displayProviders" :columns="2" />
             @else
                 <x-empty-state
                     icon="heroicon-o-briefcase"
@@ -201,395 +191,320 @@
                 />
             @endif
         </section>
+
+        {{-- Provider CTA --}}
+        <div class="lp-cta">
+            <div>
+                <span>تقدم خدمة؟</span>
+                <h2>خلّي ملفك يظهر للناس</h2>
+                <p>افتح حساب مزود وخلي خدماتك تطلع في البحث والفئات.</p>
+            </div>
+            <a href="{{ route('register') }}">سجل كمزود</a>
+        </div>
     @endif
 
-    <section class="directory-provider-cta">
-        <div>
-            <span>تقدم خدمة؟</span>
-            <h2>خلّي ملفك يظهر للناس</h2>
-            <p>افتح حساب مزود وخلي خدماتك تطلع في البحث والفئات.</p>
-        </div>
-
-        <a href="{{ route('register') }}">
-            سجل كمزود
-        </a>
-    </section>
-</main>
-@endsection
+</div>
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const searchForm = document.querySelector('.directory-search');
-        const categorySelect = searchForm?.querySelector('select[name="category_id"]');
-        const subcategorySelect = searchForm?.querySelector('select[name="subcategory_id"]');
+        const form = document.getElementById('homeSearchForm');
+        const catSelect = form?.querySelector('select[name="category_id"]');
+        const subSelect = form?.querySelector('select[name="subcategory_id"]');
 
-        const syncSubcategories = () => {
-            if (!categorySelect || !subcategorySelect) return;
-
-            const categoryId = categorySelect.value;
-
-            Array.from(subcategorySelect.options).forEach((option) => {
-                if (!option.value) {
-                    option.hidden = false;
-                    option.disabled = false;
-                    return;
-                }
-
-                const matches = !categoryId || option.dataset.categoryId === categoryId;
-                option.hidden = !matches;
-                option.disabled = !matches;
+        const sync = () => {
+            if (!catSelect || !subSelect) return;
+            const catId = catSelect.value;
+            Array.from(subSelect.options).forEach(opt => {
+                if (!opt.value) { opt.hidden = opt.disabled = false; return; }
+                const match = !catId || opt.dataset.categoryId === catId;
+                opt.hidden = !match;
+                opt.disabled = !match;
             });
-
-            const selected = subcategorySelect.selectedOptions[0];
-            if (selected && selected.disabled) {
-                subcategorySelect.value = '';
-            }
+            const sel = subSelect.selectedOptions[0];
+            if (sel?.disabled) subSelect.value = '';
         };
 
-        categorySelect?.addEventListener('change', syncSubcategories);
-        syncSubcategories();
+        catSelect?.addEventListener('change', sync);
+        sync();
     });
 </script>
 @endpush
 
 @push('styles')
 <style>
-    .directory-home {
-        width: min(100% - 1.25rem, 1120px);
-        margin-inline: auto;
-        padding: .85rem 0 2rem;
-    }
-
-    .directory-hero {
+    /* Home search hero */
+    .hp-hero {
         display: grid;
-        gap: 1rem;
+        gap: .9rem;
         padding: 1rem;
-        border: 1px solid #E8EDF4;
+        border: 1px solid var(--delni-border);
         border-radius: 22px;
-        background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
-        box-shadow: 0 12px 32px rgba(11, 26, 52, .06);
+        background: linear-gradient(180deg, #fff 0%, #F8FAFC 100%);
+        box-shadow: var(--delni-shadow-sm);
     }
 
-    .directory-hero__top,
-    .directory-section__head,
-    .directory-provider-cta {
+    .hp-hero__top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
     }
 
-    .directory-eyebrow,
-    .directory-section__head span,
-    .directory-provider-cta span {
-        margin: 0 0 .18rem;
-        color: #F1620F;
-        font-size: .75rem;
+    .hp-eyebrow {
+        margin: 0 0 .15rem;
+        color: var(--delni-primary);
+        font-size: .72rem;
         font-weight: 900;
     }
 
-    .directory-hero h1,
-    .directory-section__head h2,
-    .directory-provider-cta h2 {
+    .hp-title {
         margin: 0;
-        color: #0B1A34;
+        color: var(--delni-navy);
+        font-size: 1.4rem;
         font-weight: 950;
-        letter-spacing: 0;
-        line-height: 1.25;
+        line-height: 1.2;
     }
 
-    .directory-hero h1 {
-        font-size: 1.45rem;
-    }
-
-    .directory-icon-link {
+    .hp-star-btn {
         width: 42px;
         height: 42px;
+        flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 auto;
-        border-radius: 14px;
-        color: #F1620F;
+        border-radius: 13px;
         background: #FFF7ED;
         border: 1px solid #FED7AA;
+        color: var(--delni-primary);
     }
 
-    .directory-icon-link svg {
-        width: 21px;
-        height: 21px;
-    }
+    .hp-star-btn svg { width: 20px; height: 20px; }
 
-    .directory-search {
-        display: grid;
-        gap: .75rem;
-    }
+    /* Search form */
+    .hp-search { display: grid; gap: .65rem; }
 
-    .directory-search label {
-        display: grid;
-        gap: .32rem;
-        color: #334155;
-        font-size: .74rem;
-        font-weight: 850;
-    }
-
-    .directory-search__input div,
-    .directory-search select,
-    .directory-search__button {
-        min-height: 48px;
-        border-radius: 14px;
-        border: 1px solid #E2E8F0;
-        background: #FFFFFF;
-    }
-
-    .directory-search__input div {
+    .hp-search__field {
         display: flex;
         align-items: center;
-        gap: .55rem;
-        padding: 0 .8rem;
+        gap: .5rem;
+        min-height: 50px;
+        padding: 0 .85rem;
+        border-radius: 14px;
+        border: 1px solid var(--delni-border);
+        background: #fff;
     }
 
-    .directory-search__input svg {
-        width: 19px;
-        height: 19px;
+    .hp-search__field svg {
+        width: 18px;
+        height: 18px;
         color: #94A3B8;
-        flex: 0 0 auto;
+        flex-shrink: 0;
     }
 
-    .directory-search input,
-    .directory-search select {
-        width: 100%;
+    .hp-search__field input {
+        flex: 1;
         min-width: 0;
         border: 0;
         outline: 0;
-        color: #0B1A34;
         background: transparent;
+        color: var(--delni-navy);
+        font: inherit;
         font-size: .92rem;
         font-weight: 750;
     }
 
-    .directory-search select {
-        padding: 0 .75rem;
-    }
-
-    .directory-search__filters {
+    .hp-search__selects {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: .65rem;
+        gap: .55rem;
     }
 
-    .directory-search__button {
+    .hp-search__selects .lp-filter-select {
+        border-radius: 14px;
+        min-height: 48px;
+        padding: 0 .75rem;
+        width: 100%;
+    }
+
+    .hp-search__btn {
+        min-height: 50px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: .45rem;
-        color: #FFFFFF;
-        background: #F1620F;
-        border-color: #F1620F;
+        border-radius: 14px;
+        border: 0;
+        background: var(--delni-primary);
+        color: #fff;
+        font: inherit;
+        font-size: .92rem;
         font-weight: 950;
         cursor: pointer;
     }
 
-    .directory-search__button svg {
-        width: 18px;
-        height: 18px;
-    }
+    .hp-search__btn svg { width: 18px; height: 18px; }
 
-    .directory-section {
-        margin-top: 1.15rem;
-    }
+    /* Section header */
+    .hp-section { margin-top: 1.15rem; }
 
-    .directory-section__head {
-        margin-bottom: .8rem;
+    .hp-section__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: .75rem;
         padding-inline: .2rem;
     }
 
-    .directory-section__head h2,
-    .directory-provider-cta h2 {
-        font-size: 1.08rem;
+    .hp-section__label {
+        display: block;
+        color: var(--delni-primary);
+        font-size: .7rem;
+        font-weight: 900;
+        margin-bottom: .1rem;
     }
 
-    .directory-section__head a {
-        flex: 0 0 auto;
-        color: #F1620F;
+    .hp-section__title {
+        margin: 0;
+        color: var(--delni-navy);
+        font-size: 1.05rem;
+        font-weight: 950;
+    }
+
+    .hp-section__more {
+        flex-shrink: 0;
+        color: var(--delni-primary);
         font-size: .78rem;
         font-weight: 900;
     }
 
-    .directory-category-row {
+    /* Category strip */
+    .hp-cat-row {
         display: flex;
-        gap: .7rem;
+        gap: .65rem;
         overflow-x: auto;
-        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
         padding: .1rem .1rem .35rem;
+        scroll-snap-type: x mandatory;
     }
+    .hp-cat-row::-webkit-scrollbar { display: none; }
 
-    .directory-category {
-        width: 108px;
-        min-width: 108px;
-        min-height: 108px;
+    .hp-cat {
+        width: 106px;
+        min-width: 106px;
+        min-height: 106px;
+        flex-shrink: 0;
         display: grid;
         align-content: space-between;
         gap: .5rem;
         scroll-snap-align: start;
         padding: .8rem;
-        border: 1px solid #E8EDF4;
+        border: 1px solid var(--delni-border);
         border-radius: 18px;
-        background: #FFFFFF;
-        box-shadow: 0 4px 16px rgba(11, 26, 52, .04);
-        transition: border-color .2s ease, box-shadow .2s ease;
+        background: #fff;
+        text-decoration: none;
+        transition: border-color .15s, box-shadow .15s;
     }
 
-    .directory-category:hover {
-        border-color: rgba(241,98,15,.25);
-        box-shadow: 0 8px 24px rgba(241,98,15,.1);
+    .hp-cat:active {
+        border-color: rgba(241,98,15,.3);
+        box-shadow: 0 4px 16px rgba(241,98,15,.1);
     }
 
-    .directory-category span {
+    .hp-cat__icon {
         width: 36px;
         height: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        color: #F1620F;
-        background: #FFF7ED;
+        border-radius: 11px;
+        background: rgba(241,98,15,.07);
+        color: var(--delni-primary);
+    }
+    .hp-cat__icon svg { width: 20px; height: 20px; }
+
+    .hp-cat strong {
+        display: block;
+        color: var(--delni-navy);
+        font-size: .8rem;
+        line-height: 1.4;
     }
 
-    .directory-category svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .directory-category strong {
-        color: #0B1A34;
-        font-size: .82rem;
-        line-height: 1.45;
-    }
-
-    .directory-category small {
+    .hp-cat small {
         color: #64748B;
-        font-size: .72rem;
-        font-weight: 800;
+        font-size: .7rem;
+        font-weight: 850;
     }
 
-    .directory-service-chips {
-        display: flex;
-        gap: .5rem;
-        overflow-x: auto;
-        padding: .45rem .1rem .2rem;
-    }
-
-    .directory-service-chips a {
-        flex: 0 0 auto;
-        padding: .42rem .72rem;
-        border-radius: 999px;
-        border: 1px solid #E2E8F0;
-        background: #FFFFFF;
-        color: #475569;
-        font-size: .76rem;
-        font-weight: 800;
-        transition: background .15s ease, color .15s ease, border-color .15s ease;
-    }
-
-    .directory-service-chips a:hover {
-        background: #FFF7ED;
-        color: #C2410C;
-        border-color: rgba(241,98,15,.2);
-    }
-
-    .directory-provider-cta {
-        margin-top: 1.2rem;
-        padding: 1rem;
-        border-radius: 20px;
-        border: 1px solid #E8EDF4;
-        background: #0B1A34;
-        color: #FFFFFF;
-    }
-
-    .directory-provider-cta h2 {
-        color: #FFFFFF;
-    }
-
-    .directory-provider-cta p {
-        margin: .25rem 0 0;
-        color: rgba(255, 255, 255, .72);
-        font-size: .82rem;
-        font-weight: 650;
-        line-height: 1.7;
-    }
-
-    .directory-provider-cta a,
-    .directory-pagination a,
-    .directory-pagination span {
-        flex: 0 0 auto;
-        padding: .55rem .85rem;
-        border-radius: 12px;
-        background: #FFFFFF;
-        color: #0B1A34;
+    /* Search results head */
+    .hp-clear-link {
+        flex-shrink: 0;
+        color: var(--delni-primary);
         font-size: .78rem;
+        font-weight: 900;
+    }
+
+    /* CTA shared — also used in categories.blade */
+    .lp-cta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.2rem;
+        padding: 1rem 1.1rem;
+        border-radius: 20px;
+        background: var(--delni-navy);
+        color: #fff;
+    }
+
+    .lp-cta span {
+        display: block;
+        color: var(--delni-primary);
+        font-size: .72rem;
+        font-weight: 900;
+        margin-bottom: .2rem;
+    }
+
+    .lp-cta h2 {
+        margin: 0;
+        font-size: 1rem;
         font-weight: 950;
     }
 
-    .directory-pagination {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .65rem;
-        margin-top: 1rem;
-    }
-
-    .directory-pagination strong {
-        color: #64748B;
+    .lp-cta p {
+        margin: .25rem 0 0;
+        color: rgba(255,255,255,.7);
         font-size: .78rem;
+        font-weight: 600;
+        line-height: 1.6;
     }
 
-    .directory-pagination .is-disabled {
-        color: #94A3B8;
-        background: #F1F5F9;
+    .lp-cta a {
+        flex-shrink: 0;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        padding: .55rem 1rem;
+        border-radius: 12px;
+        background: #fff;
+        color: var(--delni-navy);
+        font-size: .82rem;
+        font-weight: 950;
     }
 
-    @media (min-width: 760px) {
-        .directory-home {
-            padding-top: 1.25rem;
-        }
-
-        .directory-hero {
-            padding: 1.25rem;
-        }
-
-        .directory-hero h1 {
-            font-size: 2rem;
-        }
-
-        .directory-search {
-            grid-template-columns: minmax(260px, 1fr) auto;
-            align-items: end;
-        }
-
-        .directory-search__input {
-            grid-column: 1 / -1;
-        }
-
-        .directory-search__filters {
-            grid-template-columns: repeat(4, minmax(150px, 1fr));
-        }
-
-        .directory-search__button {
-            min-width: 132px;
-        }
+    @media (min-width: 640px) {
+        .hp-title { font-size: 1.85rem; }
+        .hp-search { grid-template-columns: 1fr auto; }
+        .hp-search__field { grid-column: 1 / -1; }
+        .hp-search__selects { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
+        .hp-search__selects .lp-filter-select { border-radius: 999px; min-height: 38px; }
     }
 
-    @media (max-width: 520px) {
-        .directory-search__filters {
-            grid-template-columns: 1fr;
-        }
-
-        .directory-provider-cta {
-            align-items: flex-start;
-            flex-direction: column;
-        }
+    @media (max-width: 400px) {
+        .hp-search__selects { grid-template-columns: 1fr; }
+        .lp-cta { flex-direction: column; align-items: flex-start; }
     }
 </style>
 @endpush
+@endsection
