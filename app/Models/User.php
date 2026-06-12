@@ -74,7 +74,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasOne(Subscription::class)
             ->where('is_active', true)
-            ->whereDate('ends_at', '>=', now());
+            ->where('ends_at', '>=', today());
     }
 
     public function suspendedBy(): BelongsTo

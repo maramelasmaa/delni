@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use App\Enums\ReviewStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Review\CreateReviewRequest;
 use App\Http\Requests\Review\FlagReviewRequest;
 use App\Models\Profile;
 use App\Models\Review;
+use App\Services\ReviewCreationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class ReviewController extends Controller
 {
-    public function store(CreateReviewRequest $request, Profile $profile): RedirectResponse
+    public function store(CreateReviewRequest $request, Profile $profile, ReviewCreationService $reviews): RedirectResponse
     {
-        Review::create([
-            'profile_id' => $profile->id,
-            'user_id' => $request->user()->id,
-            'rating' => $request->integer('rating'),
-            'status' => ReviewStatus::APPROVED,
-            'comment' => $request->string('comment')->value(),
-        ]);
+        $reviews->create(
+            user: $request->user(),
+            profile: $profile,
+            rating: $request->integer('rating'),
+            comment: $request->string('comment')->value(),
+        );
 
         return back()->with('success', __('messages.review_submitted'));
     }

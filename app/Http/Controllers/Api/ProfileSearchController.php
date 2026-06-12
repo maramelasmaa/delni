@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Data\ProfileSearchFilters;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Search\SearchProfilesRequest;
+use App\Models\Profile;
 use App\Services\ProfileSearchService;
 use Illuminate\Http\JsonResponse;
 
@@ -58,7 +59,7 @@ class ProfileSearchController extends Controller
         $results = $this->searchService->search($filters);
 
         return response()->json([
-            'data' => $results->items(),
+            'data' => collect($results->items())->map(fn (Profile $profile): array => $this->serializeProfile($profile))->values(),
             'pagination' => [
                 'total' => $results->total(),
                 'per_page' => $results->perPage(),
@@ -68,5 +69,45 @@ class ProfileSearchController extends Controller
                 'to' => $results->lastItem(),
             ],
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function serializeProfile(Profile $profile): array
+    {
+        return [
+            'id' => $profile->id,
+            'slug' => $profile->slug,
+            'business_name' => $profile->business_name,
+            'type' => $profile->type,
+            'provider_type' => $profile->provider_type,
+            'bio' => $profile->bio,
+            'offers_remote_work' => $profile->offers_remote_work,
+            'city_id' => $profile->city_id,
+            'category_id' => $profile->category_id,
+            'phone' => $profile->phone,
+            'whatsapp' => $profile->whatsapp,
+            'logo' => $profile->logo,
+            'cover_image' => $profile->cover_image,
+            'experience_years' => $profile->experience_years,
+            'is_complete' => $profile->is_complete,
+            'stats' => $profile->stats === null ? null : [
+                'profile_id' => $profile->stats->profile_id,
+                'rating_avg' => $profile->stats->rating_avg,
+                'reviews_count' => $profile->stats->reviews_count,
+                'is_top_rated' => $profile->stats->is_top_rated,
+                'is_featured' => $profile->stats->is_featured,
+                'featured_until' => $profile->stats->featured_until?->toDateString(),
+            ],
+            'city' => $profile->city === null ? null : [
+                'id' => $profile->city->id,
+                'name' => $profile->city->name,
+                'slug' => $profile->city->slug,
+            ],
+            'category' => $profile->category === null ? null : [
+                'id' => $profile->category->id,
+                'name' => $profile->category->name,
+                'slug' => $profile->category->slug,
+            ],
+        ];
     }
 }

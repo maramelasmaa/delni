@@ -289,12 +289,26 @@
         .auth-alert {
             display: flex;
             gap: 0.75rem;
-            padding: 1rem;
+            padding: 0.75rem 0.85rem;
             border-radius: var(--auth-radius-sm);
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin-bottom: 1.5rem;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            margin-bottom: 1.25rem;
             border: 1px solid transparent;
+        }
+
+        .auth-alert svg {
+            width: 1rem;
+            height: 1rem;
+            flex-shrink: 0;
+            margin-top: 0.15rem;
+        }
+
+        .auth-alert strong {
+            display: block;
+            margin-bottom: 0.1rem;
+            font-size: 0.8rem;
+            line-height: 1.35;
         }
 
         .auth-alert-danger {

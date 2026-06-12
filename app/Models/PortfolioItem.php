@@ -35,22 +35,4 @@ class PortfolioItem extends Model
     {
         return $this->hasMany(PortfolioImage::class)->orderBy('sort_order');
     }
-
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (self $model) {
-            if ($model->profile) {
-                // Use exists() check instead of count() for better performance
-                $existingCount = $model->profile->portfolioItems()
-                    ->limit(2)
-                    ->count();
-
-                if ($existingCount >= 2) {
-                    throw new \Exception('Portfolio limit reached. Maximum 2 projects allowed per profile.');
-                }
-            }
-        });
-    }
 }

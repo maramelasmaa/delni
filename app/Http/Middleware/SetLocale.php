@@ -13,6 +13,7 @@ class SetLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Delni is Arabic-only for MVP — locale is always set to 'ar' intentionally.
         App::setLocale('ar');
         $request->session()->put('locale', 'ar');
         cookie()->queue('locale', 'ar', 60 * 24 * 365);

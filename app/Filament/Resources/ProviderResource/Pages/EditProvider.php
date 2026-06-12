@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
 class EditProvider extends EditRecord
@@ -79,15 +80,7 @@ class EditProvider extends EditRecord
             ->action(function (): void {
                 $user = $this->record;
 
-                // Generate reset token (same as Laravel's default)
-                $token = Str::random(64);
-                \DB::table('password_reset_tokens')->updateOrInsert(
-                    ['email' => $user->email],
-                    [
-                        'token' => hash('sha256', $token),
-                        'created_at' => now(),
-                    ]
-                );
+                $token = Password::createToken($user);
 
                 // Send reset email
                 $resetLink = route('password.reset', [

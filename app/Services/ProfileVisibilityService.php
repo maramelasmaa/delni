@@ -75,9 +75,11 @@ class ProfileVisibilityService
 
         // Check: Has active, non-expired subscription
         // Use fresh subscriptions query to ensure latest data
+        // Sargable range comparison (not whereDate) so the
+        // subscriptions(user_id, is_active, ends_at) index is usable.
         $subscription = $user->subscriptions()
             ->where('is_active', true)
-            ->whereDate('ends_at', '>=', Carbon::today())
+            ->where('ends_at', '>=', Carbon::today())
             ->first();
 
         if (! $subscription) {
@@ -190,7 +192,9 @@ class ProfileVisibilityService
                     ->from('subscriptions')
                     ->whereColumn('subscriptions.user_id', 'profiles.user_id')
                     ->where('subscriptions.is_active', true)
-                    ->whereDate('subscriptions.ends_at', '>=', Carbon::today());
+                    // Sargable range comparison (not whereDate) so the
+                    // subscriptions(user_id, is_active, ends_at) index is usable.
+                    ->where('subscriptions.ends_at', '>=', Carbon::today());
             });
     }
 }

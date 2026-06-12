@@ -128,7 +128,7 @@ class ProviderResource extends Resource
 
                             Notification::make()
                                 ->title(__('filament.notifications.error'))
-                                ->body('Email could not be sent. Check the Laravel logs for the Resend error.')
+                                ->body('Email could not be sent. Check the Laravel logs for the mailer error.')
                                 ->danger()
                                 ->send();
                         }

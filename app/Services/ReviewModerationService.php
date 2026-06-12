@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\ReviewStatus;
 use App\Models\Review;
+use Illuminate\Support\Facades\DB;
 
 class ReviewModerationService
 {
@@ -26,7 +27,7 @@ class ReviewModerationService
      */
     public function approve(Review $review, ?string $note = null): void
     {
-        $review->update([
+        $this->updateLockedReview($review, [
             'status' => ReviewStatus::APPROVED,
             'moderated_by' => $this->getAdminId(),
             'moderated_at' => now(),
@@ -41,7 +42,7 @@ class ReviewModerationService
      */
     public function reject(Review $review, ?string $note = null): void
     {
-        $review->update([
+        $this->updateLockedReview($review, [
             'status' => ReviewStatus::REJECTED,
             'moderated_by' => $this->getAdminId(),
             'moderated_at' => now(),
@@ -64,7 +65,7 @@ class ReviewModerationService
      */
     public function acceptFlag(Review $review, ?string $note = null): void
     {
-        $review->update([
+        $this->handleFlagDecision($review, [
             'status' => ReviewStatus::REJECTED,
             'is_flagged' => true,
             'flag_handled_by' => $this->getAdminId(),
@@ -91,7 +92,7 @@ class ReviewModerationService
      */
     public function rejectFlag(Review $review, ?string $note = null): void
     {
-        $review->update([
+        $this->handleFlagDecision($review, [
             'status' => ReviewStatus::APPROVED,
             'is_flagged' => false,
             'flag_handled_by' => $this->getAdminId(),
@@ -138,11 +139,40 @@ class ReviewModerationService
     {
         $review->restore();
 
-        $review->update([
+        $this->updateLockedReview($review, [
             'status' => ReviewStatus::APPROVED,
             'moderated_by' => $this->getAdminId(),
             'moderated_at' => now(),
             'moderation_note' => $note,
         ]);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private function handleFlagDecision(Review $review, array $attributes): void
+    {
+        DB::transaction(function () use ($review, $attributes): void {
+            $lockedReview = Review::withTrashed()
+                ->whereKey($review->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedReview->flag_handled_at !== null) {
+                return;
+            }
+
+            $lockedReview->update($attributes);
+        }, attempts: 5);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private function updateLockedReview(Review $review, array $attributes): void
+    {
+        DB::transaction(function () use ($review, $attributes): void {
+            Review::withTrashed()
+                ->whereKey($review->id)
+                ->lockForUpdate()
+                ->firstOrFail()
+                ->update($attributes);
+        }, attempts: 5);
     }
 }

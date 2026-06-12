@@ -24,8 +24,6 @@ class Profile extends Model
         'website', 'instagram', 'facebook', 'linkedin',
     ];
 
-    protected $with = ['user'];
-
     protected $casts = [
         'is_complete' => 'boolean',
         'offers_remote_work' => 'boolean',

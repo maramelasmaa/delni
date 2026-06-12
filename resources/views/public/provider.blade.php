@@ -238,7 +238,7 @@
                                         @endif
 
                                         @if($credential->verification_url)
-                                            <a href="{{ $credential->verification_url }}" target="_blank" rel="noopener">
+                                            <a href="{{ $credential->verification_url }}" target="_blank" rel="noopener noreferrer nofollow">
                                                 تحقق
                                             </a>
                                         @endif
@@ -359,7 +359,7 @@
                         @endif
 
                         @if($profile->map_url)
-                            <a href="{{ $profile->map_url }}" target="_blank" rel="noopener">الموقع</a>
+                            <a href="{{ $profile->map_url }}" target="_blank" rel="noopener noreferrer nofollow">الموقع</a>
                         @endif
 
                         <a href="#reviews" class="is-review">شوف التقييمات</a>

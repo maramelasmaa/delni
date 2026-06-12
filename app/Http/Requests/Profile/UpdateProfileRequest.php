@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Profile;
 
 use App\Models\Subcategory;
+use App\Rules\SafeExternalUrl;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -57,7 +58,7 @@ class UpdateProfileRequest extends FormRequest
             'phone' => ['required', 'string', 'max:20', 'regex:/^[+0-9][0-9\s\-()]{6,19}$/'],
             'experience_years' => ['nullable', 'integer', 'min:0', 'max:60'],
             'offers_remote_work' => ['nullable', 'boolean'],
-            'map_url' => ['nullable', 'url', 'max:255'],
+            'map_url' => ['nullable', 'url', 'max:255', new SafeExternalUrl],
             'service_area_note' => ['nullable', 'string', 'max:500'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],

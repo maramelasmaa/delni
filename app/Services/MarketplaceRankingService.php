@@ -17,10 +17,10 @@ use Illuminate\Support\Facades\DB;
  * 3. Top Category (is_top_category=1 AND top_category_until >= today)
  * 4. Top Subcategory (is_top_subcategory=1 AND top_subcategory_until >= today)
  * 5. Featured Provider (is_featured=1 AND featured_until >= today)
- * 6. Top Rated Provider (approved reviews meet live count and rating rules)
+ * 6. Top Rated Provider (profile stats meet review count and rating rules)
  * 7. Normal Provider
  *
- * Within each tier, sorted by: approved review average DESC, approved review count DESC, created_at DESC
+ * Within each tier, sorted by: stored rating average DESC, stored review count DESC, created_at DESC
  */
 class MarketplaceRankingService
 {
@@ -36,8 +36,8 @@ class MarketplaceRankingService
         return $query
             ->addSelect(DB::raw($this->bucketExpression()))
             ->orderBy('bucket', 'desc')
-            ->orderByRaw($this->approvedRatingAverageExpression().' DESC')
-            ->orderByRaw($this->approvedReviewCountExpression().' DESC')
+            ->orderByDesc('profile_stats.rating_avg')
+            ->orderByDesc('profile_stats.reviews_count')
             ->orderBy('profiles.created_at', 'desc');
     }
 
@@ -57,8 +57,8 @@ class MarketplaceRankingService
                     ELSE NULL
                 END DESC
             ")
-            ->orderByRaw($this->approvedRatingAverageExpression().' DESC')
-            ->orderByRaw($this->approvedReviewCountExpression().' DESC')
+            ->orderByDesc('profile_stats.rating_avg')
+            ->orderByDesc('profile_stats.reviews_count')
             ->orderBy('profiles.created_at', 'desc');
     }
 
@@ -70,8 +70,8 @@ class MarketplaceRankingService
         return $query
             ->addSelect(DB::raw($this->categoryBucketExpression()))
             ->orderBy('bucket', 'desc')
-            ->orderByRaw($this->approvedRatingAverageExpression().' DESC')
-            ->orderByRaw($this->approvedReviewCountExpression().' DESC')
+            ->orderByDesc('profile_stats.rating_avg')
+            ->orderByDesc('profile_stats.reviews_count')
             ->orderBy('profiles.created_at', 'desc');
     }
 
@@ -83,8 +83,8 @@ class MarketplaceRankingService
         return $query
             ->addSelect(DB::raw($this->subcategoryBucketExpression()))
             ->orderBy('bucket', 'desc')
-            ->orderByRaw($this->approvedRatingAverageExpression().' DESC')
-            ->orderByRaw($this->approvedReviewCountExpression().' DESC')
+            ->orderByDesc('profile_stats.rating_avg')
+            ->orderByDesc('profile_stats.reviews_count')
             ->orderBy('profiles.created_at', 'desc');
     }
 
@@ -95,8 +95,8 @@ class MarketplaceRankingService
     {
         return $query
             ->whereRaw($this->topRatedPredicate())
-            ->orderByRaw($this->approvedRatingAverageExpression().' DESC')
-            ->orderByRaw($this->approvedReviewCountExpression().' DESC')
+            ->orderByDesc('profile_stats.rating_avg')
+            ->orderByDesc('profile_stats.reviews_count')
             ->orderBy('profiles.created_at', 'desc');
     }
 
@@ -108,7 +108,7 @@ class MarketplaceRankingService
      * Bucket 5: Top Category (expirable)
      * Bucket 4: Top Subcategory (expirable)
      * Bucket 3: Featured Provider (expirable)
-     * Bucket 2: Top Rated Provider (live approved-review eligibility)
+     * Bucket 2: Top Rated Provider (stored profile stats eligibility)
      * Bucket 1: Normal Provider
      */
     private function bucketExpression(): string
@@ -202,33 +202,9 @@ class MarketplaceRankingService
     private function topRatedPredicate(): string
     {
         return sprintf(
-            '(%s >= %d AND %s >= %.1F)',
-            $this->approvedReviewCountExpression(),
+            '(profile_stats.reviews_count >= %d AND profile_stats.rating_avg >= %.1F)',
             self::MIN_TOP_RATED_REVIEWS,
-            $this->approvedRatingAverageExpression(),
             self::MIN_TOP_RATED_RATING,
         );
-    }
-
-    private function approvedReviewCountExpression(): string
-    {
-        return "(
-            SELECT COUNT(*)
-            FROM reviews
-            WHERE reviews.profile_id = profiles.id
-              AND reviews.status = 'approved'
-              AND reviews.deleted_at IS NULL
-        )";
-    }
-
-    private function approvedRatingAverageExpression(): string
-    {
-        return "COALESCE((
-            SELECT AVG(reviews.rating)
-            FROM reviews
-            WHERE reviews.profile_id = profiles.id
-              AND reviews.status = 'approved'
-              AND reviews.deleted_at IS NULL
-        ), 0)";
     }
 }

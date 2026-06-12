@@ -103,10 +103,12 @@ Route::post('/onboarding/set-password', [OnboardingController::class, 'setPasswo
     ->middleware('throttle:onboarding.set-password')
     ->name('onboarding.set-password');
 
-// Debug: Display onboarding link
-Route::get('/onboarding-test/{token}', fn (string $token) => view('onboarding-link', [
-    'onboardingUrl' => route('onboarding.show', $token),
-]))->name('onboarding.test');
+// Debug: Display onboarding link — local environment only
+if (app()->environment('local')) {
+    Route::get('/onboarding-test/{token}', fn (string $token) => view('onboarding-link', [
+        'onboardingUrl' => route('onboarding.show', $token),
+    ]))->name('onboarding.test');
+}
 
 // Authenticated routes
 Route::middleware([

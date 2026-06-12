@@ -254,6 +254,9 @@ class PublicFrontendService
     public function provider(Profile $profile): array
     {
         return $this->inspectQueries(function () use ($profile): array {
+            // Check visibility before loading heavy relations — avoid wasted DB work on hidden profiles
+            abort_unless($this->visibilityService->isDiscoverable($profile), 404);
+
             // Load all required relations upfront with optimized queries
             $profile->load([
                 'user',
@@ -268,8 +271,6 @@ class PublicFrontendService
                 'approvedReviews' => fn ($query) => $query->orderByDesc('created_at'),
                 'approvedReviews.user',
             ]);
-
-            abort_unless($this->visibilityService->isDiscoverable($profile), 404);
 
             return [
                 'profile' => $profile,
@@ -439,13 +440,21 @@ class PublicFrontendService
     /** @return array{data: array<string, mixed>, queryStats: array<string, mixed>} */
     private function inspectQueries(callable $callback): array
     {
-        DB::flushQueryLog();
-        DB::enableQueryLog();
+        $debug = (bool) config('app.debug');
+
+        if ($debug) {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+        }
 
         $data = $callback();
-        $queries = DB::getQueryLog();
 
-        DB::disableQueryLog();
+        if ($debug) {
+            $queries = DB::getQueryLog();
+            DB::disableQueryLog();
+        } else {
+            $queries = [];
+        }
 
         return [
             'data' => $data,

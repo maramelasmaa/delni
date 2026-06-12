@@ -32,11 +32,10 @@ class FrontendController extends Controller
     public function search(SearchProfilesRequest $request): View
     {
         $searchPayload = $this->frontendService->search($request->validated());
-        $homePayload = $this->frontendService->homepage();
 
-        return view('public.home', array_merge($homePayload['data'], $searchPayload['data'], [
+        return view('public.home', $searchPayload['data'] + [
             'queryStats' => $searchPayload['queryStats'],
-        ]));
+        ]);
     }
 
     public function topRated(Request $request): View
@@ -102,6 +101,7 @@ class FrontendController extends Controller
 
     public function switchLocale(string $locale, Request $request): RedirectResponse
     {
+        // Delni is Arabic-only for MVP — locale is always forced to 'ar' intentionally.
         $request->session()->put('locale', 'ar');
         Cookie::queue('locale', 'ar', 60 * 24 * 365);
 

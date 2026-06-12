@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureReviewEligible;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserNotSuspended;
 use App\Http\Middleware\ProviderAuthenticate;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -24,8 +25,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust the reverse proxy / load balancer in front of the app so
+        // $request->ip() resolves the real client (IP-keyed rate limiters) and
+        // $request->secure() detects HTTPS terminated at the edge.
+        // TRUSTED_PROXIES defaults to loopback for the common Nginx/Apache + PHP-FPM
+        // single-host VPS setup; set it to the proxy CIDR (or '*' if unavoidable).
+        $trustedProxies = env('TRUSTED_PROXIES', '127.0.0.1');
+        $middleware->trustProxies(
+            at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)),
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
+
         $middleware->web(append: [
             SetLocale::class,
+            SecurityHeaders::class,
         ]);
         $middleware->alias([
             'account.locked' => EnsureAccountNotLocked::class,

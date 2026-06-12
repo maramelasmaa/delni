@@ -42,6 +42,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\ValidationException;
 
@@ -53,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
     {
         // Prevent N+1 queries by detecting lazy-loaded relationships in development
         Model::preventLazyLoading(! app()->isProduction());
+
+        // Behind a TLS-terminating proxy, force generated URLs/assets to HTTPS in production.
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+        }
 
         User::observe(UserObserver::class);
         Profile::observe(ProfileObserver::class);

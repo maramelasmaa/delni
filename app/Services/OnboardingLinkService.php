@@ -37,17 +37,16 @@ class OnboardingLinkService
             ]);
         }
 
-        // Resend actions should deliver immediately; Mail::send() queues ShouldQueue mailables.
+        // Resend actions should deliver immediately using the configured default mailer.
         $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
         Log::info('Resending provider onboarding email', [
             'provider_id' => $user->id,
             'email' => $user->email,
             'mail_mailer' => config('mail.default'),
-            'selected_mailer' => 'resend',
             'queue_connection' => config('queue.default'),
         ]);
 
-        Mail::mailer('resend')->sendNow(new SetPasswordMail(
+        Mail::sendNow(new SetPasswordMail(
             email: $user->email,
             setPasswordLink: $setPasswordLink,
             userName: $user->name,

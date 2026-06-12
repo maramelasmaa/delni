@@ -3,6 +3,7 @@
 namespace App\Filament\Provider\Resources;
 
 use App\Models\ProviderCredential;
+use App\Rules\SafeExternalUrl;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -64,6 +65,7 @@ class CredentialsResource extends Resource
                         ->placeholder('https://...')
                         ->helperText('رابط اختياري يمكن للعملاء من خلاله التحقق من صحة شهادتك.')
                         ->url()
+                        ->rules([new SafeExternalUrl])
                         ->maxLength(500),
                     Forms\Components\Textarea::make('notes')
                         ->label('ملاحظات إضافية')

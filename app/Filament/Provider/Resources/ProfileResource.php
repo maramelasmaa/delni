@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\Profile;
 use App\Models\ProviderType;
 use App\Models\Subcategory;
+use App\Rules\SafeExternalUrl;
 use App\Services\ProfileImageService;
 use Filament\Actions\EditAction;
 use Filament\Forms;
@@ -160,36 +161,42 @@ class ProfileResource extends Resource
                         ->placeholder('https://example.com')
                         ->helperText('اتركه فارغاً إذا لم يكن لديك موقع إلكتروني.')
                         ->url()
+                        ->rules([new SafeExternalUrl])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('instagram')
                         ->label('إنستاجرام')
                         ->placeholder('https://instagram.com/...')
                         ->helperText('رابط صفحتك على إنستاجرام (اختياري)')
                         ->url()
+                        ->rules([new SafeExternalUrl])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('facebook')
                         ->label('فيسبوك')
                         ->placeholder('https://facebook.com/...')
                         ->helperText('رابط صفحتك على فيسبوك (اختياري)')
                         ->url()
+                        ->rules([new SafeExternalUrl])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('linkedin')
                         ->label('لينكد إن')
                         ->placeholder('https://linkedin.com/...')
                         ->helperText('رابط ملفك على لينكد إن (اختياري)')
                         ->url()
+                        ->rules([new SafeExternalUrl])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('github')
                         ->label('جيتهاب')
                         ->placeholder('https://github.com/...')
                         ->helperText('رابط حسابك على جيتهاب (اختياري)')
                         ->url()
+                        ->rules([new SafeExternalUrl])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('map_url')
                         ->label('رابط موقعك على الخريطة')
                         ->placeholder('https://maps.google.com/...')
                         ->helperText('يساعد العملاء في الوصول إلى موقعك بسهولة.')
                         ->url()
+                        ->rules([new SafeExternalUrl])
                         ->maxLength(500),
                 ])
                 ->columns(2),
