@@ -87,6 +87,11 @@ class Profile extends Model
         return $this->hasMany(Review::class)->where('status', 'approved');
     }
 
+    public function userFavorites(): HasMany
+    {
+        return $this->hasMany(UserFavorite::class);
+    }
+
     // Scopes
 
     /**
@@ -101,6 +106,13 @@ class Profile extends Model
     public function scopeVisible(Builder $query): Builder
     {
         return app(ProfileVisibilityService::class)->applyVisibleQuery($query);
+    }
+
+    public function scopeWithPublicReviewAggregates(Builder $query): Builder
+    {
+        return $query
+            ->withCount('approvedReviews')
+            ->withAvg('approvedReviews', 'rating');
     }
 
     // Helpers

@@ -5,121 +5,73 @@
 @section('content')
 @php
     $totalCount = $profiles->total() ?? 0;
+    $visibleSubcategories = $category->subcategories->filter(fn ($subcategory) => (int) ($subcategory->discoverable_profiles_count ?? 0) > 0);
+    $cityFilterUrls = ($cities ?? collect())
+        ->mapWithKeys(fn ($city) => [$city->slug => route('public.category.city', [$category->slug, $city->slug])])
+        ->all();
 @endphp
 
-<div class="lp-wrapper">
-
-    {{-- App page header --}}
-    <header class="lp-header">
-        <a href="{{ route('public.categories') }}" class="lp-back" aria-label="الفئات">
-            <x-render-icon icon="heroicon-o-arrow-right" />
-        </a>
-        <div class="lp-header-body">
-            <span class="lp-label">فئة</span>
-            <h1 class="lp-title">{{ $category->localized_name }}</h1>
-            <span class="lp-count">{{ number_format($totalCount) }} مزود</span>
-        </div>
+<div class="lp-wrapper market-browse">
+    <x-marketplace-header
+        eyebrow="فئة"
+        :title="$category->localized_name ?? $category->name"
+        :count="number_format($totalCount) . ' مزود'"
+        :back-url="route('public.categories')"
+        back-label="الفئات"
+        description="اختر خدمة فرعية أو صف النتائج حسب المدينة والتقييم."
+    >
         @if($category->icon)
-            <div class="lp-header-icon">
+            <x-slot:icon>
                 <x-svg-icon :icon="$category->icon" size="22" />
-            </div>
+            </x-slot:icon>
         @endif
-    </header>
+    </x-marketplace-header>
 
-    {{-- Subcategory chips --}}
-    @if($category->subcategories->isNotEmpty())
-        <div class="lp-chips" role="list" aria-label="الفئات الفرعية">
-            <a href="{{ route('public.category', $category->slug) }}"
-               class="lp-chip {{ !request('subcategory_id') ? 'is-active' : '' }}"
-               role="listitem">
-                الكل
-                <small>{{ $totalCount }}</small>
-            </a>
-            @foreach($category->subcategories as $subcategory)
-                <a href="{{ route('public.subcategory', $subcategory->slug) }}"
-                   class="lp-chip"
-                   role="listitem">
-                    {{ $subcategory->localized_name ?? $subcategory->name }}
-                    <small>{{ $subcategory->discoverable_profiles_count ?? 0 }}</small>
-                </a>
-            @endforeach
-        </div>
-    @endif
+    <x-browse-trail :items="[
+        ['label' => 'الفئات', 'url' => route('public.categories')],
+        ['label' => $category->localized_name ?? $category->name, 'active' => true],
+    ]" />
 
-    {{-- Inline filter row --}}
-    <form method="GET" action="{{ url()->current() }}" class="lp-filter-row" id="lpFilterForm">
-        @if(isset($cities) && $cities->isNotEmpty())
-            <select name="city_id" class="lp-filter-select" onchange="this.form.submit()">
-                <option value="">كل المدن</option>
-                @foreach($cities as $city)
-                    <option value="{{ $city->id }}" @selected(request('city_id') == $city->id)>
-                        {{ $city->localized_name ?? $city->name }}
-                    </option>
-                @endforeach
-            </select>
-        @endif
+    <x-subcategory-rail
+        :items="$visibleSubcategories"
+        :all-url="route('public.category', $category->slug)"
+        all-label="كل الخدمات"
+        :all-count="$totalCount"
+    />
 
-        <select name="sort" class="lp-filter-select" onchange="this.form.submit()">
-            <option value="" @selected(!request('sort'))>الأحدث</option>
-            <option value="rating" @selected(request('sort') === 'rating')>الأعلى تقييماً</option>
-            <option value="reviews" @selected(request('sort') === 'reviews')>الأكثر تقييماً</option>
-        </select>
+    <x-browse-filters
+        :action="url()->current()"
+        :cities="$cities ?? collect()"
+        :reset-url="route('public.category', $category->slug)"
+        :city-urls="$cityFilterUrls"
+        :city-reset-url="route('public.category', $category->slug)"
+    />
 
-        @if(request()->anyFilled(['city_id', 'sort']))
-            <a href="{{ route('public.category', $category->slug) }}" class="lp-chip" style="border-color: rgba(241,98,15,.25); background:#FFF7ED; color:#F1620F;">
-                <x-render-icon icon="heroicon-o-x-mark" />
-                مسح
-            </a>
-        @endif
-    </form>
-
-    {{-- Results --}}
-    <div class="lp-results">
+    <section class="market-results">
         @if($profiles && $profiles->count() > 0)
             <x-provider-grid :providers="$profiles" :columns="2" />
-
-            @if($profiles->hasPages())
-                <nav class="lp-pagination" aria-label="Pagination">
-                    @if($profiles->onFirstPage())
-                        <span class="is-disabled">السابق</span>
-                    @else
-                        <a href="{{ $profiles->appends(request()->query())->previousPageUrl() }}">السابق</a>
-                    @endif
-
-                    <strong>{{ $profiles->currentPage() }} / {{ $profiles->lastPage() }}</strong>
-
-                    @if($profiles->hasMorePages())
-                        <a href="{{ $profiles->appends(request()->query())->nextPageUrl() }}">التالي</a>
-                    @else
-                        <span class="is-disabled">التالي</span>
-                    @endif
-                </nav>
-            @endif
+            <x-marketplace-pagination :paginator="$profiles" />
         @else
             <x-empty-state
                 icon="heroicon-o-magnifying-glass"
-                title="ما لقيناش نتائج"
-                message="جرّب مدينة ثانية أو اختار فئة فرعية مختلفة."
+                title="لا توجد نتائج"
+                message="جرب مدينة أخرى أو اختر خدمة فرعية مختلفة."
                 actionLabel="مسح الفلاتر"
                 actionUrl="{{ route('public.category', $category->slug) }}"
             />
         @endif
-    </div>
-
+    </section>
 </div>
 
 @push('styles')
 <style>
-    .lp-header-icon {
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-        background: rgba(241,98,15,.08);
-        color: var(--delni-primary);
+    .market-browse {
+        display: grid;
+        gap: .85rem;
+    }
+
+    .market-results {
+        min-width: 0;
     }
 </style>
 @endpush

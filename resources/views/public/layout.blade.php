@@ -3,7 +3,8 @@
       dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name'))</title>
 
     <link rel="icon" type="image/png" href="{{ asset('images/icon-192.png') }}" sizes="192x192">
@@ -15,6 +16,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest.json">
 
+    <script>
+        (function(){var t=localStorage.getItem('delni-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -25,6 +30,23 @@
     ])
 
     @stack('styles')
+
+    @php
+        $shouldRegisterPublicPwa = request()->routeIs(
+            'home',
+            'public.search',
+            'public.top-rated',
+            'public.categories',
+            'public.category',
+            'public.subcategory',
+            'public.city',
+            'public.provider',
+            'contact',
+            'privacy',
+            'terms',
+            'disclaimer',
+        );
+    @endphp
 
     <style>
         :root {
@@ -47,6 +69,16 @@
             /* PWA Native UI Specifications */
             --pwa-nav-height: 64px;
             --pwa-header-height: 60px;
+        }
+
+        [data-theme="dark"] {
+            --delni-bg: #0F172A;
+            --delni-navy: #F1F5F9;
+            --delni-border: #1E293B;
+            --delni-muted: #94A3B8;
+            --delni-gray: #475569;
+            --delni-shadow-sm: 0 8px 20px rgba(0,0,0,.3);
+            --delni-shadow-md: 0 16px 36px rgba(0,0,0,.4);
         }
 
         * {
@@ -73,7 +105,7 @@
             align-items: center;
             justify-content: center;
             gap: .85rem;
-            background: var(--delni-navy);
+            background: #0B1A34;
             opacity: 1;
             transition: opacity .4s ease;
         }
@@ -89,7 +121,7 @@
             color: #fff;
             font-size: 1.6rem;
             font-weight: 950;
-            letter-spacing: -.03em;
+            letter-spacing: 0;
         }
 
         .delni-splash.is-done {
@@ -119,9 +151,12 @@
         .delni-header {
             height: calc(var(--pwa-header-height) + env(safe-area-inset-top));
             padding-top: env(safe-area-inset-top);
-            background: #ffffff;
+            background: rgba(255, 255, 255, .96);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--delni-border);
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 100;
             flex-shrink: 0;
         }
@@ -140,7 +175,7 @@
             gap: .5rem;
             font-size: 1.2rem;
             font-weight: 950;
-            letter-spacing: -.04em;
+            letter-spacing: 0;
         }
 
         .delni-logo__mark {
@@ -148,13 +183,64 @@
             height: 36px;
             border-radius: 10px;
             overflow: hidden;
-            background: var(--delni-navy);
+            background: #0B1A34;
         }
 
         .delni-logo__mark img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .delni-header__quick {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+        }
+
+        .delni-icon-btn {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: #F8FAFC;
+            border: 1px solid var(--delni-border);
+            color: var(--delni-navy);
+            transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+        }
+
+        .delni-icon-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .delni-icon-btn:active {
+            transform: scale(.96);
+        }
+
+        .delni-offline-banner {
+            position: fixed;
+            top: calc(var(--pwa-header-height) + env(safe-area-inset-top) + .6rem);
+            inset-inline: .75rem;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: .65rem .9rem;
+            border-radius: 16px;
+            background: #0B1A34;
+            color: #fff;
+            box-shadow: 0 18px 40px rgba(11, 26, 52, .18);
+            font-size: .82rem;
+            font-weight: 850;
+            text-align: center;
+        }
+
+        .delni-offline-banner.is-visible {
+            display: flex;
         }
 
         /* Dedicated App Viewport Container */
@@ -204,6 +290,21 @@
             gap: 4px;
             transition: color 0.2s ease;
             text-decoration: none;
+        }
+
+        .pwa-nav-item:focus-visible,
+        .delni-icon-btn:focus-visible,
+        button:focus-visible,
+        .lp-chip:focus-visible,
+        .lp-filter-select:focus-visible,
+        .lp-pagination a:focus-visible {
+            outline: 3px solid rgba(241, 98, 15, .28);
+            outline-offset: 2px;
+        }
+
+        .is-loading {
+            opacity: .72;
+            pointer-events: none;
         }
 
         .pwa-nav-item.active {
@@ -260,10 +361,10 @@
             display: flex;
             align-items: center;
             gap: .75rem;
-            padding: .85rem 1rem;
+            padding: .8rem .95rem;
             background: #fff;
             border: 1px solid var(--delni-border);
-            border-radius: 20px;
+            border-radius: 18px;
             box-shadow: var(--delni-shadow-sm);
         }
 
@@ -322,6 +423,7 @@
             flex: 0 0 auto;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: .38rem;
             min-height: 38px;
             padding: .45rem .85rem;
@@ -356,6 +458,26 @@
             color: var(--delni-primary);
         }
 
+        .lp-chip--reset {
+            border-color: rgba(241,98,15,.25);
+            background: #FFF7ED;
+            color: var(--delni-primary);
+        }
+
+        .lp-chip svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .lp-chips--compact {
+            padding-top: .3rem;
+        }
+
+        .lp-chips--service {
+            padding-top: .55rem;
+        }
+
         .lp-chip.is-active small {
             background: rgba(241,98,15,.15);
             color: var(--delni-primary);
@@ -364,6 +486,7 @@
         /* Inline filter selects */
         .lp-filter-row {
             display: flex;
+            align-items: center;
             gap: .5rem;
             overflow-x: auto;
             scrollbar-width: none;
@@ -392,6 +515,7 @@
 
         /* Results section */
         .lp-results { margin-top: .65rem; }
+        .lp-results--search { margin-top: .85rem; }
 
         .lp-results-head {
             display: flex;
@@ -411,6 +535,7 @@
             color: var(--delni-navy);
             font-size: 1.02rem;
             font-weight: 950;
+            line-height: 1.35;
         }
 
         /* Pagination */
@@ -449,14 +574,195 @@
             .lp-wrapper { padding-top: 1rem; }
             .lp-title { font-size: 1.35rem; }
         }
+
+        /* Header icon badge — right-side accent used on listing pages */
+        .lp-header-icon {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: rgba(241, 98, 15, .08);
+            color: var(--delni-primary);
+        }
+        .lp-header-icon svg { width: 22px; height: 22px; }
+
+        /* Provider CTA banner — shared across home, categories */
+        .lp-cta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1.2rem;
+            padding: 1rem 1.1rem;
+            border-radius: 20px;
+            background: var(--delni-navy);
+            color: #fff;
+        }
+        .lp-cta > div { flex: 1; min-width: 0; }
+        .lp-cta span {
+            display: block;
+            color: var(--delni-primary);
+            font-size: .72rem;
+            font-weight: 900;
+            margin-bottom: .2rem;
+        }
+        .lp-cta h2 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 950;
+            color: #fff;
+        }
+        .lp-cta p {
+            margin: .25rem 0 0;
+            color: rgba(255, 255, 255, .7);
+            font-size: .78rem;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+        .lp-cta a {
+            flex-shrink: 0;
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            padding: .55rem 1rem;
+            border-radius: 12px;
+            background: #fff;
+            color: var(--delni-navy);
+            font-size: .82rem;
+            font-weight: 950;
+            text-decoration: none;
+        }
+        @media (max-width: 400px) { .lp-cta { flex-direction: column; align-items: flex-start; } }
         /* ── end shared listing-page ──────────────────────────────────────── */
+
+        /* ── Dark mode overrides ──────────────────────────────────────────── */
+        [data-theme="dark"] body {
+            background: var(--delni-bg);
+            color: var(--delni-navy);
+        }
+
+        /* Shell chrome */
+        [data-theme="dark"] .delni-header {
+            background: #0F172A;
+            border-color: #1E293B;
+        }
+        [data-theme="dark"] .delni-logo {
+            color: #F1F5F9;
+        }
+        [data-theme="dark"] .delni-logo__mark {
+            background: #0B1A34;
+        }
+        [data-theme="dark"] .pwa-bottom-nav {
+            background: rgba(15, 23, 42, 0.96);
+            border-color: #1E293B;
+        }
+        [data-theme="dark"] .delni-footer {
+            background: #0F172A;
+            border-color: #1E293B;
+        }
+
+        /* lp-* system */
+        [data-theme="dark"] .lp-header {
+            background: #1E293B;
+            border-color: #334155;
+        }
+        [data-theme="dark"] .lp-back {
+            background: #0F172A;
+            border-color: #334155;
+            color: #F1F5F9;
+        }
+        [data-theme="dark"] .lp-count { color: #94A3B8; }
+        [data-theme="dark"] .lp-chip {
+            background: #1E293B;
+            border-color: #334155;
+            color: #F1F5F9;
+        }
+        [data-theme="dark"] .lp-chip small {
+            background: #0F172A;
+            color: #94A3B8;
+        }
+        [data-theme="dark"] .lp-chip.is-active {
+            background: rgba(241,98,15,.15);
+            border-color: rgba(241,98,15,.35);
+        }
+        [data-theme="dark"] .lp-filter-select {
+            background: #1E293B;
+            border-color: #334155;
+            color: #F1F5F9;
+            color-scheme: dark;
+        }
+        [data-theme="dark"] .lp-pagination a,
+        [data-theme="dark"] .lp-pagination span {
+            background: #1E293B;
+            border-color: #334155;
+            color: #F1F5F9;
+        }
+        [data-theme="dark"] .lp-pagination strong { color: #94A3B8; }
+        [data-theme="dark"] .lp-pagination .is-disabled {
+            background: #0F172A;
+            color: #475569;
+        }
+        [data-theme="dark"] .lp-cta {
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #F1F5F9;
+        }
+        [data-theme="dark"] .lp-cta h2 { color: #F1F5F9; }
+        [data-theme="dark"] .lp-cta span { color: var(--delni-primary); }
+        [data-theme="dark"] .lp-cta a {
+            background: #0F172A;
+            color: #F1F5F9;
+        }
+        [data-theme="dark"] .lp-results-head h2 { color: #F1F5F9; }
+        [data-theme="dark"] .delni-header .delni-icon-btn {
+            background: #111827;
+            border-color: #334155;
+            color: #F8FAFC;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+        }
+        [data-theme="dark"] .delni-header .delni-icon-btn:hover,
+        [data-theme="dark"] .delni-header .delni-icon-btn:focus-visible {
+            background: #1E293B;
+            border-color: rgba(241,98,15,.38);
+            color: #F1620F;
+        }
+
+        /* Provider card (pc-*) */
+        [data-theme="dark"] .pc-card {
+            background: #1E293B;
+            border-color: #334155;
+        }
+        [data-theme="dark"] .pc-name { color: #F1F5F9; }
+        [data-theme="dark"] .pc-meta-item { color: #94A3B8; }
+        [data-theme="dark"] .pc-tag {
+            background: #0F172A;
+            border-color: #334155;
+            color: #94A3B8;
+        }
+        [data-theme="dark"] .pc-btn--primary { /* keep as-is (orange) */ }
+        [data-theme="dark"] .pc-btn--wa {
+            background: #0D2B1D;
+            border-color: rgba(37,211,102,.2);
+            color: #4ADE80;
+        }
+
+        /* Desktop ghost button */
+        [data-theme="dark"] .delni-btn--ghost {
+            background: #1E293B;
+            color: #F1F5F9;
+            border-color: #334155;
+        }
+        /* ── end dark mode overrides ──────────────────────────────────────── */
 
         /* Wide Screen Layout Desktop Enhancements */
         @media (min-width: 1025px) {
             html, body { overflow: visible; }
             .pwa-shell { height: auto; }
             .delni-main { overflow-y: visible; padding-bottom: 0; }
-            .pwa-tab-bar { display: none; }
+            .pwa-bottom-nav { display: none; }
             .delni-nav { display: flex; align-items: center; gap: .35rem; }
             .delni-actions { display: flex; align-items: center; gap: .6rem; }
 
@@ -515,10 +821,66 @@
                 color: var(--delni-primary);
             }
         }
+
+        .pc-fav-toast,
+        .delni-auth-toast {
+            position: fixed;
+            inset-inline-start: 50%;
+            bottom: calc(var(--pwa-nav-height) + env(safe-area-inset-bottom, 0px) + .75rem);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            max-width: min(calc(100vw - 2rem), 420px);
+            padding: .68rem .85rem;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 16px;
+            background: #0B1A34;
+            color: #fff;
+            box-shadow: 0 18px 44px rgba(2,6,23,.28);
+            font-size: .84rem;
+            font-weight: 800;
+            line-height: 1.5;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(50%) translateY(1rem);
+            transition: opacity .22s ease, transform .22s ease;
+        }
+
+        .pc-fav-toast.is-visible,
+        .delni-auth-toast.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(50%) translateY(0);
+        }
+
+        .pc-fav-toast span,
+        .delni-auth-toast span {
+            min-width: 0;
+        }
+
+        .pc-fav-toast a,
+        .delni-auth-toast a {
+            flex-shrink: 0;
+            color: #FDBA74;
+            font-weight: 950;
+            text-decoration: none;
+        }
+
+        [data-theme="dark"] .pc-fav-toast,
+        [data-theme="dark"] .delni-auth-toast {
+            border-color: #334155;
+            background: #1E293B;
+            color: #F1F5F9;
+        }
     </style>
 </head>
 
 <body>
+    <div class="delni-offline-banner" id="delniOfflineBanner" role="status">
+        أنت غير متصل بالإنترنت حاليا. بعض بيانات مقدمي الخدمات قد لا تكون محدثة.
+    </div>
+
     <div class="delni-splash" id="delniSplash" aria-hidden="true">
         <img src="{{ asset('images/icon-192.png') }}" alt="" width="96" height="96">
         <strong>دلني</strong>
@@ -541,21 +903,36 @@
     </script>
 
     <div class="pwa-shell">
+        <header class="delni-header">
+            <div class="delni-header__inner">
+                <a href="{{ route('home') }}" class="delni-logo" aria-label="{{ config('app.name') }}">
+                    <span class="delni-logo__mark">
+                        <img src="{{ asset('images/icon-192.png') }}" alt="" width="36" height="36">
+                    </span>
+                    <span>{{ config('app.name') }}</span>
+                </a>
+
+                <nav class="delni-nav" aria-label="Primary navigation">
+                    <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'is-active' : '' }}">الرئيسية</a>
+                    <a href="{{ route('public.top-rated') }}" class="{{ request()->routeIs('public.top-rated') ? 'is-active' : '' }}">الأعلى تقييما</a>
+                    <a href="{{ route('favorites.index') }}" class="{{ request()->routeIs('favorites.*') ? 'is-active' : '' }}">المفضلة</a>
+                    <a href="{{ route('settings') }}" class="{{ request()->routeIs('settings') || request()->routeIs('about') ? 'is-active' : '' }}">الإعدادات</a>
+                </nav>
+
+                <div class="delni-header__quick">
+                    <a href="{{ route('public.search') }}" class="delni-icon-btn" aria-label="بحث">
+                        <x-render-icon icon="heroicon-o-magnifying-glass" />
+                    </a>
+                    <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" class="delni-icon-btn" aria-label="الحساب">
+                        <x-render-icon icon="app-account" />
+                    </a>
+                </div>
+            </div>
+        </header>
 
         <main class="delni-main">
             <div class="pwa-view-boundary">
                 @yield('content')
-
-                <footer class="delni-footer">
-                    <div class="delni-footer__inner">
-                        <span>© {{ date('Y') }} دلني. جميع الحقوق محفوظة.</span>
-                        <div>
-                            <a href="{{ route('privacy') }}">الخصوصية</a>
-                            ·
-                            <a href="{{ route('terms') }}">الشروط</a>
-                        </div>
-                    </div>
-                </footer>
             </div>
         </main>
 
@@ -568,25 +945,81 @@
                 <x-render-icon icon="app-star" />
                 <span>الأعلى تقييماً</span>
             </a>
-            <a href="{{ route('contact') }}" class="pwa-nav-item {{ request()->routeIs('contact') ? 'active' : '' }}">
-                <x-render-icon icon="app-contact" />
-                <span>اتصل بنا</span>
+            <a href="{{ route('favorites.index') }}" class="pwa-nav-item {{ request()->routeIs('favorites.*') ? 'active' : '' }}">
+                <x-render-icon icon="app-heart" />
+                <span>المفضلة</span>
             </a>
-            <a href="{{ route('dashboard') }}" class="pwa-nav-item {{ request()->routeIs('dashboard') || request()->routeIs('login') ? 'active' : '' }}">
+            <a href="{{ route('settings') }}" class="pwa-nav-item {{ request()->routeIs('settings') || request()->routeIs('about') ? 'active' : '' }}">
                 <x-render-icon icon="app-account" />
-                <span>{{ Auth::check() ? 'لوحتي' : 'تسجيل' }}</span>
+                <span>الإعدادات</span>
             </a>
         </nav>
     </div>
 
+    <script>
+        window.DelniAuthToast = window.DelniAuthToast || (() => {
+            let toast = null;
+            let timeoutId = null;
+
+            return {
+                show(message, actionLabel, actionUrl) {
+                    if (!toast) {
+                        toast = document.createElement('div');
+                        toast.className = 'delni-auth-toast';
+                        toast.setAttribute('role', 'status');
+                        toast.setAttribute('aria-live', 'polite');
+                        document.body.appendChild(toast);
+                    }
+
+                    window.clearTimeout(timeoutId);
+                    toast.innerHTML = '<span></span><a></a>';
+                    toast.querySelector('span').textContent = message;
+
+                    const action = toast.querySelector('a');
+                    action.textContent = actionLabel;
+                    action.href = actionUrl;
+
+                    requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+                    timeoutId = window.setTimeout(() => {
+                        toast.classList.remove('is-visible');
+                    }, 5000);
+                },
+            };
+        })();
+    </script>
+
     @stack('scripts')
 
     <script>
-        if ('serviceWorker' in navigator) {
+        (() => {
+            const banner = document.getElementById('delniOfflineBanner');
+            const syncOnlineState = () => banner?.classList.toggle('is-visible', !navigator.onLine);
+
+            window.addEventListener('online', syncOnlineState);
+            window.addEventListener('offline', syncOnlineState);
+            syncOnlineState();
+        })();
+
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+
+            if (!(form instanceof HTMLFormElement) || form.dataset.noBusy === 'true') {
+                return;
+            }
+
+            const submitter = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+            submitter?.classList.add('is-loading');
+            submitter?.setAttribute('aria-busy', 'true');
+        });
+
+        @if($shouldRegisterPublicPwa)
+        if ('serviceWorker' in navigator && window.isSecureContext) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js');
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
             });
         }
+        @endif
     </script>
 </body>
 </html>

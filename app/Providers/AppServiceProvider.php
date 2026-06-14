@@ -16,6 +16,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Observers\PortfolioImageObserver;
 use App\Observers\ProfileObserver;
+use App\Observers\ProfilePublicCacheObserver;
 use App\Observers\ProviderAssetLimitObserver;
 use App\Observers\ReviewObserver;
 use App\Observers\SubscriptionObserver;
@@ -43,6 +44,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\ValidationException;
 
@@ -62,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
         Profile::observe(ProfileObserver::class);
+        Profile::observe(ProfilePublicCacheObserver::class);
         ProviderLink::observe(ProviderAssetLimitObserver::class);
         PortfolioItem::observe(ProviderAssetLimitObserver::class);
         PortfolioImage::observe(ProviderAssetLimitObserver::class);
@@ -80,6 +83,25 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ProviderLink::class, ProviderLinkPolicy::class);
         Gate::policy(PortfolioImage::class, PortfolioImagePolicy::class);
         Gate::policy(ProviderCredential::class, ProviderCredentialPolicy::class);
+
+        View::composer('components.provider-card', function ($view): void {
+            $user = request()->user();
+            $favoriteProfileIds = [];
+
+            if ($user !== null) {
+                $favoriteProfileIds = request()->attributes->get('favorite_profile_ids');
+
+                if (! is_array($favoriteProfileIds)) {
+                    $favoriteProfileIds = $user->favorites()
+                        ->pluck('profile_id')
+                        ->all();
+
+                    request()->attributes->set('favorite_profile_ids', $favoriteProfileIds);
+                }
+            }
+
+            $view->with('favoriteProfileIds', $favoriteProfileIds);
+        });
 
         Event::listen(Attempting::class, function (Attempting $event) {
             try {

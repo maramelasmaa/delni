@@ -6,6 +6,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -100,6 +101,16 @@ class User extends Authenticatable implements FilamentUser
     public function onboardingTokens(): HasMany
     {
         return $this->hasMany(OnboardingToken::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(UserFavorite::class);
+    }
+
+    public function favoriteProfiles(): BelongsToMany
+    {
+        return $this->belongsToMany(Profile::class, 'user_favorites')->withTimestamps(false)->orderByPivot('created_at', 'desc');
     }
 
     public function isAdmin(): bool

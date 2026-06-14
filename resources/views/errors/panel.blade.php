@@ -1,167 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Error - {{ config('app.name') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #F1620F;
-            --navy: #0B1A34;
-            --bg: #FCFBFB;
-            --surface: #FFFFFF;
-            --border: #E7E7E7;
-            --muted: #5D5959;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--navy);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin: 0;
+            display: grid;
+            place-items: center;
             padding: 1rem;
-            line-height: 1.7;
-            -webkit-font-smoothing: antialiased;
+            background: #FCFBFB;
+            color: #0B1A34;
+            font-family: Cairo, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.8;
         }
-
-        .error-container {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: clamp(1.5rem, 4vw, 2.5rem);
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 4px 12px rgba(11, 26, 52, 0.03);
+        .panel-error {
+            width: min(100%, 440px);
+            padding: clamp(1.25rem, 4vw, 1.75rem);
+            border: 1px solid #E7E7E7;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 12px 30px rgba(11, 26, 52, .05);
             text-align: center;
         }
-
-        .error-code {
-            font-size: clamp(2.5rem, 10vw, 3.5rem);
+        .panel-error__code {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            min-height: 34px;
+            margin-bottom: .85rem;
+            padding: .25rem .75rem;
+            border-radius: 999px;
+            background: #FFF7ED;
+            color: #F1620F;
+            font-size: .9rem;
+            font-weight: 950;
+        }
+        .panel-error h1 {
+            margin: 0;
+            font-size: clamp(1.15rem, 4vw, 1.35rem);
+            line-height: 1.45;
+            font-weight: 950;
+        }
+        .panel-error p {
+            margin: .55rem auto 0;
+            color: #5D5959;
+            font-size: .92rem;
+            line-height: 1.85;
+            font-weight: 650;
+        }
+        .panel-error button {
+            min-height: 46px;
+            margin-top: 1.15rem;
+            padding: .7rem 1rem;
+            border: 0;
+            border-radius: 14px;
+            background: #F1620F;
+            color: #fff;
+            font: inherit;
+            font-size: .9rem;
             font-weight: 900;
-            color: var(--navy);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.03em;
-        }
-
-        .error-title {
-            font-size: clamp(1.5rem, 3vw, 1.8rem);
-            font-weight: 900;
-            color: var(--navy);
-            margin-bottom: 1rem;
-            letter-spacing: -0.02em;
-        }
-
-        .error-message {
-            color: var(--muted);
-            font-size: 0.95rem;
-            line-height: 1.8;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-        }
-
-        .back-button {
-            display: inline-block;
-            background: var(--primary);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 700;
-            transition: background 0.2s ease;
-            border: none;
             cursor: pointer;
         }
-
-        .back-button:hover {
-            background: #D9550C;
-        }
-
-        .debug-info {
+        .panel-error__debug {
+            margin-top: 1rem;
+            padding-top: .9rem;
+            border-top: 1px solid #E7E7E7;
+            color: #5D5959;
+            direction: ltr;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: .75rem;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
             text-align: left;
-            background: #FCFBFB;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1.5rem;
-            border-top: 1px solid var(--border);
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 0.8rem;
-            color: var(--muted);
-            overflow-x: auto;
-            line-height: 1.5;
-        }
-
-        .debug-info strong {
-            color: var(--navy);
-            font-weight: 700;
-        }
-
-        @media (max-width: 640px) {
-            .error-container {
-                padding: 1.25rem;
-            }
-
-            .error-code {
-                font-size: 2.2rem;
-                margin-bottom: 0.4rem;
-            }
-
-            .error-title {
-                font-size: 1.4rem;
-                margin-bottom: 0.75rem;
-            }
-
-            .error-message {
-                font-size: 0.9rem;
-                margin-bottom: 1.25rem;
-            }
-
-            .back-button {
-                padding: 0.65rem 1.25rem;
-                font-size: 0.9rem;
-            }
-
-            .debug-info {
-                padding: 0.75rem;
-                margin-top: 1.25rem;
-                font-size: 0.75rem;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="error-container">
-        <div class="error-code">⚠️</div>
-        <div class="error-title">An Error Occurred</div>
-        <div class="error-message">
-            We encountered an issue processing your request.<br>
-            Please try again or contact support if the problem persists.
-        </div>
+    <main class="panel-error">
+        <span class="panel-error__code">!</span>
+        <h1>Unable to complete this request</h1>
+        <p>Please try again. If the issue continues, contact support.</p>
+
         @if(config('app.debug') && isset($exception))
-            <div class="debug-info">
+            <div class="panel-error__debug">
                 <strong>{{ get_class($exception) }}:</strong> {{ $exception->getMessage() }}
                 @if($exception->getFile())
                     <br><br><strong>File:</strong> {{ $exception->getFile() }}:{{ $exception->getLine() }}
                 @endif
             </div>
         @endif
-        <button class="back-button" onclick="history.back()">Go Back</button>
-    </div>
+
+        <button type="button" onclick="history.back()">Go back</button>
+    </main>
 </body>
 </html>

@@ -25,10 +25,16 @@ class SocialiteController extends Controller
             $googleUser = $this->googleAuth->getGoogleUser();
             $user = $this->googleAuth->findOrCreateUser($googleUser);
 
-            $this->googleAuth->assignUserRole($user);
-            Auth::login($user);
+            if (!$user->is_active || $user->is_suspended) {
+                Auth::logout();
+                return redirect()->route('login')
+                    ->withErrors(['email' => __('messages.account_suspended')]);
+            }
 
-            return redirect()->route('home');
+            $this->googleAuth->assignUserRole($user);
+            Auth::login($user, remember: true);
+
+            return redirect()->intended(route('home'));
         } catch (\Exception $e) {
             return redirect()->route('login')
                 ->withErrors(['google' => __('messages.google_auth_failed')]);

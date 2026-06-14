@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\ProfileCompletenessService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Context;
 
 class UserObserver
@@ -35,6 +36,7 @@ class UserObserver
     {
         if ($user->wasChanged('is_suspended')) {
             $this->logSuspensionChange($user);
+            $this->clearPublicCacheOnSuspension();
         }
 
         if ($user->wasChanged('password')) {
@@ -61,6 +63,8 @@ class UserObserver
         $user->profile?->delete();
 
         SoftDeleteUserProfileJob::dispatch($user->id)->afterCommit();
+
+        $this->clearPublicCacheOnSuspension();
 
         $this->activityLog->log(
             actorId: Context::get('actor_id') ?? Auth::id(),
@@ -90,5 +94,12 @@ class UserObserver
                 properties: ['reason' => $user->reinstatement_reason],
             );
         }
+    }
+
+    private function clearPublicCacheOnSuspension(): void
+    {
+        Cache::forget('frontend.profile_counts.profiles_category_id');
+        Cache::forget('frontend.profile_counts.profiles_city_id');
+        Cache::forget('frontend.profile_counts.subcategory_id');
     }
 }

@@ -14,6 +14,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PublicFrontendService
@@ -143,7 +144,30 @@ class PublicFrontendService
     public function subcategory(Subcategory $subcategory, Request $request): array
     {
         return $this->inspectQueries(function () use ($subcategory, $request): array {
-            $subcategory->load('category', 'icon');
+            $subcategoryCounts = $this->profileCountsBySubcategory();
+            $categoryCounts = $this->profileCountsBy('profiles.category_id');
+
+            $subcategory->load([
+                'icon',
+                'category' => fn ($query) => $query->with([
+                    'subcategories' => fn ($query) => $query
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->with('icon'),
+                ]),
+            ]);
+
+            $subcategory->category?->setAttribute(
+                'discoverable_profiles_count',
+                (int) ($categoryCounts[$subcategory->category_id] ?? 0)
+            );
+
+            $subcategory->category?->subcategories->each(
+                fn (Subcategory $sibling) => $sibling->setAttribute(
+                    'discoverable_profiles_count',
+                    (int) ($subcategoryCounts[$sibling->id] ?? 0)
+                )
+            );
 
             $profiles = $this->paginateProfiles(
                 $this->rankingService
@@ -198,12 +222,12 @@ class PublicFrontendService
         return $this->inspectQueries(function () use ($request): array {
             $query = $this->discoverableProfilesQuery();
 
-            if ($request->filled('city_id')) {
-                $query->where('profiles.city_id', $request->integer('city_id'));
+            if ($cityId = $this->cityFilterId($request)) {
+                $query->where('profiles.city_id', $cityId);
             }
 
-            if ($request->filled('category_id')) {
-                $query->where('profiles.category_id', $request->integer('category_id'));
+            if ($categoryId = $this->categoryFilterId($request)) {
+                $query->where('profiles.category_id', $categoryId);
             }
 
             $this->applyKeywordFilter($query, (string) $request->query('keyword', ''));
@@ -220,7 +244,7 @@ class PublicFrontendService
                 'providerCount' => $profiles->total(),
                 'categories' => $this->activeCategories(),
                 'cities' => $this->activeCities(),
-                'filters' => $request->only(['city_id', 'category_id', 'keyword']),
+                'filters' => $request->only(['city', 'city_id', 'category', 'category_id', 'keyword']),
             ];
         });
     }
@@ -236,13 +260,12 @@ class PublicFrontendService
                 ->with(['icon', 'subcategories' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')->with('icon')])
                 ->orderBy('sort_order')
                 ->get()
-                ->each(function (Category $category) use ($categoryCounts) {
+                ->each(function (Category $category) use ($categoryCounts, $subcategoryCounts) {
                     $category->setAttribute('discoverable_profiles_count', (int) ($categoryCounts[$category->id] ?? 0));
-                })
-                ->each(function (Category $category) use ($subcategoryCounts) {
-                    $category->subcategories->each(function (Subcategory $subcategory) use ($subcategoryCounts) {
-                        $subcategory->setAttribute('discoverable_profiles_count', (int) ($subcategoryCounts[$subcategory->id] ?? 0));
-                    });
+                    $category->subcategories->each(fn (Subcategory $subcategory) => $subcategory->setAttribute(
+                        'discoverable_profiles_count',
+                        (int) ($subcategoryCounts[$subcategory->id] ?? 0)
+                    ));
                 });
 
             return [
@@ -289,6 +312,7 @@ class PublicFrontendService
         $query = Profile::query()
             ->without('user')
             ->select('profiles.*')
+            ->withPublicReviewAggregates()
             ->join('users', 'users.id', '=', 'profiles.user_id')
             ->join('profile_stats', 'profile_stats.profile_id', '=', 'profiles.id');
 
@@ -299,11 +323,47 @@ class PublicFrontendService
     /** @param Builder<Profile> $query */
     private function applyArchiveFilters(Builder $query, Request $request): Builder
     {
-        if ($request->filled('city_id')) {
-            $query->where('profiles.city_id', $request->integer('city_id'));
+        if ($cityId = $this->cityFilterId($request)) {
+            $query->where('profiles.city_id', $cityId);
         }
 
         return $query;
+    }
+
+    private function cityFilterId(Request $request): ?int
+    {
+        if ($request->filled('city_id')) {
+            return $request->integer('city_id');
+        }
+
+        if (! $request->filled('city')) {
+            return null;
+        }
+
+        $id = City::query()
+            ->where('slug', (string) $request->query('city'))
+            ->where('is_active', true)
+            ->value('id');
+
+        return $id ? (int) $id : null;
+    }
+
+    private function categoryFilterId(Request $request): ?int
+    {
+        if ($request->filled('category_id')) {
+            return $request->integer('category_id');
+        }
+
+        if (! $request->filled('category')) {
+            return null;
+        }
+
+        $id = Category::query()
+            ->where('slug', (string) $request->query('category'))
+            ->where('is_active', true)
+            ->value('id');
+
+        return $id ? (int) $id : null;
     }
 
     /** @param Builder<Profile> $query */
@@ -363,12 +423,6 @@ class PublicFrontendService
         };
     }
 
-    /** @param EloquentCollection<int, Profile> $profiles */
-    private function loadProviderCardRelations(EloquentCollection $profiles): EloquentCollection
-    {
-        return $profiles->loadMissing(['stats', 'city', 'category', 'subcategories']);
-    }
-
     /**
      * @param  EloquentCollection<int, Profile>  $profiles
      */
@@ -395,29 +449,36 @@ class PublicFrontendService
     /** @return array<int, int> */
     private function profileCountsBy(string $column): array
     {
-        return $this->discoverableProfilesQuery()
+        $key = 'frontend.profile_counts.'.str_replace('.', '_', $column);
+
+        return Cache::flexible($key, [60, 300], fn () => $this->discoverableProfilesQuery()
             ->select($column, DB::raw('COUNT(*) as aggregate'))
             ->groupBy($column)
             ->pluck('aggregate', $column)
             ->map(fn ($count) => (int) $count)
-            ->all();
+            ->all()
+        );
     }
 
     /** @return array<int, int> */
     private function profileCountsBySubcategory(): array
     {
-        return $this->discoverableProfilesQuery()
+        return Cache::flexible('frontend.profile_counts.subcategory_id', [60, 300], fn () => $this->discoverableProfilesQuery()
             ->join('profile_subcategory', 'profile_subcategory.profile_id', '=', 'profiles.id')
             ->select('profile_subcategory.subcategory_id', DB::raw('COUNT(*) as aggregate'))
             ->groupBy('profile_subcategory.subcategory_id')
             ->pluck('aggregate', 'profile_subcategory.subcategory_id')
             ->map(fn ($count) => (int) $count)
-            ->all();
+            ->all()
+        );
     }
 
     private function activeCategories(): EloquentCollection
     {
-        return Category::query()->where('is_active', true)->orderBy('sort_order')->get();
+        return Category::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
     }
 
     private function activeSubcategories(?EloquentCollection $categories = null): EloquentCollection
@@ -434,7 +495,10 @@ class PublicFrontendService
 
     private function activeCities(): EloquentCollection
     {
-        return City::query()->where('is_active', true)->orderBy('name')->get();
+        return City::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
     }
 
     /** @return array{data: array<string, mixed>, queryStats: array<string, mixed>} */

@@ -5,7 +5,10 @@
 @php
     $isSearchView = isset($profiles);
     $resultCount = $isSearchView ? ($profiles?->total() ?? $profiles?->count() ?? 0) : 0;
-    $serviceChips = isset($subcategories) ? $subcategories->take(12) : collect();
+    $serviceChips = isset($subcategories) ? $subcategories->filter(fn($s) => ($s->discoverable_profiles_count ?? 0) > 0)->take(12) : collect();
+    $activeCategorySlug = request('category') ?: (($categories ?? collect())->firstWhere('id', (int) request('category_id'))?->slug);
+    $activeServiceSlug = request('service') ?: (($subcategories ?? collect())->firstWhere('id', (int) request('subcategory_id'))?->slug);
+    $activeCitySlug = request('city') ?: (($cities ?? collect())->firstWhere('id', (int) request('city_id'))?->slug);
 @endphp
 
 @section('content')
@@ -15,15 +18,15 @@
     <section class="hp-hero">
         <div class="hp-hero__top">
             <div>
-                <p class="hp-eyebrow">شن تبي تنجز اليوم؟</p>
-                <h1 class="hp-title">لقى الخدمة اللي تحتاجها</h1>
+                <p class="hp-eyebrow">ماذا تحتاج اليوم؟</p>
+                <h1 class="hp-title">اعثر على الخدمة المناسبة لك</h1>
             </div>
             <a href="{{ route('public.top-rated') }}" class="hp-star-btn" aria-label="الأعلى تقييماً">
                 <x-render-icon icon="heroicon-o-star" />
             </a>
         </div>
 
-        <form method="GET" action="{{ route('public.search') }}" class="hp-search" id="homeSearchForm">
+        <form method="GET" action="{{ route('public.search') }}" class="hp-search" id="homeSearchForm" data-live-search-form>
             <label class="hp-search__field">
                 <x-render-icon icon="heroicon-o-magnifying-glass" />
                 <input
@@ -33,26 +36,30 @@
                     maxlength="100"
                     placeholder="مثال: تكييف، محامي، تصوير..."
                     autocomplete="off"
+                    data-live-search-input
                 >
+                <button type="submit" class="hp-search__icon-btn" aria-label="بحث">
+                    <x-render-icon icon="heroicon-o-magnifying-glass" />
+                </button>
             </label>
 
             <div class="hp-search__selects">
-                <select name="category_id" class="lp-filter-select" onchange="">
+                <select name="category" class="lp-filter-select" data-live-search-control>
                     <option value="">كل الفئات</option>
                     @foreach(($categories ?? collect()) as $category)
-                        <option value="{{ $category->id }}" @selected((string)request('category_id') === (string)$category->id)>
+                        <option value="{{ $category->slug }}" @selected($activeCategorySlug === $category->slug)>
                             {{ $category->localized_name ?? $category->name }}
                         </option>
                     @endforeach
                 </select>
 
-                <select name="subcategory_id" class="lp-filter-select">
+                <select name="service" class="lp-filter-select" data-live-search-control>
                     <option value="">كل الخدمات</option>
                     @foreach(($subcategories ?? collect())->groupBy('category_id') as $group)
-                        @php($parentCategory = $group->first()?->category)
+                        @php $parentCategory = $group->first()?->category; @endphp
                         <optgroup label="{{ $parentCategory?->localized_name ?? $parentCategory?->name ?? 'خدمات' }}">
                             @foreach($group as $subcategory)
-                                <option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}" @selected((string)request('subcategory_id') === (string)$subcategory->id)>
+                                <option value="{{ $subcategory->slug }}" data-category-slug="{{ $parentCategory?->slug }}" @selected($activeServiceSlug === $subcategory->slug)>
                                     {{ $subcategory->localized_name ?? $subcategory->name }}
                                 </option>
                             @endforeach
@@ -60,17 +67,17 @@
                     @endforeach
                 </select>
 
-                <select name="city_id" class="lp-filter-select">
+                <select name="city" class="lp-filter-select" data-live-search-control>
                     <option value="">كل المدن</option>
                     @foreach(($cities ?? collect()) as $city)
-                        <option value="{{ $city->id }}" @selected((string)request('city_id') === (string)$city->id)>
+                        <option value="{{ $city->slug }}" @selected($activeCitySlug === $city->slug)>
                             {{ $city->localized_name ?? $city->name }}
                         </option>
                     @endforeach
                 </select>
 
                 @if(isset($providerTypes))
-                    <select name="provider_type" class="lp-filter-select">
+                    <select name="provider_type" class="lp-filter-select" data-live-search-control>
                         <option value="">كل الأنواع</option>
                         @foreach($providerTypes as $code => $name)
                             <option value="{{ $code }}" @selected((string)request('provider_type') === (string)$code)>
@@ -81,16 +88,18 @@
                 @endif
             </div>
 
-            <button type="submit" class="hp-search__btn">
-                <x-render-icon icon="heroicon-o-magnifying-glass" />
-                <span>بحث</span>
-            </button>
+            <noscript>
+                <button type="submit" class="hp-search__btn">
+                    <x-render-icon icon="heroicon-o-magnifying-glass" />
+                    <span>بحث</span>
+                </button>
+            </noscript>
         </form>
     </section>
 
     @if($isSearchView)
         {{-- Search results --}}
-        <div class="lp-results" style="margin-top:.85rem;">
+        <div class="lp-results lp-results--search">
             <div class="lp-results-head">
                 <div>
                     <span>نتائج البحث</span>
@@ -120,8 +129,8 @@
             @else
                 <x-empty-state
                     icon="heroicon-o-magnifying-glass"
-                    title="ما لقيناش نتائج"
-                    message="جرّب كلمة أبسط، أو اختار مدينة ثانية."
+                    title="لا توجد نتائج"
+                    message="جرّب كلمة أخرى، أو اختر مدينة مختلفة."
                     actionLabel="مسح البحث"
                     actionUrl="{{ route('home') }}"
                 />
@@ -140,7 +149,7 @@
             </div>
 
             <div class="hp-cat-row">
-                @foreach(($categories ?? collect())->take(10) as $category)
+                @foreach(($categories ?? collect())->filter(fn($c) => ($c->discoverable_profiles_count ?? 0) > 0)->take(10) as $category)
                     <a href="{{ route('public.category', $category->slug ?? $category->id) }}" class="hp-cat">
                         <span class="hp-cat__icon">
                             @if($category->icon)
@@ -156,7 +165,7 @@
             </div>
 
             @if($serviceChips->isNotEmpty())
-                <div class="lp-chips" aria-label="خدمات" style="padding-top:.55rem;">
+                <div class="lp-chips lp-chips--service" aria-label="خدمات">
                     @foreach($serviceChips as $subcategory)
                         <a href="{{ route('public.subcategory', $subcategory->slug) }}" class="lp-chip">
                             {{ $subcategory->localized_name ?? $subcategory->name }}
@@ -173,6 +182,7 @@
                     <span class="hp-section__label">من الدليل</span>
                     <h2 class="hp-section__title">مزودين مميزين</h2>
                 </div>
+                <a href="{{ route('public.categories') }}" class="hp-section__more">تصفح الكل</a>
             </div>
 
             @php
@@ -186,8 +196,8 @@
             @else
                 <x-empty-state
                     icon="heroicon-o-briefcase"
-                    title="ما فيش مزودين حالياً"
-                    message="ارجع بعد شوية، أو جرّب تبحث باسم خدمة محددة."
+                    title="لا يوجد مزودون حالياً"
+                    message="عد لاحقاً، أو ابحث باسم خدمة محددة."
                 />
             @endif
         </section>
@@ -196,10 +206,11 @@
         <div class="lp-cta">
             <div>
                 <span>تقدم خدمة؟</span>
-                <h2>خلّي ملفك يظهر للناس</h2>
-                <p>افتح حساب مزود وخلي خدماتك تطلع في البحث والفئات.</p>
+                <h2>اجعل ملفك مرئياً للعملاء</h2>
+                <p>أنشئ حساب مزود وابدأ في الظهور في نتائج البحث والفئات.</p>
             </div>
-            <a href="{{ route('register') }}">سجل كمزود</a>
+            <a href="{{ $ctaWhatsappUrl ?? route('contact') }}"
+               @if($ctaWhatsappUrl ?? false) target="_blank" rel="noopener" @endif>سجّل كمزود</a>
         </div>
     @endif
 
@@ -209,15 +220,18 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('homeSearchForm');
-        const catSelect = form?.querySelector('select[name="category_id"]');
-        const subSelect = form?.querySelector('select[name="subcategory_id"]');
+        const catSelect = form?.querySelector('select[name="category"]');
+        const subSelect = form?.querySelector('select[name="service"]');
+        const keywordInput = form?.querySelector('[data-live-search-input]');
+        let keywordTimer;
+        let isSubmitting = false;
 
-        const sync = () => {
+        const syncSubcategories = () => {
             if (!catSelect || !subSelect) return;
-            const catId = catSelect.value;
+            const categorySlug = catSelect.value;
             Array.from(subSelect.options).forEach(opt => {
                 if (!opt.value) { opt.hidden = opt.disabled = false; return; }
-                const match = !catId || opt.dataset.categoryId === catId;
+                const match = !categorySlug || opt.dataset.categorySlug === categorySlug;
                 opt.hidden = !match;
                 opt.disabled = !match;
             });
@@ -225,8 +239,50 @@
             if (sel?.disabled) subSelect.value = '';
         };
 
-        catSelect?.addEventListener('change', sync);
-        sync();
+        const submitSearch = () => {
+            if (!form || isSubmitting) return;
+            isSubmitting = true;
+            form.classList.add('is-applying');
+            form.setAttribute('aria-busy', 'true');
+            form.querySelectorAll('[name="page"]').forEach(field => field.remove());
+            form.querySelectorAll('input, select').forEach(field => {
+                if (field.name && field.value === '') {
+                    field.disabled = true;
+                }
+            });
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+                return;
+            }
+            form.submit();
+        };
+
+        form?.querySelectorAll('[data-live-search-control]').forEach(control => {
+            control.addEventListener('change', () => {
+                if (control === catSelect) {
+                    syncSubcategories();
+                }
+                submitSearch();
+            });
+        });
+
+        keywordInput?.addEventListener('input', () => {
+            window.clearTimeout(keywordTimer);
+            keywordTimer = window.setTimeout(() => {
+                const value = keywordInput.value.trim();
+                if (value.length === 0 || value.length >= 2) {
+                    submitSearch();
+                }
+            }, 450);
+        });
+
+        keywordInput?.addEventListener('keydown', event => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            submitSearch();
+        });
+
+        syncSubcategories();
     });
 </script>
 @endpush
@@ -282,7 +338,15 @@
     .hp-star-btn svg { width: 20px; height: 20px; }
 
     /* Search form */
-    .hp-search { display: grid; gap: .65rem; }
+    .hp-search {
+        display: grid;
+        gap: .65rem;
+        transition: opacity .16s ease;
+    }
+    .hp-search.is-applying {
+        opacity: .68;
+        pointer-events: none;
+    }
 
     .hp-search__field {
         display: flex;
@@ -312,6 +376,25 @@
         font: inherit;
         font-size: .92rem;
         font-weight: 750;
+    }
+
+    .hp-search__icon-btn {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 12px;
+        background: var(--delni-primary);
+        color: #fff;
+        cursor: pointer;
+    }
+    .hp-search__icon-btn svg {
+        width: 17px;
+        height: 17px;
+        color: currentColor;
     }
 
     .hp-search__selects {
@@ -445,57 +528,9 @@
         font-weight: 900;
     }
 
-    /* CTA shared — also used in categories.blade */
-    .lp-cta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-top: 1.2rem;
-        padding: 1rem 1.1rem;
-        border-radius: 20px;
-        background: var(--delni-navy);
-        color: #fff;
-    }
-
-    .lp-cta span {
-        display: block;
-        color: var(--delni-primary);
-        font-size: .72rem;
-        font-weight: 900;
-        margin-bottom: .2rem;
-    }
-
-    .lp-cta h2 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 950;
-    }
-
-    .lp-cta p {
-        margin: .25rem 0 0;
-        color: rgba(255,255,255,.7);
-        font-size: .78rem;
-        font-weight: 600;
-        line-height: 1.6;
-    }
-
-    .lp-cta a {
-        flex-shrink: 0;
-        min-height: 42px;
-        display: inline-flex;
-        align-items: center;
-        padding: .55rem 1rem;
-        border-radius: 12px;
-        background: #fff;
-        color: var(--delni-navy);
-        font-size: .82rem;
-        font-weight: 950;
-    }
-
     @media (min-width: 640px) {
         .hp-title { font-size: 1.85rem; }
-        .hp-search { grid-template-columns: 1fr auto; }
+        .hp-search { grid-template-columns: 1fr; }
         .hp-search__field { grid-column: 1 / -1; }
         .hp-search__selects { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
         .hp-search__selects .lp-filter-select { border-radius: 999px; min-height: 38px; }
@@ -503,8 +538,29 @@
 
     @media (max-width: 400px) {
         .hp-search__selects { grid-template-columns: 1fr; }
-        .lp-cta { flex-direction: column; align-items: flex-start; }
     }
+
+    [data-theme="dark"] .hp-hero {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    [data-theme="dark"] .hp-hero .hp-title,
+    [data-theme="dark"] .hp-section__title { color: #F1F5F9; }
+    [data-theme="dark"] .hp-search__field { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+    [data-theme="dark"] .hp-search__field input { background: transparent; color: #F1F5F9; }
+    [data-theme="dark"] .hp-search__field input::placeholder { color: #475569; }
+    [data-theme="dark"] .hp-search__icon-btn { background: var(--delni-primary); color: #fff; }
+    [data-theme="dark"] .hp-search__btn { background: var(--delni-primary); color: #fff; }
+    [data-theme="dark"] .hp-hero { background: #1E293B; border-color: #334155; }
+    [data-theme="dark"] .hp-star-btn { background: #0F172A; border-color: #334155; color: #F59E0B; }
+    [data-theme="dark"] .hp-cat {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    [data-theme="dark"] .hp-cat strong { color: #F1F5F9; }
+    [data-theme="dark"] .hp-section__label { color: var(--delni-primary); }
+    [data-theme="dark"] .hp-section__more { color: #94A3B8; }
+    [data-theme="dark"] .hp-clear-link { color: #94A3B8; }
 </style>
 @endpush
 @endsection

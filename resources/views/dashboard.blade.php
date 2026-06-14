@@ -2,156 +2,119 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ __('messages.dashboard') }} - {{ config('app.name') }}</title>
-
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        /* Design System Variables */
         :root {
-            --brand-primary: #F1620F;
-            --brand-primary-hover: #D7530A;
-            --brand-dark: #0B1A34;
-            --brand-dark-light: #14284D;
-            --bg-canvas: #F8FAFC;
-            --bg-surface: #FFFFFF;
-            --text-primary: #0B1A34;
-            --text-secondary: #475569;
-            --border-color: #E2E8F0;
-            --transition-smooth: all 0.2s ease-in-out;
+            --dash-primary: #F1620F;
+            --dash-navy: #0B1A34;
+            --dash-bg: #FCFBFB;
+            --dash-muted: #5D5959;
+            --dash-border: #E7E7E7;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-canvas);
-            color: var(--text-primary);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+            background: var(--dash-bg);
+            color: var(--dash-navy);
+            font-family: Cairo, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
-
-        /* Clean Dashboard Core Panel Card */
-        .dashboard-container {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(11, 26, 52, 0.05), 0 8px 10px -6px rgba(11, 26, 52, 0.05);
-            max-width: 540px;
+        .dashboard-card {
+            width: min(100%, 440px);
+            padding: clamp(1.25rem, 4vw, 1.75rem);
+            border: 1px solid var(--dash-border);
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 16px 36px rgba(11, 26, 52, .08);
+        }
+        .dashboard-brand {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .dashboard-brand img {
             width: 100%;
-            padding: 2.25rem 2rem;
+            height: 100%;
+            object-fit: cover;
         }
-
-        /* Header Presentation Elements */
-        .dashboard-header {
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-
         .dashboard-title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--brand-dark);
-            margin-bottom: 0.35rem;
+            margin: 0;
+            font-size: 1.25rem;
+            line-height: 1.4;
+            font-weight: 950;
         }
-
-        .welcome-message {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            font-weight: 500;
+        .dashboard-message {
+            margin: .35rem 0 1.1rem;
+            color: var(--dash-muted);
+            font-size: .92rem;
+            line-height: 1.8;
+            font-weight: 650;
         }
-
-        .user-highlight {
-            color: var(--brand-dark);
-            font-weight: 700;
+        .dashboard-actions {
+            display: grid;
+            gap: .65rem;
         }
-
-        /* Core Navigation Stack Panel */
-        .action-workspace-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+        .dashboard-actions form {
+            margin: 0;
         }
-
-        /* Button & Hyperlink Framework Normatives */
-        .nav-action-btn {
+        .dashboard-action {
             width: 100%;
-            height: 46px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 700;
+            min-height: 46px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            border-radius: 14px;
+            border: 1px solid var(--dash-border);
+            background: #F8FAFC;
+            color: var(--dash-navy);
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 900;
             text-decoration: none;
             cursor: pointer;
-            border: none;
-            transition: var(--transition-smooth);
         }
-
-        .btn-link-public {
-            background-color: var(--bg-canvas);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
+        .dashboard-action--primary {
+            border-color: var(--dash-primary);
+            background: var(--dash-primary);
+            color: #fff;
         }
-
-        .btn-link-public:hover {
-            background-color: #EDF2F7;
-            border-color: #CBD5E1;
-        }
-
-        .btn-logout-trigger {
-            background-color: #FEF2F2;
-            border: 1px solid #FEE2E2;
-            color: #DC2626;
-        }
-
-        .btn-logout-trigger:hover {
-            background-color: #FEE2E2;
-            border-color: #FCA5A5;
-        }
-
-        /* Multi-directional Alignment Tuning fixes */
-        html[dir="rtl"] .dashboard-header {
-            text-align: right;
-        }
-        html[dir="ltr"] .dashboard-header {
-            text-align: left;
+        .dashboard-action--danger {
+            background: #FEF2F2;
+            border-color: #FECACA;
+            color: #B91C1C;
         }
     </style>
 </head>
 <body>
+    <main class="dashboard-card">
+        <div class="dashboard-brand">
+            <img src="{{ asset('images/icon-192.png') }}" alt="">
+        </div>
 
-    <div class="dashboard-container">
-        {{-- Structural Header Component Block --}}
-        <header class="dashboard-header">
-            <h1 class="dashboard-title">{{ __('messages.dashboard') }}</h1>
-            <p class="welcome-message">
-                {{ __('messages.welcome') }}, <span class="user-highlight">{{ auth()->user()->name }}</span>
-            </p>
-        </header>
+        <h1 class="dashboard-title">{{ __('messages.dashboard') }}</h1>
+        <p class="dashboard-message">
+            {{ __('messages.welcome') }}, <strong>{{ auth()->user()->name }}</strong>
+        </p>
 
-        {{-- Interactive Operations Panel Matrix --}}
-        <main class="action-workspace-panel">
-            <a href="{{ route('home') }}" class="nav-action-btn btn-link-public">
-                <span>{{ __('messages.public.home') }}</span>
+        <div class="dashboard-actions">
+            <a href="{{ route('home') }}" class="dashboard-action dashboard-action--primary">
+                {{ __('messages.public.home') }}
             </a>
 
-            <form method="POST" action="{{ route('logout') }}" style="width: 100%;">
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="nav-action-btn btn-logout-trigger">
-                    <span>{{ __('messages.logout') }}</span>
+                <button type="submit" class="dashboard-action dashboard-action--danger">
+                    {{ __('messages.logout') }}
                 </button>
             </form>
-        </main>
-    </div>
-
+        </div>
+    </main>
 </body>
 </html>

@@ -42,6 +42,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: .75rem;
         margin-bottom: .85rem;
         padding: 0 .2rem;
     }
@@ -71,19 +72,31 @@
 
     .pg-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: .75rem;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 360px));
+        gap: .85rem;
+        align-items: stretch;
+        justify-content: start;
+    }
+
+    .pg-grid > * {
+        min-width: 0;
+        height: 100%;
     }
 
     @media (min-width: 900px) {
         .pg-grid[data-columns="3"] {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 340px));
         }
     }
 
-    @media (max-width: 380px) {
+    @media (max-width: 620px) {
         .pg-grid {
             grid-template-columns: 1fr;
+            justify-content: stretch;
+        }
+
+        .pg-head {
+            align-items: flex-start;
         }
     }
 </style>

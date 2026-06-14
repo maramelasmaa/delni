@@ -42,9 +42,8 @@ class CreateProvider extends CreateRecord
                 'expires_at' => now()->addHours(72),
             ]);
 
-            // Queue onboarding email (SetPasswordMail implements ShouldQueue)
             $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
-            Mail::send(new SetPasswordMail(
+            Mail::queue(new SetPasswordMail(
                 email: $record->email,
                 setPasswordLink: $setPasswordLink,
                 userName: $record->name,
@@ -91,7 +90,7 @@ class CreateProvider extends CreateRecord
                 </div>
 
                 <div style="background: #fff5e6; border: 1px solid #ffe8b6; border-radius: 5px; padding: 12px; margin: 15px 0; font-size: 12px; color: #664d00;">
-                    <strong>Note:</strong> The setup link expires in 24 hours. If needed, you can resend the onboarding email from the provider details page.
+                    <strong>Note:</strong> The setup link expires in 72 hours. If needed, you can resend the onboarding email from the provider details page.
                 </div>
             </div>
         HTML;

@@ -22,6 +22,7 @@ class ProfileSearchService
     {
         $query = Profile::query()
             ->select('profiles.*')
+            ->withPublicReviewAggregates()
             ->join('users', 'users.id', '=', 'profiles.user_id')
             ->join('profile_stats', 'profile_stats.profile_id', '=', 'profiles.id');
 
@@ -106,7 +107,15 @@ class ProfileSearchService
                 ->orderByDesc('profiles.created_at')
                 ->orderByDesc('profiles.id'),
             'featured' => $query
-                ->orderByDesc('profile_stats.is_featured')
+                ->orderByRaw('
+                    CASE
+                        WHEN profile_stats.is_featured = 1
+                             AND profile_stats.featured_until >= ?
+                        THEN 1
+                        ELSE 0
+                    END DESC
+                ', [now()->toDateString()])
+                ->orderByDesc('profile_stats.featured_until')
                 ->orderByDesc('profile_stats.rating_avg')
                 ->orderByDesc('profiles.id'),
             default => null,

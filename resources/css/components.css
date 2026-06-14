@@ -694,22 +694,6 @@
         font-size: 2rem;
     }
 
-    /* Search filters */
-    .search-filters {
-        background: white;
-        border: 1px solid #F3F4F6;
-        border-radius: 12px;
-        padding: 1.35rem;
-        box-shadow: 0 8px 24px rgba(11, 26, 52, 0.07);
-    }
-
-    .search-filters .form-label {
-        font-weight: 800;
-        font-size: 0.85rem;
-        color: #0B1A34;
-        margin-bottom: 0.5rem;
-    }
-
     /* Sticky contact */
     .sticky-contact {
         position: sticky;

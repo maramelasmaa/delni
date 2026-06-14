@@ -5,8 +5,10 @@ use App\Http\Controllers\Auth\OnboardingController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Public\ContactController;
+use App\Http\Controllers\Public\FavoriteController;
 use App\Http\Controllers\Public\FrontendController;
 use App\Http\Controllers\Public\ReviewController;
+use App\Http\Controllers\Public\SettingsController;
 use App\Models\Icon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -45,9 +47,18 @@ Route::get('/favicon.ico', fn () => response()->file(public_path('images/logo.jp
 
 Route::get('/search', [FrontendController::class, 'search'])->name('public.search');
 Route::get('/top-rated', [FrontendController::class, 'topRated'])->name('public.top-rated');
+Route::get('/top-rated/in/{city:slug}', [FrontendController::class, 'topRatedInCity'])
+    ->withoutScopedBindings()
+    ->name('public.top-rated.city');
 Route::get('/categories', [FrontendController::class, 'categories'])->name('public.categories');
 Route::get('/category/{category:slug}', [FrontendController::class, 'category'])->name('public.category');
+Route::get('/category/{category:slug}/in/{city:slug}', [FrontendController::class, 'categoryInCity'])
+    ->withoutScopedBindings()
+    ->name('public.category.city');
 Route::get('/subcategory/{subcategory:slug}', [FrontendController::class, 'subcategory'])->name('public.subcategory');
+Route::get('/subcategory/{subcategory:slug}/in/{city:slug}', [FrontendController::class, 'subcategoryInCity'])
+    ->withoutScopedBindings()
+    ->name('public.subcategory.city');
 Route::get('/city/{city:slug}', [FrontendController::class, 'city'])->name('public.city');
 Route::get('/providers/{profile:slug}', [FrontendController::class, 'provider'])->name('public.provider');
 Route::middleware([
@@ -57,7 +68,7 @@ Route::middleware([
     'user.not_suspended',
 ])->group(function (): void {
     Route::post('/providers/{profile:slug}/review', [ReviewController::class, 'store'])
-        ->middleware(['password.changed', 'review.eligible', 'throttle:reviews.create'])
+        ->middleware(['review.eligible', 'throttle:reviews.create'])
         ->name('review.store');
 
     Route::post('/reviews/{review}/flag', [ReviewController::class, 'flag'])
@@ -76,25 +87,9 @@ Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
     Route::get('/auth/google', [SocialiteController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-
-    Route::get('/register', [RegisterController::class, 'showRegister'])->name('register');
-    Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:register');
-
-    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])
-        ->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
-        ->middleware('throttle:password.request')
-        ->name('password.email');
-
-    Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])
-        ->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
-        ->middleware('throttle:password.reset')
-        ->name('password.update');
 });
 
 Route::get('/onboarding/{token}', [OnboardingController::class, 'showSetPasswordForm'])
@@ -124,4 +119,21 @@ Route::middleware([
     Route::post('/account/update', [AuthController::class, 'updateAccount'])->name('account.update');
 
     Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+    Route::delete('/account', [SettingsController::class, 'destroy'])->name('account.destroy');
+});
+
+Route::get('/settings', [SettingsController::class, 'show'])->name('settings');
+Route::view('/about', 'public.about')->name('about');
+
+// Favorites — index is public (shows prompt for guests), toggle requires auth
+Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+Route::middleware([
+    'auth',
+    'account.locked',
+    'user.active',
+    'user.not_suspended',
+])->group(function (): void {
+    Route::post('/favorites/{profile}', [FavoriteController::class, 'toggle'])
+        ->middleware('throttle:60,1')
+        ->name('favorites.toggle');
 });

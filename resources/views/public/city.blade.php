@@ -25,33 +25,13 @@
     </header>
 
     {{-- Inline filter row --}}
-    <form method="GET" action="{{ url()->current() }}" class="lp-filter-row">
-        @if(isset($categories) && $categories->isNotEmpty())
-            <select name="category_id" class="lp-filter-select" onchange="this.form.submit()">
-                <option value="">كل الفئات</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>
-                        {{ $category->localized_name ?? $category->name }}
-                    </option>
-                @endforeach
-            </select>
-        @endif
-
-        <select name="sort" class="lp-filter-select" onchange="this.form.submit()">
-            <option value="" @selected(!request('sort'))>الأحدث</option>
-            <option value="rating" @selected(request('sort') === 'rating')>الأعلى تقييماً</option>
-            <option value="reviews" @selected(request('sort') === 'reviews')>الأكثر تقييماً</option>
-        </select>
-
-        @if(request()->anyFilled(['category_id', 'sort']))
-            <a href="{{ route('public.city', $city->slug) }}"
-               class="lp-chip"
-               style="border-color:rgba(241,98,15,.25);background:#FFF7ED;color:#F1620F;">
-                <x-render-icon icon="heroicon-o-x-mark" />
-                مسح
-            </a>
-        @endif
-    </form>
+    <x-browse-filters
+        :action="url()->current()"
+        :categories="$categories ?? collect()"
+        :reset-url="route('public.city', $city->slug)"
+        :show-category="true"
+        :show-city="false"
+    />
 
     {{-- Results --}}
     <div class="lp-results">
@@ -78,8 +58,8 @@
         @else
             <x-empty-state
                 icon="heroicon-o-map-pin"
-                title="ما لقيناش مزودين"
-                message="ما فيش مزودين في هذه المدينة حالياً. جرّب مدينة أخرى."
+                title="لا يوجد مزودون"
+                message="لا يوجد مزودون في هذه المدينة حالياً. جرّب مدينة أخرى."
                 actionLabel="تصفح الكل"
                 actionUrl="{{ route('public.search') }}"
             />
@@ -88,20 +68,4 @@
 
 </div>
 
-@push('styles')
-<style>
-    .lp-header-icon {
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-        background: rgba(241,98,15,.08);
-        color: var(--delni-primary);
-    }
-    .lp-header-icon svg { width: 22px; height: 22px; }
-</style>
-@endpush
 @endsection

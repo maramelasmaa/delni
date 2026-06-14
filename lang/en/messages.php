@@ -161,7 +161,7 @@ return [
         'select' => 'Select',
         'share_your_experience' => 'Share your experience...',
         'cannot_review_own' => 'You cannot review your own profile',
-        'account_too_new' => 'Your account must be at least 24 hours old to submit reviews.',
+        'account_too_new' => 'You can start leaving reviews after your account has been active for 24 hours. This helps us maintain quality and trusted reviews in our community.',
         'review_daily_limit_reached' => 'You have reached the maximum number of reviews allowed per day.',
     ],
 ];

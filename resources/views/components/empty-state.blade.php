@@ -34,19 +34,17 @@
             .delni-empty-state {
                 text-align: center;
                 padding: clamp(2rem, 5vw, 3.5rem) 1.25rem;
-                background:
-                    radial-gradient(circle at top, rgba(255, 122, 26, 0.08), transparent 38%),
-                    #ffffff;
+                background: #ffffff;
                 border: 1px solid #e8edf4;
-                border-radius: 24px;
-                box-shadow: 0 14px 38px rgba(11, 26, 52, 0.06);
+                border-radius: 20px;
+                box-shadow: 0 12px 30px rgba(11, 26, 52, 0.05);
             }
 
             .delni-empty-state__icon {
                 width: 64px;
                 height: 64px;
                 margin: 0 auto 1.25rem;
-                border-radius: 20px;
+                border-radius: 18px;
                 background: #fff7ed;
                 color: #f1620f;
                 display: flex;
@@ -85,12 +83,12 @@
                 align-items: center;
                 justify-content: center;
                 border-radius: 14px;
-                background: linear-gradient(135deg, #ff8533, #ff6b1a);
+                background: #f1620f;
                 color: #fff;
                 text-decoration: none;
                 font-size: 0.9rem;
                 font-weight: 900;
-                box-shadow: 0 12px 24px rgba(255, 107, 26, 0.18);
+                box-shadow: 0 12px 24px rgba(241, 98, 15, 0.16);
                 transition: 0.15s ease;
             }
 

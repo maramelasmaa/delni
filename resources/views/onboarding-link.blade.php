@@ -2,213 +2,119 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>رابط الإعداد والتفعيل</title>
-    {{-- High-quality typography addition --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
     <style>
-        /* Design Tokens & Variables */
-        :root {
-            --brand-primary: #F1620F;
-            --brand-primary-hover: #D7530A;
-            --brand-dark: #0B1A34;
-            --brand-dark-light: #14284D;
-            --bg-surface: #FFFFFF;
-            --bg-subtle: #F8FAFC;
-            --text-primary: #0B1A34;
-            --text-secondary: #475569;
-            --border-color: #E2E8F0;
-            --transition-smooth: all 0.2s ease-in-out;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-dark-light) 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+            background: #FCFBFB;
+            color: #0B1A34;
+            font-family: Cairo, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.8;
         }
-
-        .container {
-            background: var(--bg-surface);
+        .setup-card {
+            width: min(100%, 520px);
+            padding: clamp(1.25rem, 4vw, 1.75rem);
+            border: 1px solid #E7E7E7;
             border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-            max-width: 580px;
-            width: 100%;
-            padding: 2.5rem 2rem;
-            text-align: center;
+            background: #fff;
+            box-shadow: 0 16px 36px rgba(11, 26, 52, .08);
         }
-
-        h1 {
-            color: var(--brand-dark);
-            margin-bottom: 0.5rem;
-            font-size: 1.75rem;
-            font-weight: 800;
+        .setup-card h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            line-height: 1.4;
+            font-weight: 950;
         }
-
-        .subtitle {
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-            font-weight: 500;
-            line-height: 1.5;
+        .setup-card p {
+            margin: .35rem 0 1rem;
+            color: #5D5959;
+            font-size: .92rem;
+            line-height: 1.8;
+            font-weight: 650;
         }
-
-        /* Clean Link Display Box */
-        .link-box {
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            word-break: break-all;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            color: var(--text-primary);
-            line-height: 1.6;
-            direction: ltr; /* Keeps URL slashes and tokens properly ordered */
+        .setup-link {
+            direction: ltr;
             text-align: left;
+            overflow-wrap: anywhere;
+            padding: .85rem;
+            border: 1px solid #E7E7E7;
+            border-radius: 14px;
+            background: #F8FAFC;
+            color: #334155;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: .82rem;
+            line-height: 1.7;
         }
-
-        /* Action Controls Layout Matrix */
-        .actions-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 0.85rem;
-            margin: 1.5rem 0 2rem;
+        .setup-actions {
+            display: grid;
+            gap: .65rem;
+            margin-top: 1rem;
         }
-
-        .btn {
-            width: 100%;
-            height: 50px;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
+        .setup-button {
+            min-height: 46px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            border-radius: 14px;
+            border: 1px solid #E7E7E7;
+            background: #F8FAFC;
+            color: #0B1A34;
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 900;
             text-decoration: none;
-            border: none;
-            transition: var(--transition-smooth);
+            cursor: pointer;
         }
-
-        .btn-primary {
-            background-color: var(--brand-primary);
-            color: #FFFFFF;
-            box-shadow: 0 4px 12px rgba(241, 98, 15, 0.2);
+        .setup-button--primary {
+            border-color: #F1620F;
+            background: #F1620F;
+            color: #fff;
         }
-
-        .btn-primary:hover {
-            background-color: var(--brand-primary-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background-color: var(--bg-subtle);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .btn-secondary:hover {
-            background-color: #EDF2F7;
-            border-color: #CBD5E1;
-        }
-
-        /* Interactive Success Status Layer */
-        .success-banner {
+        .setup-status {
             display: none;
-            background: #DEF7EC;
-            color: #03543F;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            margin-top: -0.5rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border: 1px solid #BCF0DA;
-            animation: fadeIn 0.2s ease-out;
+            margin-top: .8rem;
+            padding: .75rem .85rem;
+            border: 1px solid #BBF7D0;
+            border-radius: 14px;
+            background: #F0FDF4;
+            color: #166534;
+            font-size: .84rem;
+            font-weight: 800;
         }
-
-        /* RTL-Correct Information Alert Box */
-        .info-alert {
-            background: rgba(241, 98, 15, 0.05);
-            border-right: 4px solid var(--brand-primary);
-            border-left: none; /* Corrects standard default left-border frameworks */
-            padding: 1rem 1.25rem;
-            text-align: right;
-            border-radius: 4px 12px 12px 4px;
-            color: #A73F05;
-            font-size: 0.85rem;
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .footer-note {
-            margin-top: 2rem;
-            color: var(--text-light-muted);
-            font-size: 0.8rem;
-            font-weight: 500;
-            line-height: 1.5;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 2rem 1.25rem;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
+        .setup-note {
+            margin-top: 1rem;
+            padding-top: .9rem;
+            border-top: 1px solid #E7E7E7;
+            color: #5D5959;
+            font-size: .82rem;
+            line-height: 1.7;
+            font-weight: 650;
         }
     </style>
 </head>
 <body>
+    <main class="setup-card">
+        <h1>رابط الإعداد والتفعيل</h1>
+        <p>افتح الرابط مباشرة أو انسخه لاستخدامه في المتصفح.</p>
 
-    <div class="container">
-        <h1>🔐 رابط الإعداد والتفعيل</h1>
-        <p class="subtitle">قم بالضغط مباشرة على زر التفعيل المرفق بالأسفل، أو يمكنك نسخ الرابط المباشر واستخدامه في المتصفح الخاص بك.</p>
+        <div class="setup-link" id="linkBox">{{ $onboardingUrl }}</div>
+        <div class="setup-status" id="successBanner">تم نسخ رابط التفعيل بنجاح.</div>
 
-        {{-- Interactive URL text terminal node --}}
-        <div class="link-box" id="linkBox">{{ $onboardingUrl }}</div>
-
-        <div class="success-banner" id="successBanner">✓ تم نسخ رابط التفعيل بنجاح!</div>
-
-        <div class="actions-wrapper">
-            <a href="{{ $onboardingUrl }}" class="btn btn-primary">
-                <span>إكمال عملية الإعداد والبدء</span>
-                <span>←</span>
-            </a>
-
-            <button class="btn btn-secondary" onclick="copyToClipboard()">
-                <span>📋 نسخ الرابط المباشر</span>
-            </button>
+        <div class="setup-actions">
+            <a href="{{ $onboardingUrl }}" class="setup-button setup-button--primary">إكمال الإعداد</a>
+            <button class="setup-button" type="button" onclick="copyToClipboard()">نسخ الرابط</button>
         </div>
 
-        <div class="info-alert">
-            ⏰ <strong>تنبيه هام:</strong> هذا الرابط مخصص للاستخدام مرة واحدة وصالح لفترة زمنية محدودة فقط. يرجى إتمام عملية الإعداد قبل انتهاء صلاحية الجلسة.
+        <div class="setup-note">
+            هذا الرابط مخصص للاستخدام مرة واحدة ولفترة محدودة.
         </div>
-
-        <p class="footer-note">
-            إذا لم يعمل زر الانتقال المباشر، يرجى نسخ عنوان الرابط ولصقه يدوياً في شريط العنوان أعلى متصفح الويب الخاص بك.
-        </p>
-    </div>
+    </main>
 
     <script>
         function copyToClipboard() {
@@ -220,7 +126,7 @@
                     banner.style.display = 'none';
                 }, 3500);
             }).catch(() => {
-                alert('عذراً، فشل النسخ التلقائي. يرجى تظليل الرابط ونسخه يدوياً.');
+                window.prompt('انسخ الرابط يدويا:', text);
             });
         }
     </script>

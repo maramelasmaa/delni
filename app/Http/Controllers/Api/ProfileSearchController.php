@@ -92,8 +92,10 @@ class ProfileSearchController extends Controller
             'is_complete' => $profile->is_complete,
             'stats' => $profile->stats === null ? null : [
                 'profile_id' => $profile->stats->profile_id,
-                'rating_avg' => $profile->stats->rating_avg,
-                'reviews_count' => $profile->stats->reviews_count,
+                'rating_avg' => $profile->getAttribute('approved_reviews_count') > 0
+                    ? round((float) $profile->getAttribute('approved_reviews_avg_rating'), 2)
+                    : 0.0,
+                'reviews_count' => (int) ($profile->getAttribute('approved_reviews_count') ?? 0),
                 'is_top_rated' => $profile->stats->is_top_rated,
                 'is_featured' => $profile->stats->is_featured,
                 'featured_until' => $profile->stats->featured_until?->toDateString(),

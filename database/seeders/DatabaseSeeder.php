@@ -18,8 +18,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             AdminUserSeeder::class,
-            SubscriptionPlanSeeder::class,
-            ProviderTypeIconSeeder::class,
         ]);
     }
 }

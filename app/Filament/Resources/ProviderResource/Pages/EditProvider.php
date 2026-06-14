@@ -51,9 +51,8 @@ class EditProvider extends EditRecord
                         'expires_at' => now()->addHours(72),
                     ]);
 
-                    // Send email
                     $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
-                    Mail::send(new SetPasswordMail(
+                    Mail::queue(new SetPasswordMail(
                         email: $user->email,
                         setPasswordLink: $setPasswordLink,
                         userName: $user->name,
@@ -82,13 +81,12 @@ class EditProvider extends EditRecord
 
                 $token = Password::createToken($user);
 
-                // Send reset email
                 $resetLink = route('password.reset', [
                     'token' => $token,
                     'email' => $user->email,
                 ]);
 
-                Mail::send(new PasswordResetMail(
+                Mail::queue(new PasswordResetMail(
                     email: $user->email,
                     resetLink: $resetLink,
                     userName: $user->name,

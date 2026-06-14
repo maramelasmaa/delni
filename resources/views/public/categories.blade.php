@@ -3,67 +3,26 @@
 @section('title', 'جميع الفئات - ' . config('app.name'))
 
 @section('content')
-<div class="lp-wrapper">
+<div class="lp-wrapper market-browse">
+    <x-marketplace-header
+        eyebrow="دليل الخدمات"
+        title="تصفح الفئات"
+        :count="$categories->count() . ' فئة'"
+        :back-url="route('home')"
+        back-label="الرئيسية"
+        description="اختر المجال المناسب ثم انتقل للخدمات الفرعية ومزودي الخدمة المتاحين."
+    />
 
-    {{-- App page header --}}
-    <header class="lp-header">
-        <a href="{{ route('home') }}" class="lp-back" aria-label="الرئيسية">
-            <x-render-icon icon="heroicon-o-arrow-right" />
-        </a>
-        <div class="lp-header-body">
-            <span class="lp-label">دلني</span>
-            <h1 class="lp-title">جميع الفئات</h1>
-            <span class="lp-count">{{ $categories->count() }} فئة</span>
-        </div>
-    </header>
+    <div class="market-browse__toolbar">
+        <label class="market-search">
+            <x-render-icon icon="heroicon-o-magnifying-glass" />
+            <input type="search" id="categorySearch" placeholder="ابحث عن فئة أو خدمة" autocomplete="off">
+        </label>
+    </div>
 
-    {{-- Category list --}}
-    <div class="cats-grid">
+    <section class="market-browse__grid" id="categoryGrid">
         @forelse($categories as $category)
-            <div class="cats-card">
-                {{-- Main row --}}
-                <div class="cats-row">
-                    <div class="cats-icon">
-                        @if($category->icon)
-                            <x-svg-icon :icon="$category->icon" size="22" />
-                        @else
-                            <x-render-icon icon="heroicon-o-briefcase" />
-                        @endif
-                    </div>
-                    <div class="cats-info">
-                        <strong>{{ $category->localized_name ?? $category->name }}</strong>
-                        <span>{{ number_format($category->discoverable_profiles_count ?? 0) }} مزود</span>
-                    </div>
-                    <div class="cats-actions">
-                        @if($category->subcategories->isNotEmpty())
-                            <button type="button"
-                                    class="cats-expand-btn"
-                                    data-drawer="cats-drawer-{{ $category->id }}"
-                                    aria-expanded="false">
-                                <x-render-icon icon="heroicon-o-chevron-left" />
-                            </button>
-                        @endif
-                        <a href="{{ route('public.category', $category->slug) }}" class="cats-browse-btn">
-                            تصفح
-                        </a>
-                    </div>
-                </div>
-
-                {{-- Subcategories inline expand --}}
-                @if($category->subcategories->isNotEmpty())
-                    <div class="cats-subs" id="cats-drawer-{{ $category->id }}" hidden>
-                        <a href="{{ route('public.category', $category->slug) }}" class="cats-sub-link cats-sub-link--all">
-                            كل خدمات {{ $category->localized_name ?? $category->name }}
-                        </a>
-                        @foreach($category->subcategories as $subcategory)
-                            <a href="{{ route('public.subcategory', $subcategory->slug) }}" class="cats-sub-link">
-                                <span>{{ $subcategory->localized_name ?? $subcategory->name }}</span>
-                                <small>{{ $subcategory->discoverable_profiles_count ?? 0 }}</small>
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
+            <x-category-discovery-card :category="$category" />
         @empty
             <x-empty-state
                 icon="heroicon-o-folder-open"
@@ -71,227 +30,109 @@
                 message="لا توجد فئات متاحة حالياً."
             />
         @endforelse
-    </div>
+    </section>
 
-    {{-- Provider CTA --}}
     <div class="lp-cta">
         <div>
             <span>تقدم خدمة؟</span>
-            <h2>خلّي ملفك يظهر للناس</h2>
+            <h2>اجعل ملفك مرئيا للعملاء</h2>
         </div>
-        <a href="{{ route('register') }}">سجل كمزود</a>
+        <a href="{{ $ctaWhatsappUrl ?? route('contact') }}"
+           @if($ctaWhatsappUrl ?? false) target="_blank" rel="noopener" @endif>سجل كمزود</a>
     </div>
-
 </div>
 
 @push('styles')
 <style>
-    .cats-grid {
-        display: flex;
-        flex-direction: column;
-        gap: .6rem;
-        margin-top: .65rem;
-    }
-
-    .cats-card {
-        background: #fff;
-        border: 1px solid var(--delni-border);
-        border-radius: 18px;
-        overflow: hidden;
-    }
-
-    .cats-row {
-        display: flex;
-        align-items: center;
+    .market-browse {
+        display: grid;
         gap: .85rem;
-        padding: .9rem 1rem;
+        max-width: 1120px;
+        margin-inline: auto;
     }
 
-    .cats-icon {
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
-        display: inline-flex;
+    .market-browse__toolbar {
+        display: grid;
+        gap: .65rem;
+        position: sticky;
+        top: calc(var(--pwa-header-height) + env(safe-area-inset-top) + .35rem);
+        z-index: 4;
+    }
+
+    .market-search {
+        min-height: 46px;
+        display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        background: rgba(241,98,15,.07);
-        color: var(--delni-primary);
+        gap: .55rem;
+        padding: 0 .85rem;
+        border: 1px solid var(--delni-border);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: var(--delni-shadow-sm);
     }
 
-    .cats-icon svg { width: 22px; height: 22px; }
+    .market-search svg {
+        width: 19px;
+        height: 19px;
+        color: #94A3B8;
+        flex: 0 0 auto;
+    }
 
-    .cats-info {
-        flex: 1;
+    .market-search input {
+        width: 100%;
         min-width: 0;
-    }
-
-    .cats-info strong {
-        display: block;
+        border: 0;
+        outline: 0;
+        background: transparent;
         color: var(--delni-navy);
-        font-size: .92rem;
-        font-weight: 900;
-        line-height: 1.3;
-    }
-
-    .cats-info span {
-        display: block;
-        margin-top: .1rem;
-        color: #64748B;
-        font-size: .74rem;
+        font: inherit;
+        font-size: .9rem;
         font-weight: 750;
     }
 
-    .cats-actions {
-        display: flex;
-        align-items: center;
-        gap: .45rem;
-        flex-shrink: 0;
+    .market-search input::placeholder {
+        color: #94A3B8;
     }
 
-    .cats-expand-btn {
-        width: 36px;
-        height: 36px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        border: 1px solid var(--delni-border);
-        background: #F8FAFC;
-        color: var(--delni-navy);
-        cursor: pointer;
-        transition: transform .2s ease;
+    .market-browse__grid {
+        display: grid;
+        gap: .65rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
     }
 
-    .cats-expand-btn[aria-expanded="true"] {
-        transform: rotate(-90deg);
-        border-color: rgba(241,98,15,.3);
-        background: #FFF7ED;
-        color: var(--delni-primary);
+    .cat-card.is-filtered {
+        display: none;
     }
 
-    .cats-expand-btn svg { width: 16px; height: 16px; }
-
-    .cats-browse-btn {
-        min-height: 36px;
-        display: inline-flex;
-        align-items: center;
-        padding: .45rem .8rem;
-        border-radius: 10px;
-        background: var(--delni-primary);
-        color: #fff;
-        font-size: .78rem;
-        font-weight: 900;
-        text-decoration: none;
+    [data-theme="dark"] .market-search {
+        background: #1E293B;
+        border-color: #334155;
     }
-
-    /* Subcategories panel */
-    .cats-subs {
-        border-top: 1px solid var(--delni-border);
-        padding: .65rem .85rem;
-        display: flex;
-        flex-direction: column;
-        gap: .3rem;
-        background: #FCFBFB;
-    }
-
-    .cats-sub-link {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .75rem;
-        min-height: 42px;
-        padding: .5rem .65rem;
-        border-radius: 12px;
-        background: #fff;
-        border: 1px solid transparent;
-        color: var(--delni-navy);
-        font-size: .84rem;
-        font-weight: 800;
-        text-decoration: none;
-        transition: border-color .15s;
-    }
-
-    .cats-sub-link:active,
-    .cats-sub-link:hover {
-        border-color: rgba(241,98,15,.2);
-        color: var(--delni-primary);
-    }
-
-    .cats-sub-link--all {
-        color: var(--delni-primary);
-        background: rgba(241,98,15,.05);
-        font-weight: 900;
-    }
-
-    .cats-sub-link small {
-        flex-shrink: 0;
-        min-width: 28px;
-        min-height: 22px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        background: #F1F5F9;
-        color: #64748B;
-        font-size: .7rem;
-        font-weight: 900;
-    }
-
-    /* CTA */
-    .lp-cta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-top: 1.2rem;
-        padding: 1rem 1.1rem;
-        border-radius: 20px;
-        background: var(--delni-navy);
-        color: #fff;
-    }
-
-    .lp-cta span {
-        display: block;
-        color: var(--delni-primary);
-        font-size: .72rem;
-        font-weight: 900;
-        margin-bottom: .2rem;
-    }
-
-    .lp-cta h2 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 950;
-    }
-
-    .lp-cta a {
-        flex-shrink: 0;
-        min-height: 42px;
-        display: inline-flex;
-        align-items: center;
-        padding: .55rem 1rem;
-        border-radius: 12px;
-        background: #fff;
-        color: var(--delni-navy);
-        font-size: .82rem;
-        font-weight: 950;
+    [data-theme="dark"] .market-search input { color: #F1F5F9; }
+    @media (min-width: 760px) {
+        .market-browse__grid {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: .85rem;
+        }
     }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-    document.querySelectorAll('.cats-expand-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const drawerId = btn.dataset.drawer;
-            const panel = document.getElementById(drawerId);
-            const open = btn.getAttribute('aria-expanded') === 'true';
+    (() => {
+        const input = document.getElementById('categorySearch');
+        const cards = Array.from(document.querySelectorAll('#categoryGrid .cat-card'));
+        if (!input || cards.length === 0) { return; }
 
-            btn.setAttribute('aria-expanded', String(!open));
-            panel.hidden = open;
+        input.addEventListener('input', () => {
+            const value = input.value.trim().toLowerCase();
+            cards.forEach((card) => {
+                card.classList.toggle('is-filtered', value !== '' && !card.textContent.toLowerCase().includes(value));
+            });
         });
-    });
+    })();
 </script>
 @endpush
 @endsection

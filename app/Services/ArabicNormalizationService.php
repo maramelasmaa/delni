@@ -139,20 +139,14 @@ class ArabicNormalizationService
      */
     private function removeInvisibleCharacters(string $text): string
     {
-        $invisible = [
-            '\u{200B}', // ZERO WIDTH SPACE
-            '\u{200C}', // ZERO WIDTH NON-JOINER
-            '\u{200D}', // ZERO WIDTH JOINER
-            '\u{200E}', // LEFT-TO-RIGHT MARK
-            '\u{200F}', // RIGHT-TO-LEFT MARK
-            '\u{FEFF}', // ZERO WIDTH NO-BREAK SPACE
-        ];
-
-        foreach ($invisible as $char) {
-            $text = str_replace($char, '', $text);
-        }
-
-        return $text;
+        return str_replace([
+            "\u{200B}", // ZERO WIDTH SPACE
+            "\u{200C}", // ZERO WIDTH NON-JOINER
+            "\u{200D}", // ZERO WIDTH JOINER
+            "\u{200E}", // LEFT-TO-RIGHT MARK
+            "\u{200F}", // RIGHT-TO-LEFT MARK
+            "\u{FEFF}", // ZERO WIDTH NO-BREAK SPACE
+        ], '', $text);
     }
 
     /**

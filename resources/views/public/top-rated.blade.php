@@ -4,9 +4,16 @@
 
 @php
     $providerCount = $providerCount ?? ($profiles?->total() ?? $profiles?->count() ?? 0);
-    $activeCategory = request('category_id') ? ($categories->find(request('category_id'))) : null;
-    $activeCity = request('city_id') ? ($cities->find(request('city_id'))) : null;
-    $hasFilters = request()->filled('category_id') || request()->filled('city_id') || request()->filled('keyword');
+    $activeCategory = request('category')
+        ? $categories->firstWhere('slug', request('category'))
+        : (request('category_id') ? $categories->find(request('category_id')) : null);
+    $activeCity = request('city')
+        ? $cities->firstWhere('slug', request('city'))
+        : (request('city_id') ? $cities->find(request('city_id')) : null);
+    $hasFilters = request()->filled('category') || request()->filled('category_id') || request()->filled('city') || request()->filled('city_id') || request()->filled('keyword');
+    $cityFilterUrls = ($cities ?? collect())
+        ->mapWithKeys(fn ($city) => [$city->slug => route('public.top-rated.city', $city->slug)])
+        ->all();
 @endphp
 
 @section('content')
@@ -22,59 +29,28 @@
             <h1 class="lp-title">الأعلى تقييماً</h1>
             <span class="lp-count">{{ number_format($providerCount) }} مزود مؤهل</span>
         </div>
-        <div class="lp-star-icon">★</div>
+        <div class="lp-header-icon">
+            <x-render-icon icon="heroicon-o-star" />
+        </div>
     </header>
 
     {{-- Filter row --}}
-    <form action="{{ route('public.top-rated') }}" method="GET" class="lp-filter-row" id="trFilterForm">
-        <div class="lp-search-wrap">
-            <x-render-icon icon="heroicon-o-magnifying-glass" />
-            <input
-                type="search"
-                name="keyword"
-                value="{{ request('keyword') }}"
-                maxlength="100"
-                placeholder="ابحث..."
-                class="lp-search-input"
-                onchange="this.form.submit()"
-            >
-        </div>
-
-        @if($categories->isNotEmpty())
-            <select name="category_id" class="lp-filter-select" onchange="this.form.submit()">
-                <option value="">كل الفئات</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" @selected((string)request('category_id') === (string)$category->id)>
-                        {{ $category->localized_name ?? $category->name }}
-                    </option>
-                @endforeach
-            </select>
-        @endif
-
-        @if($cities->isNotEmpty())
-            <select name="city_id" class="lp-filter-select" onchange="this.form.submit()">
-                <option value="">كل المدن</option>
-                @foreach($cities as $city)
-                    <option value="{{ $city->id }}" @selected((string)request('city_id') === (string)$city->id)>
-                        {{ $city->localized_name ?? $city->name }}
-                    </option>
-                @endforeach
-            </select>
-        @endif
-
-        @if($hasFilters)
-            <a href="{{ route('public.top-rated') }}"
-               class="lp-chip"
-               style="border-color:rgba(241,98,15,.25);background:#FFF7ED;color:#F1620F;">
-                <x-render-icon icon="heroicon-o-x-mark" />
-                مسح
-            </a>
-        @endif
-    </form>
+    <x-browse-filters
+        :action="url()->current()"
+        :categories="$categories"
+        :cities="$cities"
+        :reset-url="route('public.top-rated')"
+        :show-keyword="true"
+        :show-category="true"
+        :sort="false"
+        :city-urls="$cityFilterUrls"
+        :city-reset-url="route('public.top-rated')"
+        keyword-placeholder="ابحث..."
+    />
 
     {{-- Active filter chips --}}
     @if($hasFilters)
-        <div class="lp-chips" style="padding-top:.3rem;">
+        <div class="lp-chips lp-chips--compact">
             @if(request('keyword'))
                 <span class="lp-chip is-active">{{ request('keyword') }}</span>
             @endif
@@ -112,8 +88,8 @@
         @else
             <x-empty-state
                 icon="heroicon-o-star"
-                title="ما لقيناش نتائج"
-                message="ما فيش مزودين مطابقين للمرشحات الحالية."
+                title="لا توجد نتائج"
+                message="لا يوجد مزودون مطابقون للمرشحات المحددة."
                 actionLabel="مسح المرشحات"
                 actionUrl="{{ route('public.top-rated') }}"
             />
@@ -121,53 +97,4 @@
     </div>
 
 </div>
-
-@push('styles')
-<style>
-    .lp-star-icon {
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-        background: #FEF3C7;
-        color: #D97706;
-        font-size: 1.25rem;
-    }
-
-    .lp-search-wrap {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        gap: .45rem;
-        min-height: 38px;
-        padding: 0 .75rem;
-        border-radius: 999px;
-        border: 1px solid var(--delni-border);
-        background: #fff;
-        min-width: 140px;
-    }
-
-    .lp-search-wrap svg {
-        width: 16px;
-        height: 16px;
-        color: #94A3B8;
-        flex-shrink: 0;
-    }
-
-    .lp-search-input {
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: var(--delni-navy);
-        font: inherit;
-        font-size: .78rem;
-        font-weight: 750;
-        width: 100%;
-        min-width: 0;
-    }
-</style>
-@endpush
 @endsection

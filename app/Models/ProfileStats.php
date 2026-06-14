@@ -57,6 +57,6 @@ class ProfileStats extends Model
     {
         return $this->is_featured
             && $this->featured_until !== null
-            && $this->featured_until->isFuture();
+            && $this->featured_until->greaterThanOrEqualTo(today());
     }
 }

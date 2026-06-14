@@ -3,13 +3,17 @@
 namespace App\Filament\Provider\Resources;
 
 use App\Models\Review;
+use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 
 class ReviewsResource extends Resource
 {
@@ -133,7 +137,47 @@ class ReviewsResource extends Resource
                     ->sortable(),
             ])
             ->filters([])
-            ->recordActions([])
+            ->recordActions([
+                Action::make('flag')
+                    ->label('الإبلاغ عن التقييم')
+                    ->icon('heroicon-o-flag')
+                    ->color('warning')
+                    ->visible(fn (Review $record): bool => ! $record->is_flagged
+                        && $record->profile
+                        && $record->profile->user_id === auth()->id()
+                    )
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label('سبب البلاغ')
+                            ->required()
+                            ->minLength(10)
+                            ->maxLength(1000)
+                            ->rows(5)
+                            ->placeholder('اشرح سبب الإبلاغ عن هذا التقييم'),
+                    ])
+                    ->action(function (Review $record, array $data): void {
+                        Gate::authorize('flag', $record);
+
+                        $record->update([
+                            'is_flagged' => true,
+                            'flagged_by' => auth()->id(),
+                            'flagged_at' => now(),
+                            'flagged_reason' => $data['reason'],
+                            'flag_handled_at' => null,
+                            'flag_handled_by' => null,
+                        ]);
+
+                        Notification::make()
+                            ->title('تم إرسال البلاغ')
+                            ->body('تم إرسال البلاغ للإدارة لمراجعته.')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('الإبلاغ عن تقييم')
+                    ->modalDescription('سيتم إرسال البلاغ للإدارة لمراجعته.')
+                    ->modalSubmitActionLabel('إرسال البلاغ'),
+            ])
             ->defaultSort('created_at', 'desc');
     }
 
