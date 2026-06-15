@@ -923,7 +923,7 @@
                     <a href="{{ route('public.search') }}" class="delni-icon-btn" aria-label="بحث">
                         <x-render-icon icon="heroicon-o-magnifying-glass" />
                     </a>
-                    <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" class="delni-icon-btn" aria-label="الحساب">
+                    <a href="{{ auth()->check() ? route('settings') : route('login') }}" class="delni-icon-btn" aria-label="الحساب">
                         <x-render-icon icon="app-account" />
                     </a>
                 </div>

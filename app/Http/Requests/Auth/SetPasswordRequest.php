@@ -30,4 +30,15 @@ class SetPasswordRequest extends FormRequest
             ],
         ];
     }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'password.required' => __('validation.required', ['attribute' => __('validation.attributes.password')]),
+            'password.confirmed' => __('validation.custom.password.confirmed'),
+            'password.min' => 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.',
+            'password.regex' => 'يجب أن تحتوي كلمة المرور على أحرف صغيرة وكبيرة وأرقام ورموز خاصة.',
+        ];
+    }
 }

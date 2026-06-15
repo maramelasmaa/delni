@@ -34,10 +34,7 @@ const deniedRoutes = [
     /^\/cp\//,         // admin panel
     /^\/provider\//,   // provider panel
     /^\/login(\?.*)?$/,
-    /^\/register(\?.*)?$/,
     /^\/logout(\?.*)?$/,
-    /^\/forgot-password(\?.*)?$/,
-    /^\/reset-password\//,
     /^\/onboarding\//,
     /^\/settings(\?.*)?$/,
     /^\/favorites(\?.*)?$/,

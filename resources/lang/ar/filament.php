@@ -186,7 +186,7 @@ return [
         'reinstate' => 'إعادة تفعيل',
         'force_password_change' => 'إجبار على تغيير كلمة المرور',
         'clear_security_flag' => 'إزالة العلامة الأمنية',
-        'resend_onboarding_link' => 'إعادة إرسال رابط الإعداد',
+        'generate_onboarding_link' => 'إنشاء رابط الإعداد',
         'approve_selected' => 'اعتماد المحدد',
         'reject_selected' => 'رفض المحدد',
     ],
@@ -280,8 +280,8 @@ return [
 
     'notifications' => [
         'error' => 'خطأ',
-        'onboarding_link_sent' => 'تم إرسال رابط الإعداد',
-        'onboarding_link_sent_body' => 'تم إرسال رابط الإعداد إلى :email',
+        'onboarding_link_ready' => 'رابط الإعداد جاهز',
+        'onboarding_link_ready_body' => 'انسخ رابط الإعداد وأرسله يدويا إلى :email',
         'profile_updated' => 'تم تحديث الملف الشخصي بنجاح',
         'portfolio_limit_reached' => 'لا يمكنك إضافة أكثر من مشروعين',
         'image_limit_reached' => 'الحد الأقصى 4 صور لكل مشروع',

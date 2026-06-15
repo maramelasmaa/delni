@@ -75,6 +75,6 @@
     </form>
 
     <div class="auth-footer">
-        <a href="{{ route('dashboard') }}" class="auth-link">Back to dashboard</a>
+        <a href="{{ route('settings') }}" class="auth-link">Back to settings</a>
     </div>
 @endsection

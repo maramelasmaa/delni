@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Mail\SetPasswordMail;
 use App\Models\OnboardingToken;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class OnboardingLinkService
 {
-    public function resend(User $user): void
+    public function createOrRefreshLink(User $user): string
     {
         if (! $user->hasRole('provider')) {
             throw new \InvalidArgumentException('User is not a provider');
@@ -37,27 +34,10 @@ class OnboardingLinkService
             ]);
         }
 
-        $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
-        Log::info('Queueing provider onboarding email resend', [
-            'provider_id' => $user->id,
-            'email' => $user->email,
-            'mail_mailer' => config('mail.default'),
-            'queue_connection' => config('queue.default'),
-        ]);
-
-        Mail::queue(new SetPasswordMail(
-            email: $user->email,
-            setPasswordLink: $setPasswordLink,
-            userName: $user->name,
-        ));
-
-        Log::info('Provider onboarding email resend queued', [
-            'provider_id' => $user->id,
-            'email' => $user->email,
-        ]);
+        return route('onboarding.show', ['token' => $onboardingToken->token]);
     }
 
-    public function canResend(User $user): bool
+    public function canGenerate(User $user): bool
     {
         return $user->hasRole('provider');
     }

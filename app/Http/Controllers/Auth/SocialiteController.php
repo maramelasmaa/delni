@@ -7,8 +7,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\GoogleAuthService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class SocialiteController extends Controller
 {
@@ -19,23 +22,37 @@ class SocialiteController extends Controller
         return Socialite::driver('google')->redirect();
     }
 
-    public function handleGoogleCallback(): RedirectResponse
+    public function handleGoogleCallback(Request $request): RedirectResponse
     {
         try {
             $googleUser = $this->googleAuth->getGoogleUser();
             $user = $this->googleAuth->findOrCreateUser($googleUser);
 
-            if (!$user->is_active || $user->is_suspended) {
+            if (! $user->is_active) {
                 Auth::logout();
+
+                return redirect()->route('login')
+                    ->withErrors(['email' => __('messages.account_deactivated')]);
+            }
+
+            if ($user->is_suspended) {
+                Auth::logout();
+
                 return redirect()->route('login')
                     ->withErrors(['email' => __('messages.account_suspended')]);
             }
 
             $this->googleAuth->assignUserRole($user);
             Auth::login($user, remember: true);
+            $request->session()->regenerate();
 
             return redirect()->intended(route('home'));
-        } catch (\Exception $e) {
+        } catch (Throwable $exception) {
+            Log::warning('Google OAuth login failed', [
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
             return redirect()->route('login')
                 ->withErrors(['google' => __('messages.google_auth_failed')]);
         }

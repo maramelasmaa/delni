@@ -101,17 +101,18 @@ class ProviderResource extends Resource
                 EditAction::make()
                     ->modal(),
 
-                Action::make('resend_onboarding_link')
-                    ->label(__('filament.actions.resend_onboarding_link'))
+                Action::make('generate_onboarding_link')
+                    ->label('Generate setup link')
                     ->icon('heroicon-o-arrow-path')
                     ->color('info')
                     ->action(function (User $record, OnboardingLinkService $service) {
                         try {
-                            $service->resend($record);
+                            $setupLink = $service->createOrRefreshLink($record);
                             Notification::make()
-                                ->title(__('filament.notifications.onboarding_link_sent'))
-                                ->body(__('filament.notifications.onboarding_link_sent_body', ['email' => $record->email]))
+                                ->title('Provider setup link ready')
+                                ->body("Copy this link and send it manually to {$record->email}: {$setupLink}")
                                 ->success()
+                                ->persistent()
                                 ->send();
                         } catch (\InvalidArgumentException $e) {
                             Notification::make()
@@ -120,7 +121,7 @@ class ProviderResource extends Resource
                                 ->danger()
                                 ->send();
                         } catch (Throwable $e) {
-                            Log::error('Failed to resend provider onboarding email from table action', [
+                            Log::error('Failed to generate provider onboarding link from table action', [
                                 'provider_id' => $record->id,
                                 'email' => $record->email,
                                 'exception' => $e->getMessage(),
@@ -128,7 +129,7 @@ class ProviderResource extends Resource
 
                             Notification::make()
                                 ->title(__('filament.notifications.error'))
-                                ->body('Email could not be sent. Check the Laravel logs for the mailer error.')
+                                ->body('Setup link could not be generated. Check the Laravel logs.')
                                 ->danger()
                                 ->send();
                         }

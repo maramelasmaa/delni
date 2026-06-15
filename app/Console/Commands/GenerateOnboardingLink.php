@@ -10,13 +10,13 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('app:resend-onboarding-link {email : The provider\'s email address}')]
-#[Description('Resend onboarding setup link to a provider')]
-class ResendOnboardingLink extends Command
+#[Signature('app:generate-onboarding-link {email : The provider\'s email address}')]
+#[Description('Generate an onboarding setup link for a provider')]
+class GenerateOnboardingLink extends Command
 {
     public function handle(OnboardingLinkService $service): int
     {
-        $email = $this->argument('email');
+        $email = (string) $this->argument('email');
         $user = User::query()->where('email', $email)->first();
 
         if (! $user) {
@@ -26,12 +26,13 @@ class ResendOnboardingLink extends Command
         }
 
         try {
-            $service->resend($user);
-            $this->info("Onboarding link resent to: {$email}");
+            $setupLink = $service->createOrRefreshLink($user);
+            $this->info("Onboarding setup link for {$email}:");
+            $this->line($setupLink);
 
             return static::SUCCESS;
-        } catch (\InvalidArgumentException $e) {
-            $this->error($e->getMessage());
+        } catch (\InvalidArgumentException $exception) {
+            $this->error($exception->getMessage());
 
             return static::FAILURE;
         }

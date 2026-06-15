@@ -170,7 +170,7 @@ return [
         'reinstate' => 'Reinstate',
         'force_password_change' => 'Force Password Change',
         'clear_security_flag' => 'Clear Security Flag',
-        'resend_onboarding_link' => 'Resend Onboarding Link',
+        'generate_onboarding_link' => 'Generate Onboarding Link',
         'approve_selected' => 'Approve Selected',
         'reject_selected' => 'Reject Selected',
     ],
@@ -227,8 +227,8 @@ return [
 
     'notifications' => [
         'error' => 'Error',
-        'onboarding_link_sent' => 'Onboarding Link Sent',
-        'onboarding_link_sent_body' => 'The onboarding link has been resent to :email',
+        'onboarding_link_ready' => 'Onboarding Link Ready',
+        'onboarding_link_ready_body' => 'Copy the onboarding link and send it manually to :email',
     ],
 
 ];

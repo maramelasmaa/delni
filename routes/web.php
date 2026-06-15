@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\OnboardingController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Public\ContactController;
 use App\Http\Controllers\Public\FavoriteController;
@@ -118,7 +117,7 @@ Route::middleware([
     Route::get('/account/edit', [AuthController::class, 'showAccountEditForm'])->name('account.edit');
     Route::post('/account/update', [AuthController::class, 'updateAccount'])->name('account.update');
 
-    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+    Route::redirect('/dashboard', '/settings')->name('dashboard');
     Route::delete('/account', [SettingsController::class, 'destroy'])->name('account.destroy');
 });
 

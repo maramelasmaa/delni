@@ -5,6 +5,7 @@ return [
     'account_locked' => 'حسابك مغلق مؤقتا.',
     'account_deactivated' => 'تم إلغاء تنشيط هذا الحساب.',
     'account_suspended' => 'تم تعليق هذا الحساب.',
+    'google_auth_failed' => 'تعذر تسجيل الدخول باستخدام Google. يرجى المحاولة مرة أخرى أو استخدام البريد الإلكتروني وكلمة المرور.',
     'cannot_delete_categories_active_profiles' => 'لا يمكن حذف تصنيفات تحتوي على ملفات شخصية نشطة.',
     'cannot_delete_cities_active_profiles' => 'لا يمكن حذف مدن تحتوي على ملفات شخصية نشطة.',
     'let_get_started' => 'لنبدأ العمل',

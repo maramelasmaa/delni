@@ -5,6 +5,7 @@ return [
     'account_locked' => 'Your account is temporarily locked.',
     'account_deactivated' => 'This account has been deactivated.',
     'account_suspended' => 'This account has been suspended.',
+    'google_auth_failed' => 'We could not sign you in with Google. Please try again or use email and password.',
     'cannot_delete_categories_active_profiles' => 'Cannot delete categories with active profiles.',
     'cannot_delete_cities_active_profiles' => 'Cannot delete cities with active profiles.',
     'let_get_started' => "Let's get started",

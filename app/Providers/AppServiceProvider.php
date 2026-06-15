@@ -141,22 +141,6 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->input('email').'|'.$request->ip());
         });
 
-        RateLimiter::for('register', function (Request $request): Limit {
-            return Limit::perHour(10)->by($request->ip());
-        });
-
-        RateLimiter::for('forgot-password', function (Request $request): Limit {
-            return Limit::perHour(5)->by($request->ip());
-        });
-
-        RateLimiter::for('password.request', function (Request $request): Limit {
-            return Limit::perHour(5)->by($request->input('email').'|'.$request->ip());
-        });
-
-        RateLimiter::for('password.reset', function (Request $request): Limit {
-            return Limit::perMinute(5)->by($request->ip());
-        });
-
         RateLimiter::for('onboarding.set-password', function (Request $request): Limit {
             return Limit::perMinute(5)->by($request->ip());
         });

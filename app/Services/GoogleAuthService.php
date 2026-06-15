@@ -6,32 +6,60 @@ namespace App\Services;
 
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\GoogleProvider;
+use Laravel\Socialite\Two\User as SocialiteUser;
 
 class GoogleAuthService
 {
-    public function getGoogleUser(): GoogleProvider
+    public function getGoogleUser(): SocialiteUser
     {
         return Socialite::driver('google')->user();
     }
 
-    public function findOrCreateUser(GoogleProvider $googleUser): User
+    public function findOrCreateUser(SocialiteUser $googleUser): User
     {
-        $user = User::where('google_id', $googleUser->id)->first();
+        $googleId = (string) $googleUser->getId();
+        $email = mb_strtolower((string) $googleUser->getEmail());
+
+        if ($googleId === '' || $email === '') {
+            throw new \RuntimeException('Google account did not provide the required identity fields.');
+        }
+
+        $user = User::query()->where('google_id', $googleId)->first();
 
         if ($user) {
+            $this->ensurePublicUserCanUseGoogle($user);
+
             return $user;
         }
 
-        return $this->createGoogleUser($googleUser);
+        $user = User::query()->where('email', $email)->first();
+
+        if ($user) {
+            $this->ensurePublicUserCanUseGoogle($user);
+
+            if (filled($user->google_id) && $user->google_id !== $googleId) {
+                throw new \RuntimeException('This email is already linked to another Google account.');
+            }
+
+            $user->forceFill([
+                'google_id' => $googleId,
+                'oauth_provider' => 'google',
+                'email_verified_at' => $user->email_verified_at ?? now(),
+            ])->save();
+
+            return $user;
+        }
+
+        return $this->createGoogleUser($googleUser, $googleId, $email);
     }
 
-    private function createGoogleUser(GoogleProvider $googleUser): User
+    private function createGoogleUser(SocialiteUser $googleUser, string $googleId, string $email): User
     {
-        return User::create([
-            'name' => $googleUser->name,
-            'email' => $googleUser->email,
-            'google_id' => $googleUser->id,
+        return User::query()->create([
+            'name' => $googleUser->getName() ?: $email,
+            'email' => $email,
+            'password' => str()->random(64),
+            'google_id' => $googleId,
             'oauth_provider' => 'google',
             'email_verified_at' => now(),
             'is_active' => true,
@@ -41,8 +69,17 @@ class GoogleAuthService
 
     public function assignUserRole(User $user): void
     {
+        $this->ensurePublicUserCanUseGoogle($user);
+
         if (! $user->hasRole('user')) {
             $user->assignRole('user');
+        }
+    }
+
+    private function ensurePublicUserCanUseGoogle(User $user): void
+    {
+        if ($user->hasRole('provider') || $user->hasRole('super_admin')) {
+            throw new \RuntimeException('Google login is not allowed for this account role.');
         }
     }
 }

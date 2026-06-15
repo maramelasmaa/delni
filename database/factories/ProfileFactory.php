@@ -47,4 +47,29 @@ class ProfileFactory extends Factory
             ];
         });
     }
+
+    public function withStats(): static
+    {
+        return $this->afterCreating(function (Profile $profile): void {
+            // Only create stats if they don't already exist
+            if (! \App\Models\ProfileStats::where('profile_id', $profile->id)->exists()) {
+                \App\Models\ProfileStats::create([
+                    'profile_id' => $profile->id,
+                    'rating_avg' => 0.0,
+                    'reviews_count' => 0,
+                    'is_top_rated' => false,
+                    'is_featured' => false,
+                    'featured_until' => null,
+                    'is_homepage_featured' => false,
+                    'homepage_featured_until' => null,
+                    'is_top_search' => false,
+                    'top_search_until' => null,
+                    'is_top_category' => false,
+                    'top_category_until' => null,
+                    'is_top_subcategory' => false,
+                    'top_subcategory_until' => null,
+                ]);
+            }
+        });
+    }
 }
