@@ -1,5 +1,6 @@
 [variables]
 PORT = "8000"
+SESSION_DRIVER = "file"
 
 [phases.setup]
 nixPkgs = ["php83", "php83Packages.composer", "nodejs_22", "npm"]
@@ -13,15 +14,11 @@ cmds = [
 [phases.build]
 cmds = [
   "npm run build",
-  "php artisan config:cache",
-  "php artisan view:cache"
-]
-
-[phases.release]
-cmds = [
   "php artisan migrate --force",
   "php artisan storage:link",
-  "php artisan delni:setup-admin",
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache",
   "php artisan event:cache"
 ]
 
