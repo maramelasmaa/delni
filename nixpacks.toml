@@ -1,0 +1,29 @@
+[variables]
+PORT = "8000"
+
+[phases.setup]
+nixPkgs = ["php83", "php83Packages.composer", "nodejs_22", "npm"]
+
+[phases.install]
+cmds = [
+  "composer install --no-dev --optimize-autoloader",
+  "npm ci"
+]
+
+[phases.build]
+cmds = [
+  "npm run build",
+  "php artisan config:cache",
+  "php artisan view:cache"
+]
+
+[phases.release]
+cmds = [
+  "php artisan migrate --force",
+  "php artisan storage:link",
+  "php artisan delni:setup-admin",
+  "php artisan event:cache"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
