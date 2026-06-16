@@ -137,7 +137,7 @@ trait HasProviderFormSupport
         ];
     }
 
-    protected static function accountData(array $data): array
+    public static function accountData(array $data): array
     {
         return collect($data)
             ->only(['name', 'email', 'phone', 'password', 'is_active', 'is_suspended'])
