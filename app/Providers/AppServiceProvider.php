@@ -15,6 +15,7 @@ use App\Models\Subcategory;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Observers\PortfolioImageObserver;
+use App\Observers\PortfolioItemObserver;
 use App\Observers\ProfileObserver;
 use App\Observers\ProfilePublicCacheObserver;
 use App\Observers\ProviderAssetLimitObserver;
@@ -57,8 +58,9 @@ class AppServiceProvider extends ServiceProvider
         // Prevent N+1 queries by detecting lazy-loaded relationships in development
         Model::preventLazyLoading(! app()->isProduction());
 
-        // Behind a TLS-terminating proxy, force generated URLs/assets to HTTPS in production.
-        if (app()->isProduction()) {
+        // Behind a TLS-terminating proxy, force HTTPS only when the configured app URL is HTTPS.
+        // Local Docker uses APP_ENV=production with an HTTP localhost URL for deployment parity.
+        if (app()->isProduction() && str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
 
@@ -67,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
         Profile::observe(ProfilePublicCacheObserver::class);
         ProviderLink::observe(ProviderAssetLimitObserver::class);
         PortfolioItem::observe(ProviderAssetLimitObserver::class);
+        PortfolioItem::observe(PortfolioItemObserver::class);
         PortfolioImage::observe(ProviderAssetLimitObserver::class);
         PortfolioImage::observe(PortfolioImageObserver::class);
         Review::observe(ReviewObserver::class);

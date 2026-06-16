@@ -132,6 +132,7 @@ class Profile extends Model
      * - category_id
      * - phone
      * - whatsapp
+     * - subcategories (at least one)
      */
     public function calculateCompletionPercentage(): int
     {
@@ -141,6 +142,7 @@ class Profile extends Model
             'category' => $this->category_id !== null,
             'phone' => filled($this->phone),
             'whatsapp' => filled($this->whatsapp),
+            'subcategory' => $this->subcategories()->exists(),
         ];
 
         return (int) (count(array_filter($conditions)) / count($conditions) * 100);

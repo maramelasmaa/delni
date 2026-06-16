@@ -136,13 +136,15 @@ class SubscriptionPlanResource extends Resource
                     ->label(__('filament.fields.name'))
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\BadgeColumn::make('tier')
-                    ->colors([
-                        'gray' => 'basic',
-                        'info' => 'standard',
-                        'success' => 'premium',
-                        'danger' => 'enterprise',
-                    ]),
+                Tables\Columns\TextColumn::make('tier')
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'basic' => 'gray',
+                        'standard' => 'info',
+                        'premium' => 'success',
+                        'enterprise' => 'danger',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('price_lyd')
                     ->label('السعر (د.ل)')
                     ->formatStateUsing(fn ($state) => number_format($state, 2))

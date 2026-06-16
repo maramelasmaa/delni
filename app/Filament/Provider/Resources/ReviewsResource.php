@@ -3,13 +3,13 @@
 namespace App\Filament\Provider\Resources;
 
 use App\Models\Review;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
-use Filament\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -117,13 +117,15 @@ class ReviewsResource extends Resource
                     ->limit(50)
                     ->getStateUsing(fn ($record) => $record->comment ?? '-'),
 
-                Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
-                    ->colors([
-                        'success' => 'approved',
-                        'warning' => 'pending',
-                        'danger' => 'rejected',
-                    ])
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'approved' => 'success',
+                        'pending' => 'warning',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    })
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'approved' => 'موافق',
                         'pending' => 'قيد الانتظار',
@@ -146,7 +148,7 @@ class ReviewsResource extends Resource
                         && $record->profile
                         && $record->profile->user_id === auth()->id()
                     )
-                    ->form([
+                    ->schema([
                         Forms\Components\Textarea::make('reason')
                             ->label('سبب البلاغ')
                             ->required()

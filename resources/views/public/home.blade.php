@@ -241,6 +241,10 @@
 
         const submitSearch = () => {
             if (!form || isSubmitting) return;
+            if (!navigator.onLine) {
+                document.getElementById('delniOfflineBanner')?.classList.add('is-visible');
+                return;
+            }
             isSubmitting = true;
             form.classList.add('is-applying');
             form.setAttribute('aria-busy', 'true');

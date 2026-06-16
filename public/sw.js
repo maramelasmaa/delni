@@ -4,6 +4,7 @@ const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
+const IMAGE_CACHE_MAX_ENTRIES = 200;
 
 const DENY_PATHS = [
     /^\/cp(?:\/|$)/,
@@ -116,7 +117,7 @@ async function staleWhileRevalidate(request, cacheName) {
     const refresh = fetch(request)
         .then((response) => {
             if (response.ok) {
-                cache.put(request, response.clone());
+                cache.put(request, response.clone()).then(() => trimCache(cache, IMAGE_CACHE_MAX_ENTRIES));
             }
 
             return response;
@@ -156,4 +157,10 @@ async function putCache(request, response, cacheName) {
 
     const cache = await caches.open(cacheName);
     await cache.put(request, response.clone());
+}
+
+async function trimCache(cache, maxEntries) {
+    const keys = await cache.keys();
+    if (keys.length <= maxEntries) return;
+    await Promise.all(keys.slice(0, keys.length - maxEntries).map((key) => cache.delete(key)));
 }

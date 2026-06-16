@@ -131,13 +131,15 @@ class SubscriptionResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
-                    ->colors([
-                        'success' => 'active',
-                        'danger' => 'expired',
-                        'secondary' => 'cancelled',
-                    ])
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'active' => 'success',
+                        'expired' => 'danger',
+                        'cancelled' => 'gray',
+                        default => 'gray',
+                    })
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'active' => 'نشط',
                         'expired' => 'منتهي',
