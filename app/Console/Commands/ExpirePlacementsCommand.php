@@ -20,7 +20,6 @@ class ExpirePlacementsCommand extends Command
         ['flag' => 'is_top_search', 'until' => 'top_search_until'],
         ['flag' => 'is_top_category', 'until' => 'top_category_until'],
         ['flag' => 'is_top_subcategory', 'until' => 'top_subcategory_until'],
-        ['flag' => 'is_featured', 'until' => 'featured_until'],
     ];
 
     public function handle(): int

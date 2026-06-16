@@ -16,9 +16,8 @@ use Illuminate\Support\Facades\DB;
  * 2. Top Search (is_top_search=1 AND top_search_until >= today)
  * 3. Top Category (is_top_category=1 AND top_category_until >= today)
  * 4. Top Subcategory (is_top_subcategory=1 AND top_subcategory_until >= today)
- * 5. Featured Provider (is_featured=1 AND featured_until >= today)
- * 6. Top Rated Provider (profile stats meet review count and rating rules)
- * 7. Normal Provider
+ * 5. Top Rated Provider (profile stats meet review count and rating rules)
+ * 6. Normal Provider
  *
  * Within each tier, sorted by: stored rating average DESC, stored review count DESC, created_at DESC
  */
@@ -49,14 +48,6 @@ class MarketplaceRankingService
         return $query
             ->addSelect(DB::raw($this->bucketExpression()))
             ->orderBy('bucket', 'desc')
-            ->orderByRaw("
-                CASE
-                    WHEN profile_stats.is_featured = 1
-                         AND profile_stats.featured_until >= {$this->todaySql()}
-                    THEN profile_stats.featured_until
-                    ELSE NULL
-                END DESC
-            ")
             ->orderByDesc('profile_stats.rating_avg')
             ->orderByDesc('profile_stats.reviews_count')
             ->orderBy('profiles.created_at', 'desc');
@@ -103,11 +94,10 @@ class MarketplaceRankingService
     /**
      * Main bucket expression for global ranking (homepage, search).
      *
-     * Bucket 7: Homepage Featured (expirable)
-     * Bucket 6: Top Search (expirable)
-     * Bucket 5: Top Category (expirable)
-     * Bucket 4: Top Subcategory (expirable)
-     * Bucket 3: Featured Provider (expirable)
+     * Bucket 6: Homepage Featured (expirable)
+     * Bucket 5: Top Search (expirable)
+     * Bucket 4: Top Category (expirable)
+     * Bucket 3: Top Subcategory (expirable)
      * Bucket 2: Top Rated Provider (stored profile stats eligibility)
      * Bucket 1: Normal Provider
      */
@@ -119,18 +109,15 @@ class MarketplaceRankingService
             CASE
                 WHEN profile_stats.is_homepage_featured = 1
                      AND profile_stats.homepage_featured_until >= {$today}
-                THEN 7
+                THEN 6
                 WHEN profile_stats.is_top_search = 1
                      AND profile_stats.top_search_until >= {$today}
-                THEN 6
+                THEN 5
                 WHEN profile_stats.is_top_category = 1
                      AND profile_stats.top_category_until >= {$today}
-                THEN 5
+                THEN 4
                 WHEN profile_stats.is_top_subcategory = 1
                      AND profile_stats.top_subcategory_until >= {$today}
-                THEN 4
-                WHEN profile_stats.is_featured = 1
-                     AND profile_stats.featured_until >= {$today}
                 THEN 3
                 WHEN {$this->topRatedPredicate()}
                 THEN 2
@@ -142,9 +129,8 @@ class MarketplaceRankingService
     /**
      * Bucket expression for category-specific ranking.
      *
-     * Bucket 5: Top Category (same category)
-     * Bucket 4: Top Subcategory (same subcategory)
-     * Bucket 3: Featured Provider
+     * Bucket 4: Top Category (same category)
+     * Bucket 3: Top Subcategory (same subcategory)
      * Bucket 2: Top Rated
      * Bucket 1: Normal
      */
@@ -156,9 +142,9 @@ class MarketplaceRankingService
             CASE
                 WHEN profile_stats.is_top_category = 1
                      AND profile_stats.top_category_until >= {$today}
-                THEN 5
-                WHEN profile_stats.is_featured = 1
-                     AND profile_stats.featured_until >= {$today}
+                THEN 4
+                WHEN profile_stats.is_top_subcategory = 1
+                     AND profile_stats.top_subcategory_until >= {$today}
                 THEN 3
                 WHEN {$this->topRatedPredicate()}
                 THEN 2
@@ -170,8 +156,7 @@ class MarketplaceRankingService
     /**
      * Bucket expression for subcategory-specific ranking.
      *
-     * Bucket 4: Top Subcategory (same subcategory)
-     * Bucket 3: Featured Provider
+     * Bucket 3: Top Subcategory (same subcategory)
      * Bucket 2: Top Rated
      * Bucket 1: Normal
      */
@@ -183,9 +168,6 @@ class MarketplaceRankingService
             CASE
                 WHEN profile_stats.is_top_subcategory = 1
                      AND profile_stats.top_subcategory_until >= {$today}
-                THEN 4
-                WHEN profile_stats.is_featured = 1
-                     AND profile_stats.featured_until >= {$today}
                 THEN 3
                 WHEN {$this->topRatedPredicate()}
                 THEN 2

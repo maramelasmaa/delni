@@ -149,10 +149,6 @@ class ProfileResource extends Resource
                 Tables\Columns\TextColumn::make('stats.rating_avg')
                     ->label(__('filament.fields.rating_avg_short'))
                     ->sortable(),
-                Tables\Columns\IconColumn::make('stats.is_featured')
-                    ->label(__('filament.fields.featured'))
-                    ->boolean()
-                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_complete')
                     ->label(__('filament.fields.complete'))
                     ->boolean()
@@ -163,9 +159,6 @@ class ProfileResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('featured')
-                    ->query(fn (Builder $query) => $query->whereHas('stats', fn ($q) => $q->where('is_featured', true)))
-                    ->label(__('filament.filters.featured')),
                 Tables\Filters\Filter::make('active')
                     ->query(fn (Builder $query) => $query->whereHas('user', fn ($q) => $q->where('is_active', true)))
                     ->label(__('filament.filters.active_user')),

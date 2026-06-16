@@ -106,7 +106,7 @@ Set these values:
 APP_NAME=دلني
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://your-domain.com
+APP_URL=https://delni.ly
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -129,8 +129,8 @@ MAIL_PASSWORD=<your-resend-api-key>
 MAIL_FROM_ADDRESS=noreply@delni.ly
 MAIL_FROM_NAME=دلني
 
-GOOGLE_CLIENT_ID=131851047813-ri2kkjman6tuqn5b33nd2bfa0i60637k.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<google-oauth-client-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
 GOOGLE_REDIRECT_URL=https://your-domain.com/auth/google/callback
 
 ADMIN_EMAIL=admin@your-domain.com

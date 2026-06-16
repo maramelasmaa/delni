@@ -1,4 +1,5 @@
-const CACHE_VERSION = 'delni-public-v1';
+// Update this version string on every deploy (or use: sed -i "s/delni-public-[^']*/delni-public-$(git rev-parse --short HEAD)/" public/sw.js)
+const CACHE_VERSION = 'delni-public-2026-06-15-1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
@@ -125,16 +126,26 @@ async function staleWhileRevalidate(request, cacheName) {
     return cached || refresh;
 }
 
-async function networkFirst(request, cacheName) {
+async function networkFirst(request, cacheName, timeoutMs = 3000) {
+    const cache = await caches.open(cacheName);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
-        const response = await fetch(request);
+        const response = await fetch(request, { signal: controller.signal });
+        clearTimeout(timer);
         await putCache(request, response, cacheName);
 
         return response;
-    } catch (error) {
-        const cached = await caches.match(request);
+    } catch {
+        clearTimeout(timer);
 
-        return cached || caches.match(OFFLINE_URL);
+        const cached = await cache.match(request);
+        if (cached) return cached;
+
+        if (request.mode === 'navigate') return caches.match(OFFLINE_URL);
+
+        throw new Error('Network failed and no cache available');
     }
 }
 

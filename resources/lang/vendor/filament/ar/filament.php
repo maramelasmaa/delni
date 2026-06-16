@@ -103,8 +103,6 @@ return [
         'avatar' => 'الصورة الرمزية',
         'cover_image' => 'صورة الغلاف (المعرض)',
         'is_active' => 'نشط',
-        'is_featured' => 'مميز',
-        'featured_until' => 'مميز حتى',
         'rating_avg' => 'متوسط التقييم',
         'reviews_count' => 'عدد المراجعات',
         'provider_name' => 'اسم مقدم الخدمة',

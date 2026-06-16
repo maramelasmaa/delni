@@ -7,15 +7,18 @@
 ])
 
 @php
-    $visibleItems = collect($items)
+    $allItems = collect($items);
+    $visibleItems = $allItems
         ->filter(fn ($item) => (int) ($item->discoverable_profiles_count ?? 0) > 0)
         ->values();
     $railLimit = 12;
-    $activeItem = $active ? $visibleItems->first(fn ($item) => $item->is($active)) : null;
-    $railItems = $visibleItems
-        ->when($activeItem, fn ($items) => $items->reject(fn ($item) => $item->is($activeItem))->prepend($activeItem))
+    // Always pin active item first, even if it has 0 providers (so user sees which page they're on)
+    $activeItem = $active ? $allItems->first(fn ($item) => $item->is($active)) : null;
+    $nonActiveVisible = $visibleItems->reject(fn ($item) => $activeItem && $item->is($activeItem));
+    $railItems = $nonActiveVisible
+        ->when($activeItem, fn ($items) => $items->prepend($activeItem))
         ->take($railLimit);
-    $hasMoreItems = $visibleItems->count() > $railItems->count();
+    $hasMoreItems = $nonActiveVisible->count() > ($railLimit - ($activeItem ? 1 : 0));
     $sheetId = 'subcategorySheet-'.uniqid();
 @endphp
 
@@ -288,15 +291,18 @@
 
             @media (min-width: 760px) {
                 .service-sheet {
-                    inset-inline: 50%;
+                    /* Use physical left + negative translateX — works correctly in both LTR and RTL */
+                    inset-inline: unset;
+                    left: 50%;
+                    right: auto;
                     bottom: 2rem;
                     width: min(520px, calc(100vw - 2rem));
                     border: 1px solid var(--delni-border);
                     border-radius: 22px;
-                    transform: translateX(50%) translateY(calc(100% + 3rem));
+                    transform: translateX(-50%) translateY(calc(100% + 3rem));
                 }
                 .service-sheet.is-open {
-                    transform: translateX(50%) translateY(0);
+                    transform: translateX(-50%) translateY(0);
                 }
             }
 

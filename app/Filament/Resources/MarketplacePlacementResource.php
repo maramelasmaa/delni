@@ -102,18 +102,6 @@ class MarketplacePlacementResource extends Resource
                                     ]),
                             ]),
 
-                        Tabs\Tab::make('مميز')
-                            ->schema([
-                                Section::make('مقدم خدمة مميز')
-                                    ->description('موضع مميز يتحكم به المدير')
-                                    ->schema([
-                                        Forms\Components\Toggle::make('stats.is_featured')
-                                            ->label('مقدم خدمة مميز'),
-                                        Forms\Components\DatePicker::make('stats.featured_until')
-                                            ->label('ينتهي في')
-                                            ->visible(fn ($get) => $get('stats.is_featured')),
-                                    ]),
-                            ]),
                     ]),
             ]);
     }
@@ -142,10 +130,6 @@ class MarketplacePlacementResource extends Resource
                     ->label('أعلى التصنيف')
                     ->boolean()
                     ->sortable(),
-                Tables\Columns\IconColumn::make('stats.is_featured')
-                    ->label(__('filament.fields.featured'))
-                    ->boolean()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->label(__('filament.fields.created_at'))
@@ -161,9 +145,6 @@ class MarketplacePlacementResource extends Resource
                 Tables\Filters\Filter::make('top_category')
                     ->query(fn (Builder $query) => $query->whereHas('stats', fn ($q) => $q->where('is_top_category', true)))
                     ->label('أعلى التصنيف'),
-                Tables\Filters\Filter::make('featured')
-                    ->query(fn (Builder $query) => $query->whereHas('stats', fn ($q) => $q->where('is_featured', true)))
-                    ->label(__('filament.fields.featured')),
             ])
             ->paginated([25, 50, 100])
             ->recordActions([

@@ -83,8 +83,6 @@ return [
         'avatar' => 'Avatar',
         'cover_image' => 'Cover Image (Gallery)',
         'is_active' => 'Is Active',
-        'is_featured' => 'Is Featured',
-        'featured_until' => 'Featured Until',
         'rating_avg' => 'Rating Average',
         'reviews_count' => 'Review Count',
         'provider_name' => 'Provider Name',

@@ -16,7 +16,7 @@ APP_NAME=Delni
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://your-app.railway.app
-APP_KEY=base64:xxxxx  # Generate with: php artisan key:generate
+APP_KEY=<generate-with-php-artisan-key-generate>
 
 DB_CONNECTION=pgsql
 DB_HOST=${{ PGHOST }}
@@ -32,13 +32,13 @@ MAIL_DRIVER=smtp
 MAIL_HOST=smtp.mailtrap.io
 MAIL_PORT=465
 MAIL_USERNAME=your-username
-MAIL_PASSWORD=your-password
+MAIL_PASSWORD=<mail-provider-secret>
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=noreply@delni.app
 MAIL_FROM_NAME=Delni
 
 GEMINI_ENABLED=true
-GEMINI_API_KEY=your-api-key
+GEMINI_API_KEY=<gemini-api-key>
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com
 GEMINI_MODEL=gemini-2.5-flash
 GEMINI_TIMEOUT=15

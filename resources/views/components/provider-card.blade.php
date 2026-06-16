@@ -477,8 +477,9 @@
     .pc-fav-toast {
         position: fixed;
         bottom: calc(72px + env(safe-area-inset-bottom, 0px) + .75rem);
-        inset-inline-start: 50%;
-        transform: translateX(50%) translateY(1rem);
+        /* Use physical left + negative translateX — works correctly in both LTR and RTL */
+        left: 50%;
+        transform: translateX(-50%) translateY(1rem);
         background: #0B1A34;
         color: #fff;
         padding: .65rem 1rem;
@@ -498,7 +499,7 @@
 
     .pc-fav-toast.is-visible {
         opacity: 1;
-        transform: translateX(50%) translateY(0);
+        transform: translateX(-50%) translateY(0);
         pointer-events: auto;
     }
 

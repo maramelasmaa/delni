@@ -1,0 +1,108 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8080"
+    environment:
+      APP_NAME: Delni
+      APP_ENV: production
+      APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8088
+      APP_LOCALE: ar
+      APP_FALLBACK_LOCALE: ar
+      LOG_LEVEL: warning
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: delni
+      DB_USERNAME: delni
+      DB_PASSWORD: delnipass
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: "false"
+      SESSION_HTTP_ONLY: "true"
+      SESSION_SAME_SITE: lax
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: public
+      TRUSTED_PROXIES: "*"
+    volumes:
+      - delni_public_storage:/var/www/html/storage/app/public
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: php artisan queue:work --queue=default --max-jobs=100 --max-time=3600 --tries=3
+    environment:
+      APP_NAME: Delni
+      APP_ENV: production
+      APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8088
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: delni
+      DB_USERNAME: delni
+      DB_PASSWORD: delnipass
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: public
+    volumes:
+      - delni_public_storage:/var/www/html/storage/app/public
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    environment:
+      APP_NAME: Delni
+      APP_ENV: production
+      APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8088
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: delni
+      DB_USERNAME: delni
+      DB_PASSWORD: delnipass
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: public
+    volumes:
+      - delni_public_storage:/var/www/html/storage/app/public
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: delni
+      MYSQL_USER: delni
+      MYSQL_PASSWORD: delnipass
+    volumes:
+      - delni_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  delni_mysql_data:
+  delni_public_storage:

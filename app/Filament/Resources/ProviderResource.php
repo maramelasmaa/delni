@@ -236,8 +236,6 @@ class ProviderResource extends Resource
             'top_category_until' => $stats?->top_category_until,
             'top_subcategory' => $stats?->is_top_subcategory ?? false,
             'top_subcategory_until' => $stats?->top_subcategory_until,
-            'featured' => $stats?->is_featured ?? false,
-            'featured_until' => $stats?->featured_until,
         ];
 
         return $data;
@@ -304,8 +302,6 @@ class ProviderResource extends Resource
             'top_category_until' => $marketplaceData['top_category_until'] ?? null,
             'is_top_subcategory' => $marketplaceData['top_subcategory'] ?? false,
             'top_subcategory_until' => $marketplaceData['top_subcategory_until'] ?? null,
-            'is_featured' => $marketplaceData['featured'] ?? false,
-            'featured_until' => $marketplaceData['featured_until'] ?? null,
         ]);
 
         static::saveProviderSubscription($record, $subscriptionData);
@@ -505,10 +501,6 @@ class ProviderResource extends Resource
                     Forms\Components\DatePicker::make('marketplace.top_subcategory_until')
                         ->label('أعلى الفئة الفرعية حتى')
                         ->required(fn ($get) => $get('marketplace.top_subcategory')),
-                    Forms\Components\Toggle::make('marketplace.featured')->label(__('filament.fields.featured'))->live(),
-                    Forms\Components\DatePicker::make('marketplace.featured_until')
-                        ->label(__('filament.fields.featured_until'))
-                        ->required(fn ($get) => $get('marketplace.featured')),
                 ])
                 ->columns(2),
         ];
@@ -568,7 +560,6 @@ class ProviderResource extends Resource
             'top_search' => 'top_search_until',
             'top_category' => 'top_category_until',
             'top_subcategory' => 'top_subcategory_until',
-            'featured' => 'featured_until',
         ] as $enabledField => $untilField) {
             if (($marketplace[$enabledField] ?? false) && ! filled($marketplace[$untilField] ?? null)) {
                 throw ValidationException::withMessages([

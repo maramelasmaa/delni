@@ -17,8 +17,6 @@ class ProfileStatsFactory extends Factory
             'rating_avg' => $this->faker->numberBetween(1, 5),
             'reviews_count' => $this->faker->numberBetween(0, 50),
             'is_top_rated' => false,
-            'is_featured' => false,
-            'featured_until' => null,
             'is_homepage_featured' => false,
             'homepage_featured_until' => null,
             'is_top_search' => false,

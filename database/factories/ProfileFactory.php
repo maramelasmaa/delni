@@ -58,8 +58,6 @@ class ProfileFactory extends Factory
                     'rating_avg' => 0.0,
                     'reviews_count' => 0,
                     'is_top_rated' => false,
-                    'is_featured' => false,
-                    'featured_until' => null,
                     'is_homepage_featured' => false,
                     'homepage_featured_until' => null,
                     'is_top_search' => false,

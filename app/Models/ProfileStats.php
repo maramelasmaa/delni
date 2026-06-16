@@ -21,8 +21,6 @@ class ProfileStats extends Model
         'rating_avg',
         'reviews_count',
         'is_top_rated',
-        'is_featured',
-        'featured_until',
         'is_homepage_featured',
         'homepage_featured_until',
         'is_top_search',
@@ -36,8 +34,6 @@ class ProfileStats extends Model
     protected $casts = [
         'rating_avg' => 'decimal:1',
         'is_top_rated' => 'boolean',
-        'is_featured' => 'boolean',
-        'featured_until' => 'date',
         'is_homepage_featured' => 'boolean',
         'homepage_featured_until' => 'date',
         'is_top_search' => 'boolean',
@@ -53,10 +49,5 @@ class ProfileStats extends Model
         return $this->belongsTo(Profile::class);
     }
 
-    public function isFeaturedActive(): bool
-    {
-        return $this->is_featured
-            && $this->featured_until !== null
-            && $this->featured_until->greaterThanOrEqualTo(today());
-    }
+
 }

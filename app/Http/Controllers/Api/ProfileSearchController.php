@@ -97,8 +97,6 @@ class ProfileSearchController extends Controller
                     : 0.0,
                 'reviews_count' => (int) ($profile->getAttribute('approved_reviews_count') ?? 0),
                 'is_top_rated' => $profile->stats->is_top_rated,
-                'is_featured' => $profile->stats->is_featured,
-                'featured_until' => $profile->stats->featured_until?->toDateString(),
             ],
             'city' => $profile->city === null ? null : [
                 'id' => $profile->city->id,

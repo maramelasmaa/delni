@@ -58,7 +58,7 @@ Railway was failing because **no `nixpacks.toml` existed**. Railway uses nixpack
 APP_NAME=دلني
 APP_ENV=production
 APP_DEBUG=false
-APP_KEY=base64:6WmGpoWmyz4VbmM/hfQA7719QWOWh5HSpxx9ip34R3Q=
+APP_KEY=<generate-with-php-artisan-key-generate>
 APP_URL=https://your-railway-domain.railway.app
 APP_LOCALE=ar
 APP_FALLBACK_LOCALE=ar
@@ -98,8 +98,8 @@ MAIL_FROM_NAME=دلني
 
 ### Google OAuth
 ```
-GOOGLE_CLIENT_ID=131851047813-ri2kkjman6tuqn5b33nd2bfa0i60637k.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<google-oauth-client-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
 GOOGLE_REDIRECT_URL=https://your-railway-domain.railway.app/auth/google/callback
 ```
 

@@ -138,13 +138,13 @@ For multiple deployments (staging, production):
 **Staging:**
 ```
 ADMIN_EMAIL=admin@staging.delni.ly
-ADMIN_PASSWORD=staging-password
+ADMIN_PASSWORD=<staging-admin-password>
 ```
 
 **Production:**
 ```
 ADMIN_EMAIL=admin@delni.ly
-ADMIN_PASSWORD=production-password
+ADMIN_PASSWORD=<production-admin-password>
 ```
 
 Each Railway project has separate Variables, so secrets stay isolated.
