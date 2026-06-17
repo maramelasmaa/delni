@@ -105,7 +105,8 @@ class CredentialsResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('verification_url')
                     ->label('رابط التحقق')
-                    ->url()
+                    ->url(fn ($record) => $record->verification_url)
+                    ->openUrlInNewTab()
                     ->limit(30),
                 Tables\Columns\TextColumn::make('notes')
                     ->label('ملاحظات')

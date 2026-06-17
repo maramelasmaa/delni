@@ -23,7 +23,7 @@ class ListCredentials extends ListRecords
                 ->danger()
                 ->send();
 
-            redirect(ProfileResource::getUrl('edit', panel: 'provider'))->send();
+            redirect(ProfileResource::getUrl('create', panel: 'provider'))->send();
         }
 
         parent::mount();

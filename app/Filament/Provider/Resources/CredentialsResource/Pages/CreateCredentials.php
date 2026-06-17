@@ -3,6 +3,7 @@
 namespace App\Filament\Provider\Resources\CredentialsResource\Pages;
 
 use App\Filament\Provider\Resources\CredentialsResource;
+use App\Filament\Provider\Resources\ProfileResource;
 use App\Filament\Support\Pages\CreateRecordWithBack;
 use Filament\Notifications\Notification;
 
@@ -21,7 +22,7 @@ class CreateCredentials extends CreateRecordWithBack
                 ->danger()
                 ->send();
 
-            redirect(CredentialsResource::getUrl('index'))->send();
+            redirect(ProfileResource::getUrl('create', panel: 'provider'))->send();
         }
 
         parent::mount();
