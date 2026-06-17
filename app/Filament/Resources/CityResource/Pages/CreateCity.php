@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\CityResource\Pages;
 
 use App\Filament\Resources\CityResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 
-class CreateCity extends CreateRecord
+class CreateCity extends CreateRecordWithBack
 {
     protected static string $resource = CityResource::class;
 }

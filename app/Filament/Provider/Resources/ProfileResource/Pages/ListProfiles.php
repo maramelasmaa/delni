@@ -14,9 +14,9 @@ class ListProfiles extends ListRecords
         $profile = auth()->user()?->profile;
 
         if ($profile) {
-            redirect(ProfileResource::getUrl('edit', ['record' => $profile->id]))->send();
+            redirect(ProfileResource::getUrl('edit', ['record' => $profile->slug], panel: 'provider'))->send();
         } else {
-            redirect(ProfileResource::getUrl('create'))->send();
+            redirect(ProfileResource::getUrl('create', panel: 'provider'))->send();
         }
     }
 }

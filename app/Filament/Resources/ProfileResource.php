@@ -134,9 +134,16 @@ class ProfileResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label(__('filament.fields.id'))->sortable(),
+                Tables\Columns\TextColumn::make('business_name')
+                    ->label(__('filament.fields.business_name'))
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label(__('filament.fields.provider_name'))
                     ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('provider_type.localized_name')
+                    ->label(__('filament.fields.provider_type'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('category.localized_name')
                     ->label(__('filament.fields.category'))

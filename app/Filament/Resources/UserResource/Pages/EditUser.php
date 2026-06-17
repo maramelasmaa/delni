@@ -3,23 +3,24 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Filament\Support\Pages\EditRecordWithBack;
 use App\Services\SuperAdminGuardService;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
-class EditUser extends EditRecord
+class EditUser extends EditRecordWithBack
 {
     protected static string $resource = UserResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->getBackHeaderAction(),
             Actions\DeleteAction::make()
                 ->visible(fn () => SuperAdminGuardService::canDeleteUser($this->record))
-                ->tooltip(fn () => ! SuperAdminGuardService::canDeleteUser($this->record) ? 'Cannot delete the sole super admin user' : null),
+                ->tooltip(fn () => ! SuperAdminGuardService::canDeleteUser($this->record) ? __('filament.help_text.super_admin_delete_blocked') : null),
         ];
     }
 

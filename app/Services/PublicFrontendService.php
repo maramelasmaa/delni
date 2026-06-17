@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\ProfileSearchFilters;
+use App\Enums\ReviewStatus;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Profile;
 use App\Models\ProviderType;
+use App\Models\Review;
 use App\Models\Subcategory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,7 +50,7 @@ class PublicFrontendService
                 ->each(fn (Subcategory $subcategory) => $subcategory->setRelation('category', $categoryMap->get($subcategory->category_id)));
 
             $featuredProviders = $this->rankingService
-                ->applyHomepageRanking($this->discoverableProfilesQuery())
+                ->applyHomepageFeaturedOnly($this->discoverableProfilesQuery())
                 ->limit(8)
                 ->get();
 
@@ -62,6 +64,15 @@ class PublicFrontendService
                 $loadedProviders
             );
 
+            $stats = Cache::flexible('homepage.stats', [180, 600], function () {
+                return [
+                    'profiles_count' => (int) $this->discoverableProfilesQuery()->count(),
+                    'reviews_count' => (int) Review::where('status', ReviewStatus::APPROVED)->count(),
+                    'categories_count' => (int) Category::where('is_active', true)->count(),
+                    'cities_count' => (int) City::where('is_active', true)->count(),
+                ];
+            });
+
             return [
                 'categories' => $categories,
                 'subcategories' => $subcategories,
@@ -73,6 +84,7 @@ class PublicFrontendService
                 'providerTypes' => ProviderType::options(),
                 'featuredProviders' => $loadedFeaturedProviders,
                 'suggestedProviders' => $loadedFeaturedProviders->take(6)->values(),
+                'stats' => $stats,
             ];
         });
     }
@@ -111,13 +123,33 @@ class PublicFrontendService
     public function category(Category $category, Request $request): array
     {
         return $this->inspectQueries(function () use ($category, $request): array {
+            $serviceSlugs = is_array($request->query('services'))
+                ? $request->query('services')
+                : ($request->filled('services') ? explode(',', (string) $request->query('services')) : []);
+
+            if (empty($serviceSlugs) && $request->filled('service')) {
+                $serviceSlugs = is_array($request->query('service'))
+                    ? $request->query('service')
+                    : [$request->query('service')];
+            }
+            $serviceSlugs = array_filter($serviceSlugs);
+
+            $query = $this->discoverableProfilesQuery()->where('profiles.category_id', $category->id);
+
+            if (! empty($serviceSlugs)) {
+                $query->whereExists(function ($sub) use ($serviceSlugs): void {
+                    $sub->select(DB::raw(1))
+                        ->from('profile_subcategory')
+                        ->join('subcategories', 'subcategories.id', '=', 'profile_subcategory.subcategory_id')
+                        ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
+                        ->whereIn('subcategories.slug', $serviceSlugs);
+                });
+            }
+
             $profiles = $this->paginateProfiles(
                 $this->rankingService
                     ->applyCategoryRanking(
-                        $this->applyArchiveFilters(
-                            $this->discoverableProfilesQuery()->where('profiles.category_id', $category->id),
-                            $request
-                        )
+                        $this->applyArchiveFilters($query, $request)
                     ),
                 $request
             );
@@ -137,6 +169,7 @@ class PublicFrontendService
                 'profiles' => $profiles,
                 'providerCount' => $profiles->total(),
                 'cities' => $this->activeCities(),
+                'providerTypes' => ProviderType::options(),
             ];
         });
     }
@@ -169,17 +202,35 @@ class PublicFrontendService
                 )
             );
 
+            $serviceSlugs = is_array($request->query('services'))
+                ? $request->query('services')
+                : ($request->filled('services') ? explode(',', (string) $request->query('services')) : []);
+
+            if (empty($serviceSlugs) && $request->filled('service')) {
+                $serviceSlugs = is_array($request->query('service'))
+                    ? $request->query('service')
+                    : [$request->query('service')];
+            }
+            $serviceSlugs = array_filter($serviceSlugs);
+
+            $subcategoryFilter = function ($query) use ($subcategory, $serviceSlugs): void {
+                $query->select(DB::raw(1))
+                    ->from('profile_subcategory')
+                    ->whereColumn('profile_subcategory.profile_id', 'profiles.id');
+
+                if (! empty($serviceSlugs)) {
+                    $query->join('subcategories', 'subcategories.id', '=', 'profile_subcategory.subcategory_id')
+                        ->whereIn('subcategories.slug', $serviceSlugs);
+                } else {
+                    $query->where('profile_subcategory.subcategory_id', $subcategory->id);
+                }
+            };
+
             $profiles = $this->paginateProfiles(
                 $this->rankingService
                     ->applySubcategoryRanking(
                         $this->applyArchiveFilters(
-                            $this->discoverableProfilesQuery()
-                                ->whereExists(function ($query) use ($subcategory): void {
-                                    $query->select(DB::raw(1))
-                                        ->from('profile_subcategory')
-                                        ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
-                                        ->where('profile_subcategory.subcategory_id', $subcategory->id);
-                                }),
+                            $this->discoverableProfilesQuery()->whereExists($subcategoryFilter),
                             $request
                         )
                     ),
@@ -195,6 +246,7 @@ class PublicFrontendService
                 'profiles' => $profiles,
                 'providerCount' => $profiles->total(),
                 'cities' => $this->activeCities(),
+                'providerTypes' => ProviderType::options(),
             ];
         });
     }
@@ -203,9 +255,18 @@ class PublicFrontendService
     {
         return $this->inspectQueries(function () use ($city, $request): array {
 
+            $query = $this->discoverableProfilesQuery()->where('profiles.city_id', $city->id);
+
+            if ($categoryId = $this->categoryFilterId($request)) {
+                $query->where('profiles.category_id', $categoryId);
+            }
+
+            if ($request->boolean('remote') || $request->query('remote') === '1') {
+                $query->where('profiles.offers_remote_work', true);
+            }
+
             $profiles = $this->paginateProfiles(
-                $this->rankingService
-                    ->applySearchRanking($this->discoverableProfilesQuery()->where('profiles.city_id', $city->id)),
+                $this->rankingService->applySearchRanking($query),
                 $request
             );
 
@@ -213,6 +274,7 @@ class PublicFrontendService
                 'city' => $city,
                 'profiles' => $profiles,
                 'providerCount' => $profiles->total(),
+                'categories' => $this->activeCategories(),
             ];
         });
     }
@@ -228,6 +290,10 @@ class PublicFrontendService
 
             if ($categoryId = $this->categoryFilterId($request)) {
                 $query->where('profiles.category_id', $categoryId);
+            }
+
+            if ($request->boolean('remote') || $request->query('remote') === '1') {
+                $query->where('profiles.offers_remote_work', true);
             }
 
             $this->applyKeywordFilter($query, (string) $request->query('keyword', ''));
@@ -326,6 +392,12 @@ class PublicFrontendService
         if ($cityId = $this->cityFilterId($request)) {
             $query->where('profiles.city_id', $cityId);
         }
+
+        if ($request->boolean('remote') || $request->query('remote') === '1') {
+            $query->where('profiles.offers_remote_work', true);
+        }
+
+        $this->applyKeywordFilter($query, (string) $request->query('keyword', ''));
 
         return $query;
     }

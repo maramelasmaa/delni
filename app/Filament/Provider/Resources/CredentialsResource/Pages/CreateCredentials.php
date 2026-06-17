@@ -3,16 +3,17 @@
 namespace App\Filament\Provider\Resources\CredentialsResource\Pages;
 
 use App\Filament\Provider\Resources\CredentialsResource;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\CreateRecord;
 
-class CreateCredentials extends CreateRecord
+class CreateCredentials extends CreateRecordWithBack
 {
     protected static string $resource = CredentialsResource::class;
 
     public function mount(): void
     {
         $user = auth()->user();
+
         if (! $user?->profile) {
             Notification::make()
                 ->title('لم ينشأ ملفك التجاري بعد')
@@ -20,7 +21,7 @@ class CreateCredentials extends CreateRecord
                 ->danger()
                 ->send();
 
-            redirect(route('filament.provider.auth.profile'))->send();
+            redirect(CredentialsResource::getUrl('index'))->send();
         }
 
         parent::mount();

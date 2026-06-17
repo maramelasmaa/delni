@@ -9,9 +9,6 @@
         <div class="lp-header-body">
             <span class="lp-label">دلني</span>
             <h1 class="lp-title">المفضلة</h1>
-            @auth
-                <span class="lp-count">{{ $favorites instanceof \Illuminate\Pagination\LengthAwarePaginator ? $favorites->total() : $favorites->count() }} مزود</span>
-            @endauth
         </div>
         <div class="fv-heart-icon">
             <x-render-icon icon="app-heart-filled" />
@@ -35,7 +32,7 @@
                 <x-provider-grid :providers="$favorites" :columns="2" />
 
                 @if($favorites->hasPages())
-                    <nav class="lp-pagination" aria-label="Pagination">
+                    <nav class="lp-pagination" aria-label="التنقل بين الصفحات">
                         @if($favorites->onFirstPage())
                             <span class="is-disabled">السابق</span>
                         @else

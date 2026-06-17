@@ -2,6 +2,7 @@
 
 namespace App\Filament\Provider\Resources;
 
+use App\Models\Category;
 use App\Models\City;
 use App\Models\Profile;
 use App\Models\ProviderType;
@@ -35,15 +36,17 @@ class ProfileResource extends Resource
 
     protected static bool $shouldRegisterNavigation = true;
 
+    protected static ?string $recordRouteKeyName = 'slug';
+
     public static function getNavigationUrl(): string
     {
         $profile = auth()->user()?->profile;
 
         if ($profile) {
-            return static::getUrl('edit', ['record' => $profile->id]);
+            return static::getUrl('edit', ['record' => $profile->slug], panel: 'provider');
         }
 
-        return static::getUrl('create');
+        return static::getUrl('create', panel: 'provider');
     }
 
     public static function canCreate(): bool
@@ -81,7 +84,15 @@ class ProfileResource extends Resource
                         ->label('التصنيف الرئيسي')
                         ->placeholder('اختر التصنيف الأنسب لنشاطك')
                         ->helperText('اختر التصنيف الأساسي الذي يعكس طبيعة عملك.')
-                        ->relationship('category', 'name', fn (Builder $query) => $query->where('is_active', true))
+                        ->options(fn () => Category::query()
+                            ->where('is_active', true)
+                            ->orderBy('sort_order')
+                            ->orderBy('name_ar')
+                            ->get()
+                            ->mapWithKeys(fn (Category $category): array => [
+                                $category->id => $category->localized_name,
+                            ])
+                            ->all())
                         ->searchable()
                         ->required()
                         ->live()
@@ -94,6 +105,7 @@ class ProfileResource extends Resource
                         ->helperText('يمكنك اختيار عدة تصنيفات فرعية لتوضيح تخصصاتك.')
                         ->relationship('subcategories', 'name')
                         ->multiple()
+                        ->required()
                         ->options(function ($get) {
                             $categoryId = $get('category_id');
                             if (! $categoryId) {
@@ -102,9 +114,16 @@ class ProfileResource extends Resource
 
                             return Subcategory::where('category_id', $categoryId)
                                 ->where('is_active', true)
-                                ->pluck('name', 'id');
+                                ->orderBy('sort_order')
+                                ->orderBy('name_ar')
+                                ->get()
+                                ->mapWithKeys(fn (Subcategory $subcategory): array => [
+                                    $subcategory->id => $subcategory->localized_name,
+                                ])
+                                ->all();
                         })
-                        ->searchable(),
+                        ->searchable()
+                        ->live(),
                     Forms\Components\Select::make('city_id')
                         ->label('المدينة')
                         ->placeholder('اختر المدينة')
@@ -250,6 +269,21 @@ class ProfileResource extends Resource
                     ->label('اسم العمل')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('provider_type.localized_name')
+                    ->label('نوع النشاط')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('category.localized_name')
+                    ->label('التصنيف الرئيسي')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('city.localized_name')
+                    ->label('المدينة')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('الهاتف')
+                    ->copyable(),
+                Tables\Columns\TextColumn::make('whatsapp')
+                    ->label('واتساب')
+                    ->limit(20),
             ])
             ->filters([])
             ->recordActions([

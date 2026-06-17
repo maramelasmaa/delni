@@ -10,6 +10,13 @@ return [
     'unique' => 'The :attribute has already been taken.',
     'email' => 'The :attribute must be a valid email address.',
     'confirmed' => 'The :attribute confirmation does not match.',
+    'password' => [
+        'letters' => 'The password must contain at least one letter.',
+        'mixed' => 'The password must contain both uppercase and lowercase letters.',
+        'numbers' => 'The password must contain at least one number.',
+        'symbols' => 'The password must contain at least one symbol.',
+        'uncompromised' => 'The given password has appeared in a data leak. Please choose a different password.',
+    ],
     'custom' => [
         'email' => [
             'unique' => 'This email address is already registered.',

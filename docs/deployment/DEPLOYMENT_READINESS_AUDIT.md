@@ -105,8 +105,9 @@ GOOGLE_REDIRECT_URL=https://your-railway-domain.railway.app/auth/google/callback
 
 ### Admin Setup
 ```
-ADMIN_EMAIL=admin@delni.ly
-ADMIN_PASSWORD=<strong-secure-password>
+SUPER_ADMIN_NAME=<super-admin-name>
+SUPER_ADMIN_EMAIL=<super-admin-email>
+SUPER_ADMIN_PASSWORD=<strong-secure-password>
 ```
 
 ### WhatsApp (Optional)
@@ -195,13 +196,13 @@ The `nixpacks.toml` release phase runs once before web start:
 cmds = [
   "php artisan migrate --force",
   "php artisan storage:link",
-  "php artisan delni:setup-admin",
+  "php artisan delni:ensure-super-admin",
   "php artisan event:cache"
 ]
 ```
 
 ✅ Migrations run fresh  
-✅ Admin user created from `ADMIN_EMAIL` / `ADMIN_PASSWORD`  
+✅ Super admin user created from `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD`  
 ✅ Storage symlink created (for public uploads)  
 ✅ Event cache warmed  
 
@@ -298,13 +299,13 @@ Railway's filesystem is **ephemeral** — files uploaded to the local disk will 
    - **setup:** Install PHP 8.3, Node 22, Composer
    - **install:** `composer install --no-dev`, `npm ci`
    - **build:** `npm run build`, cache config/views
-   - **release:** Run migrations, create admin, setup storage
+   - **release:** Run migrations, create env-configured super admin, setup storage
    - **start:** `php artisan serve --host=0.0.0.0 --port=$PORT`
 
 ### Verification
 ```bash
 # In Railway logs, look for:
-✓ Admin user ready: admin@delni.ly
+✓ Super admin configured from SUPER_ADMIN_EMAIL
 ✓ Build successful
 ✓ App listening on 0.0.0.0:8000
 ```
@@ -312,7 +313,7 @@ Railway's filesystem is **ephemeral** — files uploaded to the local disk will 
 ### First Login
 1. Go to `https://your-railway-domain.railway.app`
 2. Navigate to `/cp/admin`
-3. Login with `ADMIN_EMAIL` and `ADMIN_PASSWORD`
+3. Login with `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD`
 4. Change password immediately (optional but recommended)
 
 ---
@@ -357,7 +358,7 @@ php artisan storage:link
 sudo chown -R www-data:www-data storage public
 
 # 8. Create admin
-php artisan delni:setup-admin
+php artisan delni:ensure-super-admin
 
 # 9. Configure Nginx (use provided template)
 # 10. Enable HTTPS with Certbot

@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\ProviderTypeResource\Pages;
 
 use App\Filament\Resources\ProviderTypeResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 
-class CreateProviderType extends CreateRecord
+class CreateProviderType extends CreateRecordWithBack
 {
     protected static string $resource = ProviderTypeResource::class;
 }

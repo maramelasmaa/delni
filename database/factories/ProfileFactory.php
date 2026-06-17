@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Profile;
+use App\Models\ProfileStats;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -48,12 +49,17 @@ class ProfileFactory extends Factory
         });
     }
 
+    public function withAccess(): static
+    {
+        return $this->state(['provider_access_ends_at' => now()->addYear()]);
+    }
+
     public function withStats(): static
     {
         return $this->afterCreating(function (Profile $profile): void {
             // Only create stats if they don't already exist
-            if (! \App\Models\ProfileStats::where('profile_id', $profile->id)->exists()) {
-                \App\Models\ProfileStats::create([
+            if (! ProfileStats::where('profile_id', $profile->id)->exists()) {
+                ProfileStats::create([
                     'profile_id' => $profile->id,
                     'rating_avg' => 0.0,
                     'reviews_count' => 0,

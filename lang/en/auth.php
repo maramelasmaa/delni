@@ -43,4 +43,7 @@ return [
     'onboarding_link_expired' => 'This onboarding link has expired. Please request a new one.',
     'onboarding_link_used' => 'This link has already been used. Please request a new setup link.',
     'onboarding_link_invalid' => 'This onboarding link is invalid. Please check the link.',
+    'set_password_title' => 'Set Password',
+    'set_password_subtitle' => 'Set your account password to complete onboarding.',
+    'password_set_success' => 'Password has been set successfully. You can now log in.',
 ];

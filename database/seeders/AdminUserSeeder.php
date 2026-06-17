@@ -10,9 +10,13 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('SUPER_ADMIN_EMAIL', 'admin@delni.ly');
-        $name = env('SUPER_ADMIN_NAME', 'Delni Admin');
-        $password = env('SUPER_ADMIN_PASSWORD', 'ChangeMe123!');
+        $email = env('SUPER_ADMIN_EMAIL');
+        $name = env('SUPER_ADMIN_NAME');
+        $password = env('SUPER_ADMIN_PASSWORD');
+
+        if (! $name || ! $email || ! $password) {
+            throw new \RuntimeException('SUPER_ADMIN_NAME, SUPER_ADMIN_EMAIL, and SUPER_ADMIN_PASSWORD must be set before seeding an admin user.');
+        }
 
         $admin = User::firstOrCreate(
             ['email' => $email],

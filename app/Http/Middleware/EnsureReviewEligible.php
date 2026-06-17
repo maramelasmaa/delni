@@ -20,11 +20,6 @@ class EnsureReviewEligible
             return $next($request);
         }
 
-        if (Carbon::parse($user->created_at)->diffInHours(Carbon::now()) < 24) {
-            return redirect()->back()
-                ->with('error', __('messages.public.account_too_new'));
-        }
-
         $dailyCount = Review::query()
             ->where('user_id', $user->id)
             ->whereBetween('created_at', [
@@ -34,6 +29,13 @@ class EnsureReviewEligible
             ->count();
 
         if ($dailyCount >= 10) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('messages.public.review_daily_limit_reached'),
+                ], 422);
+            }
+
             return redirect()->back()
                 ->with('error', __('messages.public.review_daily_limit_reached'));
         }

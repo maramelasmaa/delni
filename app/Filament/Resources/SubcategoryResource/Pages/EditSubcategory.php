@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\SubcategoryResource\Pages;
 
 use App\Filament\Resources\SubcategoryResource;
+use App\Filament\Support\Pages\EditRecordWithBack;
 use App\Services\SvgIconService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
 
-class EditSubcategory extends EditRecord
+class EditSubcategory extends EditRecordWithBack
 {
     protected static string $resource = SubcategoryResource::class;
 
@@ -26,7 +26,7 @@ class EditSubcategory extends EditRecord
             } catch (\Throwable $e) {
                 Notification::make()
                     ->danger()
-                    ->title('Icon upload failed')
+                    ->title(__('filament.notifications.icon_upload_failed'))
                     ->body($e->getMessage())
                     ->send();
             }
@@ -39,6 +39,7 @@ class EditSubcategory extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            $this->getBackHeaderAction(),
             Actions\DeleteAction::make(),
         ];
     }

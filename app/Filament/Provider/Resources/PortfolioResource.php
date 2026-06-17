@@ -117,6 +117,9 @@ class PortfolioResource extends Resource
                     ->label('العنوان')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('short_description')
+                    ->label('الوصف المختصر')
+                    ->limit(50),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('الحالة')
                     ->boolean(),

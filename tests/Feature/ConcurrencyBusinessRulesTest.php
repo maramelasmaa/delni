@@ -12,8 +12,6 @@ use App\Models\PortfolioItem;
 use App\Models\Profile;
 use App\Models\ProfileStats;
 use App\Models\Review;
-use App\Models\Subscription;
-use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Services\ReviewCreationService;
 use App\Services\ReviewModerationService;
@@ -150,17 +148,10 @@ class ConcurrencyBusinessRulesTest extends TestCase
             'phone' => '+218912345678',
             'experience_years' => 5,
             'is_complete' => true,
+            'provider_access_ends_at' => now()->addMonth(),
         ]);
 
         ProfileStats::firstOrCreate(['profile_id' => $profile->id]);
-
-        Subscription::factory()->create([
-            'user_id' => $provider->id,
-            'plan_id' => SubscriptionPlan::factory()->create()->id,
-            'is_active' => true,
-            'starts_at' => now()->toDateString(),
-            'ends_at' => now()->addMonth()->toDateString(),
-        ]);
 
         return $profile->fresh();
     }

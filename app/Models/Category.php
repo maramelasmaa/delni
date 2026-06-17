@@ -31,6 +31,15 @@ class Category extends Model
         return $this->belongsTo(Icon::class);
     }
 
+    public function getIconAttribute()
+    {
+        if ($this->relationLoaded('icon')) {
+            return $this->getRelationValue('icon');
+        }
+
+        return $this->icon()->getResults();
+    }
+
     public function subcategories(): HasMany
     {
         return $this->hasMany(Subcategory::class)->orderBy('sort_order');

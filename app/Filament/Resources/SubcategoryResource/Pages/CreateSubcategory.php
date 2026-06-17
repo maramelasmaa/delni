@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\SubcategoryResource\Pages;
 
 use App\Filament\Resources\SubcategoryResource;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 use App\Services\SvgIconService;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\CreateRecord;
 
-class CreateSubcategory extends CreateRecord
+class CreateSubcategory extends CreateRecordWithBack
 {
     protected static string $resource = SubcategoryResource::class;
 
@@ -25,7 +25,7 @@ class CreateSubcategory extends CreateRecord
             } catch (\Throwable $e) {
                 Notification::make()
                     ->danger()
-                    ->title('Icon upload failed')
+                    ->title(__('filament.notifications.icon_upload_failed'))
                     ->body($e->getMessage())
                     ->send();
             }

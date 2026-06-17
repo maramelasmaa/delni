@@ -3,14 +3,16 @@
 namespace App\Filament\Resources\MarketplacePlacementResource\Pages;
 
 use App\Filament\Resources\MarketplacePlacementResource;
-use Filament\Resources\Pages\EditRecord;
+use App\Filament\Support\Pages\EditRecordWithBack;
 
-class EditMarketplacePlacement extends EditRecord
+class EditMarketplacePlacement extends EditRecordWithBack
 {
     protected static string $resource = MarketplacePlacementResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            $this->getBackHeaderAction(),
+        ];
     }
 }

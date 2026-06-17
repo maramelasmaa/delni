@@ -66,42 +66,6 @@ class MarketplacePlacementResource extends Resource
                                     ]),
                             ]),
 
-                        Tabs\Tab::make('البحث')
-                            ->schema([
-                                Section::make('موضع أعلى البحث')
-                                    ->schema([
-                                        Forms\Components\Toggle::make('stats.is_top_search')
-                                            ->label('أعلى البحث'),
-                                        Forms\Components\DatePicker::make('stats.top_search_until')
-                                            ->label('ينتهي في')
-                                            ->visible(fn ($get) => $get('stats.is_top_search')),
-                                    ]),
-                            ]),
-
-                        Tabs\Tab::make('التصنيف')
-                            ->schema([
-                                Section::make('تمييز التصنيف')
-                                    ->schema([
-                                        Forms\Components\Toggle::make('stats.is_top_category')
-                                            ->label('مميز في التصنيف'),
-                                        Forms\Components\DatePicker::make('stats.top_category_until')
-                                            ->label('ينتهي في')
-                                            ->visible(fn ($get) => $get('stats.is_top_category')),
-                                    ]),
-                            ]),
-
-                        Tabs\Tab::make('الفئة الفرعية')
-                            ->schema([
-                                Section::make('تمييز الفئة الفرعية')
-                                    ->schema([
-                                        Forms\Components\Toggle::make('stats.is_top_subcategory')
-                                            ->label('مميز في الفئة الفرعية'),
-                                        Forms\Components\DatePicker::make('stats.top_subcategory_until')
-                                            ->label('ينتهي في')
-                                            ->visible(fn ($get) => $get('stats.is_top_subcategory')),
-                                    ]),
-                            ]),
-
                     ]),
             ]);
     }
@@ -122,14 +86,6 @@ class MarketplacePlacementResource extends Resource
                     ->label('الرئيسية')
                     ->boolean()
                     ->sortable(),
-                Tables\Columns\IconColumn::make('stats.is_top_search')
-                    ->label('أعلى البحث')
-                    ->boolean()
-                    ->sortable(),
-                Tables\Columns\IconColumn::make('stats.is_top_category')
-                    ->label('أعلى التصنيف')
-                    ->boolean()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->label(__('filament.fields.created_at'))
@@ -139,12 +95,6 @@ class MarketplacePlacementResource extends Resource
                 Tables\Filters\Filter::make('homepage_featured')
                     ->query(fn (Builder $query) => $query->whereHas('stats', fn ($q) => $q->where('is_homepage_featured', true)))
                     ->label('مميز في الرئيسية'),
-                Tables\Filters\Filter::make('top_search')
-                    ->query(fn (Builder $query) => $query->whereHas('stats', fn ($q) => $q->where('is_top_search', true)))
-                    ->label('أعلى البحث'),
-                Tables\Filters\Filter::make('top_category')
-                    ->query(fn (Builder $query) => $query->whereHas('stats', fn ($q) => $q->where('is_top_category', true)))
-                    ->label('أعلى التصنيف'),
             ])
             ->paginated([25, 50, 100])
             ->recordActions([

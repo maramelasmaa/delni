@@ -27,11 +27,19 @@
     $sortedReviews = $reviews->sortByDesc('created_at')->values();
     $isFavorited = (bool) ($isFavorited ?? false);
     $previousUrl = url()->previous();
-    $backUrl = $previousUrl !== url()->current() ? $previousUrl : route('public.categories');
+    $invalidBackUrls = ['/sw.js', '/offline.html', '/favicon.ico'];
+    $isInvalidBackUrl = false;
+    foreach ($invalidBackUrls as $invalidPath) {
+        if (str_ends_with($previousUrl, $invalidPath)) {
+            $isInvalidBackUrl = true;
+            break;
+        }
+    }
+    $backUrl = ($previousUrl !== url()->current() && !$isInvalidBackUrl) ? $previousUrl : route('public.categories');
 
     $contactActions = collect([
         $whatsappNumber ? [
-            'label'    => 'واتساب',
+            'label'    => __('messages.public.whatsapp'),
             'url'      => "https://wa.me/{$whatsappNumber}?text={$whatsappMessage}",
             'icon'     => 'heroicon-o-chat-bubble-left-ellipsis',
             'class'    => 'is-whatsapp',
@@ -39,7 +47,7 @@
             'primary'  => true,
         ] : null,
         $phoneNumber ? [
-            'label'    => 'اتصال',
+            'label'    => __('messages.public.call'),
             'url'      => "tel:{$phoneNumber}",
             'icon'     => 'heroicon-o-phone',
             'class'    => '',
@@ -47,7 +55,7 @@
             'primary'  => true,
         ] : null,
         $profile->website ? [
-            'label'    => 'الموقع',
+            'label'    => __('messages.public.website'),
             'url'      => $profile->website,
             'icon'     => 'heroicon-o-globe-alt',
             'class'    => '',
@@ -55,7 +63,7 @@
             'primary'  => false,
         ] : null,
         $profile->map_url ? [
-            'label'    => 'الاتجاهات',
+            'label'    => __('messages.public.directions'),
             'url'      => $profile->map_url,
             'icon'     => 'heroicon-o-map-pin',
             'class'    => '',
@@ -63,7 +71,7 @@
             'primary'  => false,
         ] : null,
         $profile->instagram ? [
-            'label'    => 'Instagram',
+            'label'    => __('filament.link_types.instagram'),
             'url'      => $profile->instagram,
             'icon'     => 'brand-instagram',
             'class'    => '',
@@ -71,7 +79,7 @@
             'primary'  => false,
         ] : null,
         $profile->facebook ? [
-            'label'    => 'Facebook',
+            'label'    => __('filament.link_types.facebook'),
             'url'      => $profile->facebook,
             'icon'     => 'brand-facebook',
             'class'    => '',
@@ -79,7 +87,7 @@
             'primary'  => false,
         ] : null,
         $profile->linkedin ? [
-            'label'    => 'LinkedIn',
+            'label'    => __('filament.link_types.linkedin'),
             'url'      => $profile->linkedin,
             'icon'     => 'brand-linkedin',
             'class'    => '',
@@ -362,23 +370,26 @@
                     <div class="pp-review-notice">مزودو الخدمات لا يمكنهم كتابة تقييمات.</div>
                 @elseif($profile->user_id === auth()->id())
                     <div class="pp-review-notice">لا يمكنك تقييم ملفك الخاص.</div>
-                @elseif(auth()->user()->created_at && auth()->user()->created_at->diffInHours(now()) < 24)
-                    <div class="pp-review-notice">{{ __('messages.public.account_too_new') }}</div>
                 @else
-                    <form method="POST" action="{{ route('review.store', $profile) }}" class="pp-review-form">
+                    <form method="POST" action="{{ route('review.store', $profile) }}" class="pp-review-form" id="reviewForm">
                         @csrf
-                        <label for="rating">التقييم</label>
-                        <select id="rating" name="rating" required>
-                            <option value="">اختر التقييم</option>
-                            @for($r = 5; $r >= 1; $r--)
-                                <option value="{{ $r }}" @selected(old('rating') == $r)>{{ $r }} / 5</option>
+                        <label>التقييم <span class="pp-optional-label">(اختياري)</span></label>
+                        <div class="pp-star-selector" id="starSelector" dir="ltr">
+                            @for($r = 1; $r <= 5; $r++)
+                                <button type="button" class="pp-star-btn" data-value="{{ $r }}" aria-label="تقييم {{ $r }} من 5">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                    </svg>
+                                </button>
                             @endfor
-                        </select>
+                        </div>
+                        <input type="hidden" name="rating" id="ratingValue" value="{{ old('rating') }}">
 
-                        <label for="comment">رأيك</label>
+                        <label for="comment">رأيك <span class="pp-optional-label">(اختياري)</span></label>
                         <textarea id="comment" name="comment" rows="4" maxlength="2000" placeholder="شارك تجربتك باختصار...">{{ old('comment') }}</textarea>
+                        <span class="pp-review-tip">يمكنك اختيار تقييم بالنجوم، أو كتابة تعليق، أو الاثنين معاً.</span>
 
-                        <button type="submit">إرسال التقييم</button>
+                        <button type="submit" id="submitReviewBtn">إرسال التقييم</button>
                     </form>
                 @endif
 
@@ -387,7 +398,9 @@
                         <article class="{{ $index >= 3 ? 'is-hidden-review' : '' }}" data-review-item>
                             <div>
                                 <strong>{{ $review->user?->name ?? $review->reviewer_name ?? 'مستخدم دلني' }}</strong>
-                                <span class="pp-review-badge">★ {{ $review->rating }}</span>
+                                @if($review->rating)
+                                    <span class="pp-review-badge">★ {{ $review->rating }}</span>
+                                @endif
                             </div>
                             @if($review->comment)<p>{{ $review->comment }}</p>@endif
                             @if($review->created_at)<small>{{ $review->created_at->diffForHumans() }}</small>@endif
@@ -501,28 +514,29 @@
         position: relative;
         z-index: 1;
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        gap: .85rem;
-        align-items: center;
-        padding: 1rem;
+        grid-template-columns: auto 1fr;
+        gap: 1.35rem;
+        align-items: flex-start;
+        padding: 2rem 2rem 1.35rem;
         background: #fff;
     }
 
     .pp-avatar {
-        width: clamp(74px, 9vw, 96px);
-        height: clamp(74px, 9vw, 96px);
+        width: clamp(90px, 12vw, 120px);
+        height: clamp(90px, 12vw, 120px);
         display: grid;
         place-items: center;
         overflow: hidden;
         align-self: start;
-        margin-top: -2.35rem;
-        border-radius: 18px;
-        border: 3px solid #fff;
-        background: #0B1A34;
-        box-shadow: 0 14px 32px rgba(15,23,42,.16);
+        margin-top: -3rem;
+        border-radius: 20px;
+        border: 4px solid #fff;
+        background: linear-gradient(135deg, #0B1A34 0%, #1E293B 100%);
+        box-shadow: 0 18px 48px rgba(15,23,42,.24);
+        flex-shrink: 0;
     }
     .pp-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .pp-avatar span { color: var(--delni-primary); font-size: 2.2rem; font-weight: 950; }
+    .pp-avatar span { color: var(--delni-primary); font-size: 2.8rem; font-weight: 950; }
 
     .pp-eyebrow {
         width: fit-content;
@@ -530,185 +544,215 @@
         display: inline-flex;
         align-items: center;
         color: var(--delni-primary);
-        border: 1px solid rgba(241,98,15,.16);
+        border: 1.5px solid rgba(241,98,15,.24);
         border-radius: 999px;
-        background: rgba(241,98,15,.07);
-        padding: .28rem .58rem;
-        font-size: .72rem;
-        font-weight: 950;
+        background: rgba(241,98,15,.08);
+        padding: .35rem .68rem;
+        font-size: .74rem;
+        font-weight: 900;
         line-height: 1.2;
         overflow-wrap: anywhere;
+        letter-spacing: .3px;
+    }
+
+    .pp-title {
+        display: grid;
+        gap: .68rem;
+        align-content: start;
     }
 
     .pp-title h1 {
-        margin: .45rem 0 0;
+        margin: 0;
         color: var(--delni-navy);
-        font-size: clamp(1.45rem, 3vw, 2.25rem);
-        line-height: 1.18;
-        font-weight: 950;
-        letter-spacing: 0;
+        font-size: clamp(1.65rem, 4vw, 2.5rem);
+        line-height: 1.15;
+        font-weight: 970;
+        letter-spacing: -.3px;
         overflow-wrap: anywhere;
     }
+
     .pp-meta {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: .25rem .55rem;
-        margin: .45rem 0 0;
-    }
-    .pp-meta span {
-        color: rgba(255,255,255,.68);
-        font-size: .78rem;
-        font-weight: 800;
-        line-height: 1.4;
-    }
-    .pp-meta span:not(:last-child)::after {
-        content: '·';
-        margin-inline-start: .55rem;
-        opacity: .4;
-    }
-    .pp-rating-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        margin-top: .55rem;
-        padding: .3rem .6rem;
-        border-radius: 999px;
-        background: rgba(255,255,255,.12);
-        border: 1px solid rgba(255,255,255,.18);
-        color: rgba(255,255,255,.9);
-        font-size: .78rem;
-        font-weight: 900;
-        text-decoration: none;
-    }
-    .pp-rating-chip b { color: #FBBF24; font-style: normal; }
-    .pp-rating-chip span { opacity: .7; }
-    .pp-meta {
-        gap: .4rem;
-        margin: .65rem 0 0;
-    }
-    .pp-meta > span {
-        min-height: 28px;
-        display: inline-flex;
-        align-items: center;
-        gap: .28rem;
-        max-width: 100%;
-        padding: .28rem .52rem;
-        border: 1px solid var(--delni-border);
-        border-radius: 999px;
-        background: #F8FAFC;
-        color: #475569;
-        font-size: .74rem;
-        font-weight: 850;
-        line-height: 1.35;
-    }
-    .pp-meta span:not(:last-child)::after {
-        content: none;
+        display: grid;
+        grid-auto-rows: max-content;
+        gap: .6rem;
         margin: 0;
     }
+
+    .pp-meta > span {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        gap: .38rem;
+        max-width: 100%;
+        padding: .38rem .68rem;
+        border: 1.2px solid #E2E8F0;
+        border-radius: 999px;
+        background: linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
+        color: #334155;
+        font-size: .76rem;
+        font-weight: 850;
+        line-height: 1.35;
+        transition: all .2s ease;
+    }
+
+    .pp-meta > span:hover {
+        border-color: #CBD5E1;
+        background: #F8FAFC;
+    }
+
+    .pp-meta > span:not(:last-child)::after {
+        content: none;
+    }
+
     .pp-meta svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         color: var(--delni-primary);
         flex-shrink: 0;
     }
+
     .pp-meta > span > span {
         min-width: 0;
         color: inherit;
         overflow-wrap: anywhere;
     }
+
     .pp-rating-chip {
         gap: .55rem;
-        justify-self: end;
-        min-width: 104px;
-        margin-top: 0;
-        padding: .7rem .8rem;
+        min-width: 120px;
+        padding: .85rem .95rem;
         border-radius: 16px;
-        background: #FFF7ED;
-        border: 1px solid #FED7AA;
+        background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
+        border: 1.5px solid #FED7AA;
         color: var(--delni-navy);
-        font-size: inherit;
-        font-weight: inherit;
-    }
-    .pp-rating-chip:hover { border-color: #FDBA74; }
-    .pp-rating-chip span { opacity: 1; }
-    .pp-rating-chip__star {
-        width: 34px;
-        height: 34px;
+        font-size: .85rem;
+        font-weight: 900;
+        text-decoration: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 11px;
+        transition: all .2s ease;
+        align-self: start;
+        margin-top: 0;
+    }
+
+    .pp-rating-chip:hover {
+        border-color: #FDBA74;
+        background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(241,98,15,.12);
+    }
+
+    .pp-rating-chip b { color: #F59E0B; font-style: normal; }
+    .pp-rating-chip span { opacity: 1; }
+
+    .pp-rating-chip__star {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
         background: #F59E0B;
         color: #fff;
-        font-size: 1rem;
+        font-size: 1.1rem;
         line-height: 1;
         flex-shrink: 0;
     }
+
     .pp-rating-chip__body {
         display: grid;
-        gap: .08rem;
+        gap: .12rem;
     }
+
     .pp-rating-chip strong {
         color: var(--delni-navy);
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 950;
         line-height: 1;
     }
+
     .pp-rating-chip small {
         color: #64748B;
-        font-size: .72rem;
+        font-size: .75rem;
         font-weight: 850;
         line-height: 1.25;
         white-space: nowrap;
     }
+
     .is-muted { opacity: .28; }
 
     .pp-actions {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: .55rem;
+        gap: .6rem;
+        padding: 0 2rem 1.35rem;
+        justify-content: flex-start;
     }
+
     .pp-action-primary,
     .pp-favorite {
-        min-height: 46px;
+        min-height: 48px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: .45rem;
-        padding: 0 1.1rem;
-        border-radius: 15px;
-        border: 1px solid var(--delni-border);
-        background: #fff;
+        gap: .5rem;
+        padding: 0 1.35rem;
+        border-radius: 16px;
+        border: 1.2px solid #E2E8F0;
+        background: linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
         color: var(--delni-navy);
         font: inherit;
-        font-size: .86rem;
+        font-size: .87rem;
         font-weight: 950;
         text-decoration: none;
         cursor: pointer;
-        flex: 1;
+        transition: all .2s ease;
+        flex: 0 1 auto;
     }
+
+    .pp-action-primary:hover,
+    .pp-favorite:hover {
+        border-color: #CBD5E1;
+        background: #F1F5F9;
+        transform: translateY(-1px);
+    }
+
     .pp-action-icon {
-        width: 46px;
-        height: 46px;
+        width: 48px;
+        height: 48px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 13px;
-        border: 1px solid var(--delni-border);
-        background: #fff;
+        border-radius: 14px;
+        border: 1.2px solid #E2E8F0;
+        background: linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
         color: var(--delni-navy);
         text-decoration: none;
         flex-shrink: 0;
+        transition: all .2s ease;
     }
+
+    .pp-action-icon:hover {
+        border-color: #CBD5E1;
+        background: #F1F5F9;
+        transform: translateY(-1px);
+    }
+
     .pp-action-primary svg,
     .pp-action-icon svg,
-    .pp-favorite svg { width: 18px; height: 18px; }
+    .pp-favorite svg { width: 20px; height: 20px; }
+
     .pp-action-primary.is-whatsapp {
-        background: #22C55E;
+        background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
         border-color: #22C55E;
         color: #fff;
+    }
+
+    .pp-action-primary.is-whatsapp:hover {
+        border-color: #16A34A;
+        background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
     }
 
     .pp-layout {
@@ -831,6 +875,7 @@
         position: relative;
         overflow: hidden;
         background: #0B1A34;
+        height: 210px;
     }
     .pp-proj-slides {
         display: flex;
@@ -864,7 +909,7 @@
     .pp-proj-slide img,
     .pp-gallery__empty {
         width: 100%;
-        aspect-ratio: 16 / 10;
+        height: 210px;
         object-fit: cover;
         display: block;
         background: #0B1A34;
@@ -1201,6 +1246,55 @@
         font-size: .8rem;
         font-weight: 950;
     }
+    .pp-star-selector {
+        display: inline-flex;
+        gap: 0.35rem;
+        margin-bottom: 0.25rem;
+    }
+    .pp-star-btn {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        background: transparent;
+        color: #E2E8F0;
+        cursor: pointer;
+        padding: 0;
+        transition: color 0.15s ease, transform 0.1s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        outline: none;
+    }
+    [data-theme="dark"] .pp-star-btn {
+        color: #334155;
+    }
+    .pp-star-btn svg {
+        width: 32px;
+        height: 32px;
+        fill: currentColor;
+    }
+    .pp-star-btn:hover {
+        transform: scale(1.12);
+    }
+    .pp-star-btn.is-active,
+    .pp-star-btn.is-hovered {
+        color: #F59E0B;
+    }
+    .pp-optional-label {
+        font-weight: normal;
+        font-size: 0.75rem;
+        color: var(--delni-muted);
+        margin-inline-start: 0.25rem;
+    }
+    .pp-review-tip {
+        font-size: 0.72rem;
+        color: var(--delni-muted);
+        margin-top: -0.25rem;
+        margin-bottom: 0.25rem;
+        display: block;
+        font-weight: 600;
+    }
+
     .pp-review-form select,
     .pp-review-form textarea {
         width: 100%;
@@ -1289,9 +1383,10 @@
             grid-template-columns: 1fr;
             gap: .75rem;
         }
+        .pp-proj-slider,
         .pp-proj-slide img,
         .pp-gallery__empty {
-            aspect-ratio: 4 / 3;
+            height: 190px;
         }
         .pp-proj-nav {
             width: 34px;
@@ -1505,6 +1600,126 @@
             closePortfolioLightbox();
         }
     });
+
+    // Interactive Star Rating Selector
+    const starSelector = document.getElementById('starSelector');
+    const ratingInput = document.getElementById('ratingValue');
+    if (starSelector && ratingInput) {
+        const stars = starSelector.querySelectorAll('.pp-star-btn');
+        
+        function updateStars(val, isHover = false) {
+            stars.forEach(star => {
+                const starVal = parseInt(star.dataset.value, 10);
+                if (isHover) {
+                    star.classList.toggle('is-hovered', starVal <= val);
+                } else {
+                    star.classList.toggle('is-active', starVal <= val);
+                }
+            });
+        }
+
+        if (ratingInput.value) {
+            updateStars(parseInt(ratingInput.value, 10));
+        }
+
+        stars.forEach(star => {
+            star.addEventListener('click', function () {
+                const val = parseInt(this.dataset.value, 10);
+                ratingInput.value = val;
+                updateStars(val);
+            });
+
+            star.addEventListener('mouseenter', function () {
+                const val = parseInt(this.dataset.value, 10);
+                updateStars(val, true);
+            });
+        });
+
+        starSelector.addEventListener('mouseleave', function () {
+            stars.forEach(star => star.classList.remove('is-hovered'));
+        });
+    }
+
+    // AJAX Review Form Submission Flow
+    const reviewForm = document.getElementById('reviewForm');
+    const submitBtn = document.getElementById('submitReviewBtn');
+    if (reviewForm && submitBtn) {
+        reviewForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            
+            const commentVal = document.getElementById('comment')?.value.trim();
+            if (!ratingInput.value && !commentVal) {
+                alert('يجب إدخال تقييم بالنجوم أو كتابة تعليق لإرسال المراجعة.');
+                return;
+            }
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
+            submitBtn.disabled = true;
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.textContent = 'جاري الإرسال...';
+
+            const formData = new FormData(reviewForm);
+
+            fetch(reviewForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.indexOf('application/json') !== -1) {
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw data;
+                        }
+                        return data;
+                    });
+                } else {
+                    // It returned HTML (likely redirected back due to middleware, session expiry, etc.)
+                    // Reload the page to surface the redirect/flash message naturally
+                    window.location.reload();
+                    return new Promise(() => {}); // Stop promise chain
+                }
+            })
+            .then(data => {
+                reviewForm.reset();
+                ratingInput.value = '';
+                updateStars(0);
+
+                let flash = document.querySelector('.pp-review-flash.is-success');
+                if (!flash) {
+                    flash = document.createElement('div');
+                    flash.className = 'pp-review-flash is-success';
+                    starSelector.parentNode.insertBefore(flash, starSelector);
+                }
+                flash.textContent = data.message || 'تم إرسال التقييم بنجاح.';
+                flash.style.display = 'block';
+                flash.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                const errorFlash = document.querySelector('.pp-review-flash.is-error');
+                if (errorFlash) { errorFlash.style.display = 'none'; }
+            })
+            .catch(err => {
+                console.error(err);
+                let flash = document.querySelector('.pp-review-flash.is-error');
+                if (!flash) {
+                    flash = document.createElement('div');
+                    flash.className = 'pp-review-flash is-error';
+                    starSelector.parentNode.insertBefore(flash, starSelector);
+                }
+                flash.textContent = err.message || err.errors?.rating?.[0] || err.errors?.comment?.[0] || 'تعذر إرسال التقييم. يرجى المحاولة لاحقاً.';
+                flash.style.display = 'block';
+                flash.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            });
+        });
+    }
 
     document.getElementById('showAllReviewsBtn')?.addEventListener('click', function () {
         document.querySelectorAll('[data-review-item].is-hidden-review').forEach(function (item) {

@@ -113,10 +113,6 @@ Route::middleware([
 ])->group(function (): void {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Account edit for regular users (providers manage account info in Filament)
-    Route::get('/account/edit', [AuthController::class, 'showAccountEditForm'])->name('account.edit');
-    Route::post('/account/update', [AuthController::class, 'updateAccount'])->name('account.update');
-
     Route::redirect('/dashboard', '/settings')->name('dashboard');
     Route::delete('/account', [SettingsController::class, 'destroy'])->name('account.destroy');
 });

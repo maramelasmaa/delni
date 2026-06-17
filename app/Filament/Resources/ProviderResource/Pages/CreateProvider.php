@@ -5,15 +5,21 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ProviderResource\Pages;
 
 use App\Filament\Resources\ProviderResource;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 use App\Models\OnboardingToken;
 use App\Models\User;
+use App\Services\ProviderCreationService;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Js;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
+use Throwable;
 
-class CreateProvider extends CreateRecord
+class CreateProvider extends CreateRecordWithBack
 {
     protected static string $resource = ProviderResource::class;
 
@@ -25,7 +31,12 @@ class CreateProvider extends CreateRecord
             $accountData['password'] = bcrypt(Str::random(32));
 
             $record = User::query()->create($accountData);
-            $record->assignRole('provider');
+            $record->assignRole(Role::findOrCreate('provider', 'web'));
+
+            // CRITICAL: Create provider profile synchronously, inside transaction.
+            // This ensures profile creation never depends on queue workers.
+            $service = app(ProviderCreationService::class);
+            $service->createProfileForUser($record);
 
             ProviderResource::saveProviderData($record, $data);
 
@@ -46,7 +57,22 @@ class CreateProvider extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $this->showOnboardingSuccessNotification();
+        try {
+            $this->showOnboardingSuccessNotification();
+        } catch (Throwable $e) {
+            Log::error('Provider was created but setup link notification failed', [
+                'provider_id' => $this->record?->getKey(),
+                'email' => $this->record?->email,
+                'exception' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->title(__('filament.notifications.provider_created'))
+                ->body(__('filament.notifications.provider_created_setup_link_hidden'))
+                ->warning()
+                ->persistent()
+                ->send();
+        }
     }
 
     protected function showOnboardingSuccessNotification(): void
@@ -54,26 +80,26 @@ class CreateProvider extends CreateRecord
         $providerEmail = e((string) $this->record->email);
         $setupUrl = $this->latestSetupUrl();
 
-        $content = <<<HTML
-            <div style="text-align: left; padding: 8px 0;">
-                <p style="margin: 0 0 12px; color: #059669; font-size: 15px; font-weight: 700;">
-                    Provider created successfully.
-                </p>
-                <p style="margin: 0 0 14px; color: #374151; font-size: 14px;">
-                    Copy this secure setup link and send it to <strong>{$providerEmail}</strong>. Delni does not send onboarding emails automatically.
-                </p>
-                <p style="word-break: break-all; margin: 0; padding: 12px; border-radius: 8px; background: #f3f4f6; color: #111827; font-size: 13px;">
-                    {$setupUrl}
-                </p>
-                <p style="margin: 12px 0 0; color: #92400e; font-size: 12px;">
-                    The setup link expires in 72 hours.
-                </p>
-            </div>
-        HTML;
+        $content = __('filament.notifications.setup_link_send_manual', [
+            'email' => $providerEmail,
+            'link' => $setupUrl,
+        ]);
 
         Notification::make()
-            ->title('Provider setup link generated')
+            ->title(__('filament.notifications.provider_setup_link_generated'))
             ->body($content)
+            ->actions([
+                Action::make('copySetupLink')
+                    ->label(__('filament.actions.copy_setup_link'))
+                    ->icon('heroicon-o-clipboard')
+                    ->color('gray')
+                    ->actionJs('navigator.clipboard.writeText('.Js::from($setupUrl).')'),
+                Action::make('openSetupLink')
+                    ->label(__('filament.actions.open_setup_link'))
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('gray')
+                    ->url($setupUrl, shouldOpenInNewTab: true),
+            ])
             ->success()
             ->persistent()
             ->send();
@@ -88,7 +114,7 @@ class CreateProvider extends CreateRecord
             ->first();
 
         if (! $token instanceof OnboardingToken) {
-            return 'No active setup link was generated.';
+            return __('filament.notifications.setup_link_missing');
         }
 
         return route('onboarding.show', ['token' => $token->token]);

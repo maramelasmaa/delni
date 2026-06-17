@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\ContactInfos\Pages;
 
 use App\Filament\Resources\ContactInfos\ContactInfoResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 
-class CreateContactInfo extends CreateRecord
+class CreateContactInfo extends CreateRecordWithBack
 {
     protected static string $resource = ContactInfoResource::class;
 

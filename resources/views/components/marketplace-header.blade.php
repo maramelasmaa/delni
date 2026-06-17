@@ -8,154 +8,33 @@
     'description' => null,
 ])
 
-<header class="mp-header">
+<header class="grid grid-cols-[auto_minmax(0,_1fr)_auto] items-center gap-3 p-3 md:p-4.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-sm">
     @if($backUrl)
-        <a href="{{ $backUrl }}" class="mp-header__back" aria-label="{{ $backLabel }}">
-            <x-render-icon icon="heroicon-o-arrow-right" />
+        <a href="{{ $backUrl }}" class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors" aria-label="{{ $backLabel }}">
+            <x-render-icon icon="heroicon-o-arrow-right" class="w-5 h-5" />
         </a>
     @endif
 
-    <div class="mp-header__body">
+    <div class="min-w-0">
         @if($eyebrow)
-            <span class="mp-header__eyebrow">{{ $eyebrow }}</span>
+            <span class="block text-primary text-[10px] md:text-xs font-black tracking-wider mb-0.5 uppercase">{{ $eyebrow }}</span>
         @endif
 
-        <h1>{{ $title }}</h1>
+        <h1 class="m-0 text-slate-900 dark:text-slate-100 text-[1.05rem] md:text-xl font-black leading-tight truncate">{{ $title }}</h1>
 
         @if($description)
-            <p>{{ $description }}</p>
+            <p class="hidden md:block text-slate-500 dark:text-slate-400 text-xs md:text-sm font-semibold leading-relaxed mt-1.5 max-w-2xl">{{ $description }}</p>
         @endif
 
         @if($count !== null)
-            <span class="mp-header__count">{{ $count }}</span>
+            <span class="inline-flex text-slate-500 dark:text-slate-400 text-[11px] md:text-xs font-bold mt-1">{{ $count }}</span>
         @endif
     </div>
 
     @if($icon)
-        <div class="mp-header__icon">
+        <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/20 text-primary [&_svg]:w-5 [&_svg]:h-5">
             {{ $icon }}
         </div>
     @endif
 </header>
 
-@once
-    @push('styles')
-        <style>
-            .mp-header {
-                display: grid;
-                grid-template-columns: auto minmax(0, 1fr) auto;
-                align-items: center;
-                gap: .75rem;
-                padding: .95rem;
-                border: 1px solid var(--delni-border);
-                border-radius: 18px;
-                background: #fff;
-                box-shadow: var(--delni-shadow-sm);
-            }
-
-            .mp-header__back,
-            .mp-header__icon {
-                width: 42px;
-                height: 42px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 14px;
-                border: 1px solid var(--delni-border);
-                background: #F8FAFC;
-                color: var(--delni-navy);
-            }
-
-            .mp-header__back svg,
-            .mp-header__icon svg {
-                width: 20px;
-                height: 20px;
-            }
-
-            .mp-header__body {
-                min-width: 0;
-            }
-
-            .mp-header__eyebrow {
-                display: block;
-                color: var(--delni-primary);
-                font-size: .72rem;
-                font-weight: 900;
-                margin-bottom: .15rem;
-            }
-
-            .mp-header h1 {
-                margin: 0;
-                color: var(--delni-navy);
-                font-size: clamp(1.15rem, 2vw, 1.45rem);
-                line-height: 1.25;
-                font-weight: 950;
-            }
-
-            .mp-header p {
-                max-width: 56rem;
-                margin: .35rem 0 0;
-                color: var(--delni-muted);
-                font-size: .86rem;
-                line-height: 1.7;
-                font-weight: 650;
-            }
-
-            .mp-header__count {
-                display: inline-flex;
-                margin-top: .35rem;
-                color: #64748B;
-                font-size: .76rem;
-                font-weight: 850;
-            }
-
-            [data-theme="dark"] .mp-header {
-                background: #1E293B;
-                border-color: #334155;
-            }
-            [data-theme="dark"] .mp-header__back,
-            [data-theme="dark"] .mp-header__icon {
-                background: #0F172A;
-                border-color: #334155;
-                color: #F1F5F9;
-            }
-            [data-theme="dark"] .mp-header h1 { color: #F1F5F9; }
-            [data-theme="dark"] .mp-header p,
-            [data-theme="dark"] .mp-header__count { color: #94A3B8; }
-
-            @media (max-width: 700px) {
-                .mp-header {
-                    position: sticky;
-                    top: calc(var(--pwa-header-height) + env(safe-area-inset-top) + .35rem);
-                    z-index: 5;
-                    gap: .6rem;
-                    padding: .75rem;
-                    border-radius: 16px;
-                }
-
-                .mp-header__back,
-                .mp-header__icon {
-                    width: 38px;
-                    height: 38px;
-                    border-radius: 12px;
-                }
-
-                .mp-header h1 {
-                    font-size: 1.05rem;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-
-                .mp-header p {
-                    display: none;
-                }
-
-                .mp-header__count {
-                    margin-top: .12rem;
-                    font-size: .72rem;
-                }
-            }
-        </style>
-    @endpush
-@endonce

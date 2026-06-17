@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class ReviewCreationService
 {
-    public function create(User $user, Profile $profile, int $rating, ?string $comment = null): Review
+    public function create(User $user, Profile $profile, ?int $rating = null, ?string $comment = null): Review
     {
         return DB::transaction(function () use ($user, $profile, $rating, $comment): Review {
             User::query()
@@ -31,7 +31,7 @@ class ReviewCreationService
 
             if ($alreadyReviewed) {
                 throw ValidationException::withMessages([
-                    'profile' => 'You have already submitted a review for this profile.',
+                    'profile' => __('messages.already_reviewed'),
                 ]);
             }
 
@@ -61,7 +61,7 @@ class ReviewCreationService
             } catch (QueryException $exception) {
                 if ($this->isDuplicateReviewConstraint($exception)) {
                     throw ValidationException::withMessages([
-                        'profile' => 'You have already submitted a review for this profile.',
+                        'profile' => __('messages.already_reviewed'),
                     ]);
                 }
 

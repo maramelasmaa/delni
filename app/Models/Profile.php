@@ -22,11 +22,13 @@ class Profile extends Model
         'city_id', 'category_id', 'whatsapp', 'phone',
         'experience_years', 'logo', 'cover_image', 'is_complete',
         'website', 'instagram', 'facebook', 'linkedin',
+        'provider_access_ends_at',
     ];
 
     protected $casts = [
         'is_complete' => 'boolean',
         'offers_remote_work' => 'boolean',
+        'provider_access_ends_at' => 'datetime',
     ];
 
     // Relationships

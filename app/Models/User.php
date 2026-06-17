@@ -66,18 +66,6 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Profile::class);
     }
 
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(Subscription::class);
-    }
-
-    public function activeSubscription(): HasOne
-    {
-        return $this->hasOne(Subscription::class)
-            ->where('is_active', true)
-            ->where('ends_at', '>=', today());
-    }
-
     public function suspendedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'suspended_by');

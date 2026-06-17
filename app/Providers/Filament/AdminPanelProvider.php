@@ -24,9 +24,11 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         $panel = $panel
+            ->default()
             ->id('admin')
             ->path(env('FILAMENT_PATH', 'cp/admin'))
-            ->brandLogo(fn () => view('filament.brand'))
+            ->brandLogo(asset('images/logo.jpg'))
+            ->brandLogoHeight('36px')
             ->brandName('دلني')
             ->login()
             ->profile()
@@ -66,7 +68,6 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 __('filament.nav.providers'),
                 __('filament.nav.marketplace'),
-                __('filament.nav.billing'),
                 __('filament.nav.community'),
                 __('filament.nav.system'),
             ])

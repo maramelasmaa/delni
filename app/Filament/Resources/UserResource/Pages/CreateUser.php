@@ -3,15 +3,15 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 use App\Models\User;
 use App\Services\ProviderCreationService;
 use App\Services\SuperAdminGuardService;
-use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
-class CreateUser extends CreateRecord
+class CreateUser extends CreateRecordWithBack
 {
     protected static string $resource = UserResource::class;
 

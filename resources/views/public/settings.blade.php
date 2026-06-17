@@ -44,18 +44,9 @@
 
     {{-- Account Menu Group (Authenticated) --}}
     @auth
-        <div class="st-group">
-            <p class="st-group__label">الحساب</p>
-            <div class="st-list">
-                <a href="{{ route('account.edit') }}" class="st-row">
-                    <div class="st-row__icon st-row__icon--blue">
-                        <x-render-icon icon="heroicon-o-pencil-square" style="width: 16px; height: 16px;" />
-                    </div>
-                    <span class="st-row__text">تعديل معلوماتي</span>
-                    <x-render-icon icon="heroicon-o-chevron-left" class="st-row__arrow" />
-                </a>
-
-                @if(auth()->user()->profile)
+        @if(auth()->user()->profile)
+            <div class="st-group">
+                <div class="st-list">
                     <a href="{{ route('public.provider', auth()->user()->profile->slug) }}" class="st-row">
                         <div class="st-row__icon st-row__icon--orange">
                             <x-render-icon icon="heroicon-o-identification" style="width: 16px; height: 16px;" />
@@ -63,9 +54,9 @@
                         <span class="st-row__text">ملفي المهني</span>
                         <x-render-icon icon="heroicon-o-chevron-left" class="st-row__arrow" />
                     </a>
-                @endif
+                </div>
             </div>
-        </div>
+        @endif
     @endauth
 
     {{-- Display/Appearance Menu Group --}}
@@ -133,32 +124,6 @@
                         <span class="st-row__text">تسجيل الخروج</span>
                     </button>
                 </form>
-
-                <button type="button" class="st-row st-row--btn st-row--danger" id="deleteAccountBtn">
-                    <div class="st-row__icon st-row__icon--red">
-                        <x-render-icon icon="heroicon-o-trash" style="width: 16px; height: 16px;" />
-                    </div>
-                    <span class="st-row__text">حذف الحساب</span>
-                </button>
-            </div>
-        </div>
-
-        {{-- Bottom Sheet Confirmation Drawer --}}
-        <div class="st-modal" id="deleteModal" hidden>
-            <div class="st-modal__backdrop" id="deleteModalBackdrop"></div>
-            <div class="st-modal__sheet">
-                <div class="st-modal__drag-handle"></div>
-                <div class="st-modal__icon">
-                    <x-render-icon icon="heroicon-o-exclamation-triangle" style="width: 20px; height: 20px;" />
-                </div>
-                <h2>حذف الحساب</h2>
-                <p>هذا الإجراء لا يمكن التراجع عنه. سيتم حذف حسابك وجميع بياناتك نهائياً من أنظمتنا.</p>
-                <form method="POST" action="{{ route('account.destroy') }}">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="st-modal__confirm">تأكيد الحذف النهائي</button>
-                </form>
-                <button type="button" class="st-modal__cancel" id="deleteModalCancel">إلغاء</button>
             </div>
         </div>
     @endauth
@@ -189,14 +154,7 @@
         applyTheme(next);
     });
 
-    const deleteBtn = document.getElementById('deleteAccountBtn');
-    const deleteModal = document.getElementById('deleteModal');
-    const cancelBtn = document.getElementById('deleteModalCancel');
-    const backdrop = document.getElementById('deleteModalBackdrop');
 
-    deleteBtn?.addEventListener('click', () => { deleteModal.hidden = false; });
-    cancelBtn?.addEventListener('click', () => { deleteModal.hidden = true; });
-    backdrop?.addEventListener('click', () => { deleteModal.hidden = true; });
 </script>
 @endpush
 

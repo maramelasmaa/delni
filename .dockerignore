@@ -19,3 +19,4 @@ yarn-error.log
 test_output.log
 cookies.txt
 *.stackdump
+public/hot

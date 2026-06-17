@@ -12,12 +12,9 @@ use Illuminate\Support\Facades\DB;
  * Single source of truth for all marketplace ranking logic.
  *
  * Ranking hierarchy:
- * 1. Homepage Featured (is_homepage_featured=1 AND homepage_featured_until >= today)
- * 2. Top Search (is_top_search=1 AND top_search_until >= today)
- * 3. Top Category (is_top_category=1 AND top_category_until >= today)
- * 4. Top Subcategory (is_top_subcategory=1 AND top_subcategory_until >= today)
- * 5. Top Rated Provider (profile stats meet review count and rating rules)
- * 6. Normal Provider
+ * 1. Homepage Featured on the homepage only (is_homepage_featured=1 AND homepage_featured_until >= today)
+ * 2. Top Rated Provider (profile stats meet review count and rating rules)
+ * 3. Normal Provider
  *
  * Within each tier, sorted by: stored rating average DESC, stored review count DESC, created_at DESC
  */
@@ -33,7 +30,7 @@ class MarketplaceRankingService
     public function applyHomepageRanking(Builder $query): Builder
     {
         return $query
-            ->addSelect(DB::raw($this->bucketExpression()))
+            ->addSelect(DB::raw($this->homepageBucketExpression()))
             ->orderBy('bucket', 'desc')
             ->orderByDesc('profile_stats.rating_avg')
             ->orderByDesc('profile_stats.reviews_count')
@@ -46,7 +43,7 @@ class MarketplaceRankingService
     public function applySearchRanking(Builder $query): Builder
     {
         return $query
-            ->addSelect(DB::raw($this->bucketExpression()))
+            ->addSelect(DB::raw($this->standardBucketExpression()))
             ->orderBy('bucket', 'desc')
             ->orderByDesc('profile_stats.rating_avg')
             ->orderByDesc('profile_stats.reviews_count')
@@ -59,7 +56,7 @@ class MarketplaceRankingService
     public function applyCategoryRanking(Builder $query): Builder
     {
         return $query
-            ->addSelect(DB::raw($this->categoryBucketExpression()))
+            ->addSelect(DB::raw($this->standardBucketExpression()))
             ->orderBy('bucket', 'desc')
             ->orderByDesc('profile_stats.rating_avg')
             ->orderByDesc('profile_stats.reviews_count')
@@ -72,8 +69,23 @@ class MarketplaceRankingService
     public function applySubcategoryRanking(Builder $query): Builder
     {
         return $query
-            ->addSelect(DB::raw($this->subcategoryBucketExpression()))
+            ->addSelect(DB::raw($this->standardBucketExpression()))
             ->orderBy('bucket', 'desc')
+            ->orderByDesc('profile_stats.rating_avg')
+            ->orderByDesc('profile_stats.reviews_count')
+            ->orderBy('profiles.created_at', 'desc');
+    }
+
+    /**
+     * Filter to providers with an active, non-expired homepage placement (paid visibility only).
+     */
+    public function applyHomepageFeaturedOnly(Builder $query): Builder
+    {
+        $today = $this->todaySql();
+
+        return $query
+            ->where('profile_stats.is_homepage_featured', 1)
+            ->whereRaw("profile_stats.homepage_featured_until >= {$today}")
             ->orderByDesc('profile_stats.rating_avg')
             ->orderByDesc('profile_stats.reviews_count')
             ->orderBy('profiles.created_at', 'desc');
@@ -92,16 +104,13 @@ class MarketplaceRankingService
     }
 
     /**
-     * Main bucket expression for global ranking (homepage, search).
+     * Bucket expression for homepage ranking.
      *
-     * Bucket 6: Homepage Featured (expirable)
-     * Bucket 5: Top Search (expirable)
-     * Bucket 4: Top Category (expirable)
-     * Bucket 3: Top Subcategory (expirable)
+     * Bucket 3: Homepage Featured (expirable)
      * Bucket 2: Top Rated Provider (stored profile stats eligibility)
      * Bucket 1: Normal Provider
      */
-    private function bucketExpression(): string
+    private function homepageBucketExpression(): string
     {
         $today = $this->todaySql();
 
@@ -109,15 +118,6 @@ class MarketplaceRankingService
             CASE
                 WHEN profile_stats.is_homepage_featured = 1
                      AND profile_stats.homepage_featured_until >= {$today}
-                THEN 6
-                WHEN profile_stats.is_top_search = 1
-                     AND profile_stats.top_search_until >= {$today}
-                THEN 5
-                WHEN profile_stats.is_top_category = 1
-                     AND profile_stats.top_category_until >= {$today}
-                THEN 4
-                WHEN profile_stats.is_top_subcategory = 1
-                     AND profile_stats.top_subcategory_until >= {$today}
                 THEN 3
                 WHEN {$this->topRatedPredicate()}
                 THEN 2
@@ -127,48 +127,12 @@ class MarketplaceRankingService
     }
 
     /**
-     * Bucket expression for category-specific ranking.
-     *
-     * Bucket 4: Top Category (same category)
-     * Bucket 3: Top Subcategory (same subcategory)
-     * Bucket 2: Top Rated
-     * Bucket 1: Normal
+     * Bucket expression for non-homepage public listings.
      */
-    private function categoryBucketExpression(): string
+    private function standardBucketExpression(): string
     {
-        $today = $this->todaySql();
-
         return "
             CASE
-                WHEN profile_stats.is_top_category = 1
-                     AND profile_stats.top_category_until >= {$today}
-                THEN 4
-                WHEN profile_stats.is_top_subcategory = 1
-                     AND profile_stats.top_subcategory_until >= {$today}
-                THEN 3
-                WHEN {$this->topRatedPredicate()}
-                THEN 2
-                ELSE 1
-            END AS bucket
-        ";
-    }
-
-    /**
-     * Bucket expression for subcategory-specific ranking.
-     *
-     * Bucket 3: Top Subcategory (same subcategory)
-     * Bucket 2: Top Rated
-     * Bucket 1: Normal
-     */
-    private function subcategoryBucketExpression(): string
-    {
-        $today = $this->todaySql();
-
-        return "
-            CASE
-                WHEN profile_stats.is_top_subcategory = 1
-                     AND profile_stats.top_subcategory_until >= {$today}
-                THEN 3
                 WHEN {$this->topRatedPredicate()}
                 THEN 2
                 ELSE 1

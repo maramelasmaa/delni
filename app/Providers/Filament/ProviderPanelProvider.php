@@ -27,6 +27,8 @@ class ProviderPanelProvider extends PanelProvider
         return $panel
             ->id('provider')
             ->path('provider')
+            ->brandLogo(asset('images/logo.jpg'))
+            ->brandLogoHeight('36px')
             ->brandName('دلني')
             ->login(Login::class)
             ->homeUrl('/provider/dashboard')
@@ -62,6 +64,7 @@ class ProviderPanelProvider extends PanelProvider
                 'user.active',
                 'user.not_suspended',
                 'provider',
+                'provider.active_subscription',
             ])
             ->darkMode()
             ->breadcrumbs(false);

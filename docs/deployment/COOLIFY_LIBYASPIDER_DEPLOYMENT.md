@@ -139,8 +139,8 @@ GOOGLE_REDIRECT_URL=https://delni.ly/auth/google/callback
 CORS_ALLOWED_ORIGINS=https://delni.ly,https://www.delni.ly
 TRUSTED_PROXIES=*
 
-SUPER_ADMIN_NAME="Delni Admin"
-SUPER_ADMIN_EMAIL=admin@delni.ly
+SUPER_ADMIN_NAME=<super-admin-name>
+SUPER_ADMIN_EMAIL=<super-admin-email>
 SUPER_ADMIN_PASSWORD=<temporary-strong-admin-password>
 
 WHATSAPP_NUMBER=218911111111
@@ -168,7 +168,7 @@ Before first traffic, run:
 
 ```bash
 php artisan migrate --force
-php artisan delni:setup-admin
+php artisan delni:ensure-super-admin
 php artisan queue:deployment-check
 ```
 
@@ -179,7 +179,7 @@ Do **not** run demo seeders in production.
 Configure this as the app's post-deploy command in Coolify:
 
 ```bash
-php artisan migrate --force && php artisan storage:link && php artisan delni:setup-admin && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan event:cache && php artisan queue:restart
+php artisan migrate --force && php artisan storage:link && php artisan delni:ensure-super-admin && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan event:cache && php artisan queue:restart
 ```
 
 ## Web Service

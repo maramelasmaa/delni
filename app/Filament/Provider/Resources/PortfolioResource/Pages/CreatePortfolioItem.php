@@ -3,16 +3,17 @@
 namespace App\Filament\Provider\Resources\PortfolioResource\Pages;
 
 use App\Filament\Provider\Resources\PortfolioResource;
+use App\Filament\Support\Pages\CreateRecordWithBack;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\CreateRecord;
 
-class CreatePortfolioItem extends CreateRecord
+class CreatePortfolioItem extends CreateRecordWithBack
 {
     protected static string $resource = PortfolioResource::class;
 
     public function mount(): void
     {
         $user = auth()->user();
+
         if (! $user?->profile) {
             Notification::make()
                 ->title('لم ينشأ ملفك التجاري بعد')
@@ -20,7 +21,7 @@ class CreatePortfolioItem extends CreateRecord
                 ->danger()
                 ->send();
 
-            redirect(route('filament.provider.auth.profile'))->send();
+            redirect(PortfolioResource::getUrl('index'))->send();
         }
 
         parent::mount();

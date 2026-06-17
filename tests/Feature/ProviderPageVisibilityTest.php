@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Profile;
 use App\Models\ProfileStats;
-use App\Models\Subscription;
-use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,7 +17,7 @@ class ProviderPageVisibilityTest extends TestCase
     // -------------------------------------------------------------------
 
     /**
-     * Create a complete, visible provider profile with an active subscription.
+     * Create a complete, visible provider profile with an active access end date.
      */
     private function makeVisibleProfile(): Profile
     {
@@ -31,18 +29,10 @@ class ProviderPageVisibilityTest extends TestCase
 
         $profile = Profile::factory()->complete()->create([
             'user_id' => $user->id,
+            'provider_access_ends_at' => now()->addMonth(),
         ]);
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
-
-        $plan = SubscriptionPlan::factory()->create();
-        Subscription::factory()->create([
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'is_active' => true,
-            'starts_at' => now()->toDateString(),
-            'ends_at' => now()->addMonth()->toDateString(),
-        ]);
 
         return $profile->fresh();
     }
@@ -70,18 +60,10 @@ class ProviderPageVisibilityTest extends TestCase
         $profile = Profile::factory()->create([
             'user_id' => $user->id,
             'is_complete' => false,
+            'provider_access_ends_at' => now()->addMonth(),
         ]);
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
-
-        $plan = SubscriptionPlan::factory()->create();
-        Subscription::factory()->create([
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'is_active' => true,
-            'starts_at' => now()->toDateString(),
-            'ends_at' => now()->addMonth()->toDateString(),
-        ]);
 
         $this->get(route('public.provider', $profile->slug))
             ->assertStatus(404);
@@ -97,18 +79,10 @@ class ProviderPageVisibilityTest extends TestCase
 
         $profile = Profile::factory()->complete()->create([
             'user_id' => $user->id,
+            'provider_access_ends_at' => now()->addMonth(),
         ]);
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
-
-        $plan = SubscriptionPlan::factory()->create();
-        Subscription::factory()->create([
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'is_active' => true,
-            'starts_at' => now()->toDateString(),
-            'ends_at' => now()->addMonth()->toDateString(),
-        ]);
 
         $this->get(route('public.provider', $profile->slug))
             ->assertStatus(404);
@@ -123,6 +97,7 @@ class ProviderPageVisibilityTest extends TestCase
 
         $profile = Profile::factory()->complete()->create([
             'user_id' => $user->id,
+            'provider_access_ends_at' => now()->addMonth(),
         ]);
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
@@ -131,7 +106,7 @@ class ProviderPageVisibilityTest extends TestCase
             ->assertStatus(404);
     }
 
-    public function test_expired_subscription_returns_404(): void
+    public function test_expired_access_returns_404(): void
     {
         $user = User::factory()->create([
             'is_active' => true,
@@ -141,18 +116,29 @@ class ProviderPageVisibilityTest extends TestCase
 
         $profile = Profile::factory()->complete()->create([
             'user_id' => $user->id,
+            'provider_access_ends_at' => now()->subDay(),
         ]);
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
 
-        $plan = SubscriptionPlan::factory()->create();
-        Subscription::factory()->create([
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'is_active' => false,
-            'starts_at' => now()->subMonth()->toDateString(),
-            'ends_at' => now()->subDay()->toDateString(),
+        $this->get(route('public.provider', $profile->slug))
+            ->assertStatus(404);
+    }
+
+    public function test_null_access_returns_404(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'is_suspended' => false,
         ]);
+        $user->assignRole('provider');
+
+        $profile = Profile::factory()->complete()->create([
+            'user_id' => $user->id,
+            'provider_access_ends_at' => null,
+        ]);
+
+        ProfileStats::factory()->create(['profile_id' => $profile->id]);
 
         $this->get(route('public.provider', $profile->slug))
             ->assertStatus(404);

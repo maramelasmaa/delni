@@ -6,7 +6,7 @@ services:
     ports:
       - "8088:8080"
     environment:
-      APP_NAME: Delni
+      APP_NAME: "دلني"
       APP_ENV: production
       APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
       APP_DEBUG: "false"
@@ -28,8 +28,12 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: public
       TRUSTED_PROXIES: "*"
+      GOOGLE_CLIENT_ID: 721734995923-b0o61muq5q3murj3ib7rsc3s1vkf0ibv.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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
+      GOOGLE_REDIRECT_URL: http://localhost:8088/auth/google/callback
     volumes:
       - delni_public_storage:/var/www/html/storage/app/public
+      - ./storage/app/icons:/var/www/html/storage/app/icons
     depends_on:
       mysql:
         condition: service_healthy
@@ -40,7 +44,7 @@ services:
       dockerfile: Dockerfile
     command: php artisan queue:work --queue=default --max-jobs=100 --max-time=3600 --tries=3
     environment:
-      APP_NAME: Delni
+      APP_NAME: "دلني"
       APP_ENV: production
       APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
       APP_DEBUG: "false"
@@ -55,8 +59,12 @@ services:
       CACHE_STORE: database
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: public
+      GOOGLE_CLIENT_ID: 721734995923-b0o61muq5q3murj3ib7rsc3s1vkf0ibv.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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
+      GOOGLE_REDIRECT_URL: http://localhost:8088/auth/google/callback
     volumes:
       - delni_public_storage:/var/www/html/storage/app/public
+      - ./storage/app/icons:/var/www/html/storage/app/icons
     depends_on:
       mysql:
         condition: service_healthy
@@ -67,7 +75,7 @@ services:
       dockerfile: Dockerfile
     command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
     environment:
-      APP_NAME: Delni
+      APP_NAME: "دلني"
       APP_ENV: production
       APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
       APP_DEBUG: "false"
@@ -82,8 +90,12 @@ services:
       CACHE_STORE: database
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: public
+      GOOGLE_CLIENT_ID: 721734995923-b0o61muq5q3murj3ib7rsc3s1vkf0ibv.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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
+      GOOGLE_REDIRECT_URL: http://localhost:8088/auth/google/callback
     volumes:
       - delni_public_storage:/var/www/html/storage/app/public
+      - ./storage/app/icons:/var/www/html/storage/app/icons
     depends_on:
       mysql:
         condition: service_healthy

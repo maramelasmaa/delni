@@ -18,36 +18,36 @@
     $hasFilters = request()->anyFilled(['keyword', 'category', 'category_id', 'city', 'city_id', 'sort']);
 @endphp
 
-<button type="button" class="browse-filter-trigger" data-filter-sheet-trigger>
+<button type="button" class="inline-flex md:hidden items-center gap-1.5 min-h-[42px] px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-full bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-200 text-xs font-black shadow-xs cursor-pointer hover:border-primary/20 transition-all [&>svg]:w-4.5 [&>svg]:h-4.5 [&>svg]:text-primary" data-filter-sheet-trigger>
     <x-render-icon icon="heroicon-o-adjustments-horizontal" />
     <span>تصفية</span>
     @if($hasFilters)
-        <small></small>
+        <small class="w-1.5 h-1.5 rounded-full bg-primary"></small>
     @endif
 </button>
-<div class="browse-filter-overlay" data-filter-sheet-close></div>
+<div class="hidden fixed inset-0 z-[80] bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 [&.is-open]:block" data-filter-sheet-close></div>
 
 <form
     method="GET"
     action="{{ $action }}"
-    class="browse-filters"
+    class="flex flex-col items-stretch gap-3.5 transition-all duration-300 [&.is-applying]:opacity-70 [&.is-applying]:pointer-events-none fixed inset-x-0 bottom-0 z-[90] max-h-[min(78vh,_620px)] overflow-y-auto p-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] border border-slate-200 dark:border-slate-800 border-b-0 rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl translate-y-[105%] [&.is-open]:translate-y-0 md:static md:translate-y-0 md:flex md:flex-row md:items-end md:gap-2 md:p-0 md:bg-transparent md:border-0 md:shadow-none md:overflow-visible md:h-auto md:max-h-none"
     data-auto-filter
     data-city-urls='@json($cityUrls)'
     data-city-reset-url="{{ $cityResetUrl }}"
     data-city-in-path="{{ request()->attributes->has('active_city') ? 'true' : 'false' }}"
 >
-    <div class="browse-filters__sheet-head">
-        <strong>تصفية النتائج</strong>
-        <button type="button" data-filter-sheet-close aria-label="إغلاق">
+    <div class="flex md:hidden items-center justify-between gap-4 pb-2 border-b border-slate-105 dark:border-slate-800">
+        <strong class="text-slate-900 dark:text-slate-100 text-sm md:text-base font-black">تصفية النتائج</strong>
+        <button type="button" class="flex items-center justify-center w-9.5 h-9.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:text-primary transition-colors cursor-pointer [&>svg]:w-4.5 [&>svg]:h-4.5" data-filter-sheet-close aria-label="إغلاق">
             <x-render-icon icon="heroicon-o-x-mark" />
         </button>
     </div>
 
     @if($showKeyword)
-        <label class="browse-filters__field browse-filters__field--search">
-            <span>البحث</span>
-            <span class="browse-filters__input">
-                <x-render-icon icon="heroicon-o-magnifying-glass" />
+        <label class="flex-none w-full md:w-[220px] flex flex-col gap-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">البحث</span>
+            <span class="flex items-center gap-2 min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-950 text-slate-400 focus-within:border-primary/45 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                <x-render-icon icon="heroicon-o-magnifying-glass" class="w-4.5 h-4.5 text-slate-400 flex-none" />
                 <input
                     type="search"
                     name="keyword"
@@ -55,6 +55,7 @@
                     maxlength="100"
                     placeholder="{{ $keywordPlaceholder }}"
                     autocomplete="off"
+                    class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-950 dark:text-slate-50 font-semibold text-xs md:text-sm placeholder-slate-400"
                     data-auto-filter-input
                 >
             </span>
@@ -62,9 +63,9 @@
     @endif
 
     @if($showCategory && $categories->isNotEmpty())
-        <label class="browse-filters__field">
-            <span>الفئة</span>
-            <select name="category" data-auto-filter-control>
+        <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">الفئة</span>
+            <select name="category" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
                 <option value="">كل الفئات</option>
                 @foreach($categories as $category)
                     <option value="{{ $category->slug }}" @selected($activeCategorySlug === $category->slug)>
@@ -76,9 +77,9 @@
     @endif
 
     @if($showCity && $cities->isNotEmpty())
-        <label class="browse-filters__field">
-            <span>المدينة</span>
-            <select name="city" data-auto-filter-control>
+        <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">المدينة</span>
+            <select name="city" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
                 <option value="">كل المدن</option>
                 @foreach($cities as $city)
                     <option value="{{ $city->slug }}" @selected($activeCitySlug === $city->slug)>
@@ -89,11 +90,23 @@
         </label>
     @endif
 
+    <label class="flex-none w-full md:w-[140px] flex flex-col gap-1 cursor-pointer select-none">
+        <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">نوع العمل</span>
+        <div class="flex items-center justify-between min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm hover:border-primary/20 dark:hover:border-slate-800 transition-all relative">
+            <span class="flex items-center gap-1.5">
+                <x-render-icon icon="heroicon-o-globe-alt" class="w-4 h-4 text-primary" />
+                <span class="text-xs md:text-sm font-semibold">عن بُعد</span>
+            </span>
+            <input type="checkbox" name="remote" value="1" @checked(request('remote') == 1) class="sr-only peer" data-auto-filter-control>
+            <span class="relative w-8 h-4.5 bg-slate-200 dark:bg-slate-800 rounded-full transition-colors peer-checked:bg-orange-500 after:content-[''] after:absolute after:top-0.5 after:right-0.5 after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-transform peer-checked:-translate-x-3.5"></span>
+        </div>
+    </label>
+
     @if($sort)
-        <label class="browse-filters__field">
-            <span>الترتيب</span>
-            <select name="sort" data-auto-filter-control>
-                <option value="" @selected(! request('sort'))>الأفضل لك</option>
+        <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">الترتيب</span>
+            <select name="sort" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
+
                 <option value="rating" @selected(request('sort') === 'rating')>الأعلى تقييما</option>
                 <option value="reviews" @selected(request('sort') === 'reviews')>الأكثر تقييما</option>
                 <option value="newest" @selected(request('sort') === 'newest')>الأحدث</option>
@@ -102,242 +115,18 @@
     @endif
 
     @if($hasFilters)
-        <a href="{{ $resetUrl }}" class="browse-filters__reset">
+        <a href="{{ $resetUrl }}" class="flex-none min-h-[42px] inline-flex items-center justify-center gap-1.5 px-4 rounded-2xl border border-orange-500/20 dark:border-orange-500/35 bg-orange-50/50 dark:bg-orange-950/20 text-primary dark:text-orange-400 text-xs font-black text-decoration-none transition-all hover:bg-orange-50 dark:hover:bg-orange-950/30 [&>svg]:w-4 [&>svg]:h-4">
             <x-render-icon icon="heroicon-o-x-mark" />
             <span>مسح</span>
         </a>
     @endif
 
     <noscript>
-        <button type="submit" class="browse-filters__reset">تطبيق</button>
+        <button type="submit" class="flex-none min-h-[42px] inline-flex items-center justify-center gap-1.5 px-4 rounded-2xl border border-orange-500/20 dark:border-orange-500/35 bg-orange-50/50 dark:bg-orange-950/20 text-primary dark:text-orange-400 text-xs font-black text-decoration-none transition-all hover:bg-orange-50">تطبيق</button>
     </noscript>
 </form>
 
 @once
-    @push('styles')
-        <style>
-            .browse-filters {
-                display: flex;
-                align-items: end;
-                gap: .55rem;
-                overflow-x: auto;
-                padding: .8rem .05rem .25rem;
-                scrollbar-width: none;
-                transition: opacity .16s ease;
-            }
-            .browse-filters::-webkit-scrollbar { display: none; }
-            .browse-filters.is-applying {
-                opacity: .68;
-                pointer-events: none;
-            }
-
-            .browse-filter-trigger,
-            .browse-filter-overlay,
-            .browse-filters__sheet-head {
-                display: none;
-            }
-
-            .browse-filters__field {
-                flex: 0 0 auto;
-                min-width: min(44vw, 180px);
-                display: grid;
-                gap: .28rem;
-            }
-            .browse-filters__field--search {
-                min-width: min(70vw, 260px);
-            }
-
-            .browse-filters__field > span:first-child {
-                color: #64748B;
-                font-size: .68rem;
-                font-weight: 900;
-                padding-inline: .25rem;
-            }
-
-            .browse-filters select,
-            .browse-filters__input {
-                min-height: 42px;
-                border: 1px solid var(--delni-border);
-                border-radius: 14px;
-                background: #fff;
-                color: var(--delni-navy);
-                font: inherit;
-                font-size: .8rem;
-                font-weight: 850;
-                outline: none;
-            }
-
-            .browse-filters select {
-                padding: 0 .78rem;
-                cursor: pointer;
-            }
-
-            .browse-filters__input {
-                display: flex;
-                align-items: center;
-                gap: .45rem;
-                padding: 0 .72rem;
-            }
-            .browse-filters__input svg {
-                width: 16px;
-                height: 16px;
-                color: #94A3B8;
-                flex-shrink: 0;
-            }
-            .browse-filters__input input {
-                width: 100%;
-                min-width: 0;
-                border: 0;
-                outline: 0;
-                background: transparent;
-                color: inherit;
-                font: inherit;
-            }
-
-            .browse-filters__reset {
-                min-height: 42px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: .35rem;
-                padding: .55rem .85rem;
-                border-radius: 14px;
-                border: 1px solid rgba(241,98,15,.22);
-                background: #FFF7ED;
-                color: var(--delni-primary);
-                font-size: .8rem;
-                font-weight: 900;
-                text-decoration: none;
-                white-space: nowrap;
-            }
-            .browse-filters__reset svg { width: 16px; height: 16px; }
-
-            [data-theme="dark"] .browse-filters__field > span:first-child { color: #94A3B8; }
-            [data-theme="dark"] .browse-filters select,
-            [data-theme="dark"] .browse-filters__input {
-                background: #1E293B;
-                border-color: #334155;
-                color: #F1F5F9;
-                color-scheme: dark;
-            }
-            [data-theme="dark"] .browse-filters__reset {
-                background: rgba(241,98,15,.12);
-                border-color: rgba(241,98,15,.25);
-                color: #FB923C;
-            }
-
-            @media (max-width: 700px) {
-                .browse-filter-trigger {
-                    min-height: 42px;
-                    width: fit-content;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: .42rem;
-                    padding: .52rem .8rem;
-                    border: 1px solid var(--delni-border);
-                    border-radius: 999px;
-                    background: #fff;
-                    color: var(--delni-navy);
-                    font: inherit;
-                    font-size: .82rem;
-                    font-weight: 950;
-                    box-shadow: var(--delni-shadow-sm);
-                    cursor: pointer;
-                }
-                .browse-filter-trigger svg {
-                    width: 17px;
-                    height: 17px;
-                    color: var(--delni-primary);
-                }
-                .browse-filter-trigger small {
-                    width: 7px;
-                    height: 7px;
-                    border-radius: 999px;
-                    background: var(--delni-primary);
-                }
-
-                .browse-filter-overlay {
-                    position: fixed;
-                    inset: 0;
-                    z-index: 80;
-                    background: rgba(2,6,23,.38);
-                }
-
-                .browse-filters {
-                    position: fixed;
-                    inset-inline: 0;
-                    bottom: 0;
-                    z-index: 90;
-                    display: grid;
-                    gap: .75rem;
-                    max-height: min(78vh, 620px);
-                    overflow-y: auto;
-                    padding: .9rem 1rem calc(1rem + env(safe-area-inset-bottom));
-                    border: 1px solid var(--delni-border);
-                    border-bottom: 0;
-                    border-radius: 22px 22px 0 0;
-                    background: #fff;
-                    box-shadow: 0 -18px 44px rgba(2,6,23,.18);
-                    transform: translateY(105%);
-                    transition: transform .22s ease;
-                }
-
-                .browse-filters__sheet-head {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 1rem;
-                }
-                .browse-filters__sheet-head strong {
-                    color: var(--delni-navy);
-                    font-size: .95rem;
-                    font-weight: 950;
-                }
-                .browse-filters__sheet-head button {
-                    width: 38px;
-                    height: 38px;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 1px solid var(--delni-border);
-                    border-radius: 12px;
-                    background: #F8FAFC;
-                    color: var(--delni-navy);
-                }
-                .browse-filters__sheet-head svg {
-                    width: 18px;
-                    height: 18px;
-                }
-
-                .browse-filters__field,
-                .browse-filters__field--search {
-                    min-width: 0;
-                    width: 100%;
-                }
-
-                .browse-filter-overlay.is-open {
-                    display: block;
-                }
-                .browse-filters.is-open {
-                    transform: translateY(0);
-                }
-
-                [data-theme="dark"] .browse-filter-trigger,
-                [data-theme="dark"] .browse-filters {
-                    background: #1E293B;
-                    border-color: #334155;
-                    color: #F1F5F9;
-                }
-                [data-theme="dark"] .browse-filters__sheet-head strong { color: #F1F5F9; }
-                [data-theme="dark"] .browse-filters__sheet-head button {
-                    background: #0F172A;
-                    border-color: #334155;
-                    color: #F1F5F9;
-                }
-            }
-        </style>
-    @endpush
-
     @push('scripts')
         <script>
             (() => {

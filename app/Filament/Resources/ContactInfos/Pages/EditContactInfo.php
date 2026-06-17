@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\ContactInfos\Pages;
 
 use App\Filament\Resources\ContactInfos\ContactInfoResource;
+use App\Filament\Support\Pages\EditRecordWithBack;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 
-class EditContactInfo extends EditRecord
+class EditContactInfo extends EditRecordWithBack
 {
     protected static string $resource = ContactInfoResource::class;
 
@@ -18,6 +18,7 @@ class EditContactInfo extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            $this->getBackHeaderAction(),
             DeleteAction::make(),
         ];
     }

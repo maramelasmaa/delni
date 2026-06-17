@@ -1279,4 +1279,23 @@
     picture {
         display: contents;
     }
+
+    /* Inline SVG Icon component styles */
+    .inline-svg-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+    }
+    .inline-svg-icon svg {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+    }
+    .inline-svg-icon svg [fill]:not([fill="none"]) {
+        fill: currentColor !important;
+    }
+    .inline-svg-icon svg [stroke]:not([stroke="none"]) {
+        stroke: currentColor !important;
+    }
 }

@@ -21,8 +21,9 @@ openssl rand -base64 32
 3. Add environment variables:
 
 ```
-ADMIN_EMAIL=your-admin@delni.ly
-ADMIN_PASSWORD=<your-generated-strong-password>
+SUPER_ADMIN_NAME=<your-admin-name>
+SUPER_ADMIN_EMAIL=<your-admin@delni.ly>
+SUPER_ADMIN_PASSWORD=<your-generated-strong-password>
 ```
 
 **Important:** 
@@ -43,7 +44,7 @@ Railway auto-deploys and runs the `release` phase in `Procfile`:
 ```
 php artisan migrate --force
 php artisan storage:link
-php artisan delni:setup-admin    # ← Creates admin user
+php artisan delni:ensure-super-admin    # Creates super admin user from env
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
@@ -55,7 +56,7 @@ php artisan event:cache
 After deploy succeeds, check Rails logs:
 
 ```
-✓ Admin user ready: your-admin@delni.ly
+✓ Super admin configured from SUPER_ADMIN_EMAIL
 ```
 
 ### 5. First Login
@@ -78,19 +79,19 @@ After deploy succeeds, check Rails logs:
    - Enable two-factor authentication
 
 3. **Remove Deployment Secrets** (optional but safer):
-   - After first successful login, you can remove `ADMIN_PASSWORD` from Railway
+   - After first successful login, keep `SUPER_ADMIN_PASSWORD` stored securely or rotate it intentionally
    - You'll never deploy with same admin password again
 
 ---
 
 ## Troubleshooting
 
-### Admin user not created?
+### Super admin user not created?
 
 Check Railway logs:
 
 ```
-ERROR: ADMIN_EMAIL and ADMIN_PASSWORD environment variables required
+ERROR: SUPER_ADMIN_NAME, SUPER_ADMIN_EMAIL, or SUPER_ADMIN_PASSWORD is not set
 ```
 
 **Fix:** Ensure both variables are set in Railway dashboard.
@@ -99,14 +100,14 @@ ERROR: ADMIN_EMAIL and ADMIN_PASSWORD environment variables required
 
 1. Verify email/password in Railway Variables
 2. Check spelling exactly
-3. Confirm `php artisan delni:setup-admin` succeeded in release logs
+3. Confirm `php artisan delni:ensure-super-admin` succeeded in release logs
 
 ### Lost admin password?
 
-1. Set new `ADMIN_PASSWORD` in Railway Variables
+1. Set new `SUPER_ADMIN_PASSWORD` in Railway Variables
 2. Trigger manual deploy or run:
    ```bash
-   railway run php artisan delni:setup-admin --force
+   railway run php artisan delni:ensure-super-admin --force
    ```
 3. Use new password to login
 
@@ -137,14 +138,16 @@ For multiple deployments (staging, production):
 
 **Staging:**
 ```
-ADMIN_EMAIL=admin@staging.delni.ly
-ADMIN_PASSWORD=<staging-admin-password>
+SUPER_ADMIN_NAME=<staging-admin-name>
+SUPER_ADMIN_EMAIL=<staging-admin-email>
+SUPER_ADMIN_PASSWORD=<staging-admin-password>
 ```
 
 **Production:**
 ```
-ADMIN_EMAIL=admin@delni.ly
-ADMIN_PASSWORD=<production-admin-password>
+SUPER_ADMIN_NAME=<production-admin-name>
+SUPER_ADMIN_EMAIL=<production-admin-email>
+SUPER_ADMIN_PASSWORD=<production-admin-password>
 ```
 
 Each Railway project has separate Variables, so secrets stay isolated.

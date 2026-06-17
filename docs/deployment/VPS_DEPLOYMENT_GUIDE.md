@@ -133,8 +133,9 @@ GOOGLE_CLIENT_ID=<google-oauth-client-id>
 GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
 GOOGLE_REDIRECT_URL=https://your-domain.com/auth/google/callback
 
-ADMIN_EMAIL=admin@your-domain.com
-ADMIN_PASSWORD=<generate-strong-password>
+SUPER_ADMIN_NAME=<super-admin-name>
+SUPER_ADMIN_EMAIL=<super-admin-email>
+SUPER_ADMIN_PASSWORD=<generate-strong-password>
 
 TRUSTED_PROXIES=127.0.0.1
 CORS_ALLOWED_ORIGINS=https://your-domain.com
@@ -161,7 +162,7 @@ EXIT;
 ```bash
 php artisan migrate --force
 php artisan storage:link
-php artisan delni:setup-admin
+php artisan delni:ensure-super-admin
 ```
 
 ---
@@ -646,7 +647,7 @@ REDIS_HOST=127.0.0.1
 - [ ] SSL certificate installed
 - [ ] Queue worker running via Supervisor
 - [ ] Scheduler cron configured
-- [ ] Admin user created via `delni:setup-admin`
+- [ ] Super admin user created via `delni:ensure-super-admin`
 - [ ] Domain accessible via HTTPS
 - [ ] Login works
 - [ ] Search/marketplace works

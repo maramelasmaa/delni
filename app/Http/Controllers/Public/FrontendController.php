@@ -51,8 +51,20 @@ class FrontendController extends Controller
         ]);
     }
 
-    public function topRated(Request $request): View
+    public function topRated(Request $request): View|RedirectResponse
     {
+        if ($request->has('clear_city')) {
+            $request->session()->forget('active_city_slug');
+
+            return redirect()->route('public.top-rated');
+        }
+
+        if (! $request->attributes->has('active_city') && $activeCitySlug = $this->getActiveCitySlug($request)) {
+            return redirect()->route('public.top-rated.city', [
+                'city' => $activeCitySlug,
+            ]);
+        }
+
         $payload = $this->frontendService->topRated($request);
 
         return view('public.top-rated', $payload['data'] + [
@@ -63,6 +75,8 @@ class FrontendController extends Controller
     public function topRatedInCity(City $city, Request $request): View
     {
         abort_unless($city->is_active, 404);
+
+        $request->session()->put('active_city_slug', $city->slug);
 
         return $this->withCityFilter($request, $city, fn () => $this->topRated($request));
     }
@@ -77,9 +91,22 @@ class FrontendController extends Controller
         ]);
     }
 
-    public function category(Category $category, Request $request): View
+    public function category(Category $category, Request $request): View|RedirectResponse
     {
         abort_unless($category->is_active, 404);
+
+        if ($request->has('clear_city')) {
+            $request->session()->forget('active_city_slug');
+
+            return redirect()->route('public.category', $category->slug);
+        }
+
+        if (! $request->attributes->has('active_city') && $activeCitySlug = $this->getActiveCitySlug($request)) {
+            return redirect()->route('public.category.city', [
+                'category' => $category->slug,
+                'city' => $activeCitySlug,
+            ]);
+        }
 
         $payload = $this->frontendService->category($category, $request);
 
@@ -92,13 +119,28 @@ class FrontendController extends Controller
     {
         abort_unless($city->is_active, 404);
 
+        $request->session()->put('active_city_slug', $city->slug);
+
         return $this->withCityFilter($request, $city, fn () => $this->category($category, $request));
     }
 
-    public function subcategory(Subcategory $subcategory, Request $request): View
+    public function subcategory(Subcategory $subcategory, Request $request): View|RedirectResponse
     {
         abort_unless($subcategory->is_active, 404);
         abort_unless($subcategory->category?->is_active, 404);
+
+        if ($request->has('clear_city')) {
+            $request->session()->forget('active_city_slug');
+
+            return redirect()->route('public.subcategory', $subcategory->slug);
+        }
+
+        if (! $request->attributes->has('active_city') && $activeCitySlug = $this->getActiveCitySlug($request)) {
+            return redirect()->route('public.subcategory.city', [
+                'subcategory' => $subcategory->slug,
+                'city' => $activeCitySlug,
+            ]);
+        }
 
         $payload = $this->frontendService->subcategory($subcategory, $request);
 
@@ -111,12 +153,16 @@ class FrontendController extends Controller
     {
         abort_unless($city->is_active, 404);
 
+        $request->session()->put('active_city_slug', $city->slug);
+
         return $this->withCityFilter($request, $city, fn () => $this->subcategory($subcategory, $request));
     }
 
     public function city(City $city, Request $request): View
     {
         abort_unless($city->is_active, 404);
+
+        $request->session()->put('active_city_slug', $city->slug);
 
         $payload = $this->frontendService->city($city, $request);
 
@@ -144,6 +190,23 @@ class FrontendController extends Controller
         Cookie::queue('locale', 'ar', 60 * 24 * 365);
 
         return back();
+    }
+
+    private function getActiveCitySlug(Request $request): ?string
+    {
+        $slug = $request->session()->get('active_city_slug');
+        if (! $slug) {
+            return null;
+        }
+
+        $city = City::where('slug', $slug)->where('is_active', true)->first();
+        if (! $city) {
+            $request->session()->forget('active_city_slug');
+
+            return null;
+        }
+
+        return $slug;
     }
 
     private function withCityFilter(Request $request, City $city, callable $callback): View

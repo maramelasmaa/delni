@@ -5,22 +5,23 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ProviderResource\Pages;
 
 use App\Filament\Resources\ProviderResource;
+use App\Filament\Support\Pages\EditRecordWithBack;
 use App\Models\OnboardingToken;
 use Filament\Actions;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class EditProvider extends EditRecord
+class EditProvider extends EditRecordWithBack
 {
     protected static string $resource = ProviderResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->getBackHeaderAction(),
             $this->getGenerateSetPasswordLinkAction(),
             Actions\DeleteAction::make(),
         ];
@@ -29,12 +30,12 @@ class EditProvider extends EditRecord
     private function getGenerateSetPasswordLinkAction(): Actions\Action
     {
         return Actions\Action::make('generate_set_password_link')
-            ->label('Generate Setup Link')
+            ->label(__('filament.actions.generate_setup_link'))
             ->icon('heroicon-o-link')
             ->color('info')
             ->requiresConfirmation()
-            ->modalHeading('Generate Setup Link')
-            ->modalDescription('Create a new password setup link. Old setup links will be revoked.')
+            ->modalHeading(__('filament.actions.generate_setup_link'))
+            ->modalDescription('أنشئ رابطاً جديداً لإعداد كلمة المرور. سيتم إلغاء الروابط السابقة.')
             ->action(function (): void {
                 DB::transaction(function (): void {
                     $user = $this->record;
@@ -52,8 +53,8 @@ class EditProvider extends EditRecord
                     $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
 
                     Notification::make()
-                        ->title('Setup link generated')
-                        ->body("Copy and send this setup link to {$user->email}: {$setPasswordLink}")
+                        ->title(__('filament.notifications.setup_link_generated'))
+                        ->body(__('filament.notifications.setup_link_copy_send', ['email' => $user->email, 'link' => $setPasswordLink]))
                         ->success()
                         ->persistent()
                         ->send();

@@ -72,13 +72,13 @@
         }
 
         [data-theme="dark"] {
-            --delni-bg: #0F172A;
-            --delni-navy: #F1F5F9;
-            --delni-border: #1E293B;
-            --delni-muted: #94A3B8;
-            --delni-gray: #475569;
+            --delni-bg: #0D1117;
+            --delni-navy: #F8FAFC;
+            --delni-border: #334155;
+            --delni-muted: #CBD5E1;
+            --delni-gray: #94A3B8;
             --delni-shadow-sm: 0 8px 20px rgba(0,0,0,.3);
-            --delni-shadow-md: 0 16px 36px rgba(0,0,0,.4);
+            --delni-shadow-md: 0 18px 42px rgba(0,0,0,.42);
         }
 
         * {
@@ -192,33 +192,7 @@
             object-fit: cover;
         }
 
-        .delni-header__quick {
-            display: flex;
-            align-items: center;
-            gap: .45rem;
-        }
 
-        .delni-icon-btn {
-            width: 42px;
-            height: 42px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 14px;
-            background: #F8FAFC;
-            border: 1px solid var(--delni-border);
-            color: var(--delni-navy);
-            transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
-        }
-
-        .delni-icon-btn svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .delni-icon-btn:active {
-            transform: scale(.96);
-        }
 
         .delni-offline-banner {
             position: fixed;
@@ -241,6 +215,14 @@
 
         .delni-offline-banner.is-visible {
             display: flex;
+        }
+
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         /* Dedicated App Viewport Container */
@@ -275,8 +257,20 @@
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid var(--delni-border);
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             z-index: 999;
+        }
+
+        /* Extend nav background below safe-area on Android where env() returns 0 */
+        .pwa-bottom-nav::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: inherit;
+            pointer-events: none;
         }
 
         .pwa-nav-item {
@@ -287,13 +281,27 @@
             color: var(--delni-muted);
             font-size: 0.72rem;
             font-weight: 700;
-            gap: 4px;
+            gap: 2px;
             transition: color 0.2s ease;
             text-decoration: none;
         }
 
+        .pwa-nav-icon-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 32px;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .pwa-nav-item.active .pwa-nav-icon-container {
+            background-color: rgba(241, 98, 15, 0.08);
+            color: var(--delni-primary);
+        }
+
         .pwa-nav-item:focus-visible,
-        .delni-icon-btn:focus-visible,
         button:focus-visible,
         .lp-chip:focus-visible,
         .lp-filter-select:focus-visible,
@@ -309,6 +317,7 @@
 
         .pwa-nav-item.active {
             color: var(--delni-primary);
+            font-weight: 850;
         }
 
         .pwa-nav-item svg {
@@ -598,13 +607,17 @@
             margin-top: 1.2rem;
             padding: 1rem 1.1rem;
             border-radius: 20px;
-            background: var(--delni-navy);
+            border: 1px solid rgba(11, 26, 52, .08);
+            background:
+                radial-gradient(circle at top left, rgba(241, 98, 15, .18), transparent 42%),
+                linear-gradient(135deg, #0B1A34 0%, #132443 58%, #1A3158 100%);
             color: #fff;
+            box-shadow: 0 16px 36px rgba(11, 26, 52, .16);
         }
         .lp-cta > div { flex: 1; min-width: 0; }
         .lp-cta span {
             display: block;
-            color: var(--delni-primary);
+            color: #FDBA74;
             font-size: .72rem;
             font-weight: 900;
             margin-bottom: .2rem;
@@ -617,23 +630,32 @@
         }
         .lp-cta p {
             margin: .25rem 0 0;
-            color: rgba(255, 255, 255, .7);
+            color: rgba(255, 255, 255, .78);
             font-size: .78rem;
             font-weight: 600;
             line-height: 1.6;
         }
         .lp-cta a {
             flex-shrink: 0;
-            min-height: 42px;
+            min-height: 44px;
             display: inline-flex;
             align-items: center;
-            padding: .55rem 1rem;
-            border-radius: 12px;
-            background: #fff;
-            color: var(--delni-navy);
+            justify-content: center;
+            padding: .65rem 1.15rem;
+            border-radius: 14px;
+            border: 1px solid rgba(217, 85, 12, .28);
+            background: linear-gradient(135deg, #F1620F 0%, #D9550C 100%);
+            color: #fff;
             font-size: .82rem;
             font-weight: 950;
             text-decoration: none;
+            box-shadow: 0 12px 28px rgba(241, 98, 15, .28);
+            transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+        }
+        .lp-cta a:hover {
+            filter: brightness(1.04);
+            transform: translateY(-1px);
+            box-shadow: 0 16px 32px rgba(241, 98, 15, .32);
         }
         @media (max-width: 400px) { .lp-cta { flex-direction: column; align-items: flex-start; } }
         /* ── end shared listing-page ──────────────────────────────────────── */
@@ -646,101 +668,94 @@
 
         /* Shell chrome */
         [data-theme="dark"] .delni-header {
-            background: #0F172A;
-            border-color: #1E293B;
+            background: rgba(13, 17, 23, 0.92);
+            border-color: #334155;
         }
         [data-theme="dark"] .delni-logo {
-            color: #F1F5F9;
+            color: #F8FAFC;
         }
         [data-theme="dark"] .delni-logo__mark {
-            background: #0B1A34;
+            background: #131A22;
         }
         [data-theme="dark"] .pwa-bottom-nav {
-            background: rgba(15, 23, 42, 0.96);
-            border-color: #1E293B;
+            background: rgba(13, 17, 23, 0.96);
+            border-color: #334155;
         }
         [data-theme="dark"] .delni-footer {
-            background: #0F172A;
-            border-color: #1E293B;
+            background: #131A22;
+            border-color: #334155;
         }
 
         /* lp-* system */
         [data-theme="dark"] .lp-header {
-            background: #1E293B;
+            background: #131A22;
             border-color: #334155;
         }
         [data-theme="dark"] .lp-back {
-            background: #0F172A;
+            background: #0D1117;
             border-color: #334155;
-            color: #F1F5F9;
+            color: #F8FAFC;
         }
-        [data-theme="dark"] .lp-count { color: #94A3B8; }
+        [data-theme="dark"] .lp-count { color: #CBD5E1; }
         [data-theme="dark"] .lp-chip {
-            background: #1E293B;
+            background: #131A22;
             border-color: #334155;
-            color: #F1F5F9;
+            color: #F8FAFC;
         }
         [data-theme="dark"] .lp-chip small {
-            background: #0F172A;
-            color: #94A3B8;
+            background: #0D1117;
+            color: #CBD5E1;
         }
         [data-theme="dark"] .lp-chip.is-active {
             background: rgba(241,98,15,.15);
             border-color: rgba(241,98,15,.35);
         }
         [data-theme="dark"] .lp-filter-select {
-            background: #1E293B;
+            background: #131A22;
             border-color: #334155;
-            color: #F1F5F9;
+            color: #F8FAFC;
             color-scheme: dark;
         }
         [data-theme="dark"] .lp-pagination a,
         [data-theme="dark"] .lp-pagination span {
-            background: #1E293B;
-            border-color: #334155;
-            color: #F1F5F9;
-        }
-        [data-theme="dark"] .lp-pagination strong { color: #94A3B8; }
-        [data-theme="dark"] .lp-pagination .is-disabled {
-            background: #0F172A;
-            color: #475569;
-        }
-        [data-theme="dark"] .lp-cta {
-            background: #1E293B;
-            border: 1px solid #334155;
-            color: #F1F5F9;
-        }
-        [data-theme="dark"] .lp-cta h2 { color: #F1F5F9; }
-        [data-theme="dark"] .lp-cta span { color: var(--delni-primary); }
-        [data-theme="dark"] .lp-cta a {
-            background: #0F172A;
-            color: #F1F5F9;
-        }
-        [data-theme="dark"] .lp-results-head h2 { color: #F1F5F9; }
-        [data-theme="dark"] .delni-header .delni-icon-btn {
-            background: #111827;
+            background: #131A22;
             border-color: #334155;
             color: #F8FAFC;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
         }
-        [data-theme="dark"] .delni-header .delni-icon-btn:hover,
-        [data-theme="dark"] .delni-header .delni-icon-btn:focus-visible {
-            background: #1E293B;
-            border-color: rgba(241,98,15,.38);
-            color: #F1620F;
+        [data-theme="dark"] .lp-pagination strong { color: #CBD5E1; }
+        [data-theme="dark"] .lp-pagination .is-disabled {
+            background: #0D1117;
+            color: #94A3B8;
         }
+        [data-theme="dark"] .lp-cta {
+            border-color: #334155;
+            background:
+                radial-gradient(circle at top left, rgba(241, 98, 15, .16), transparent 42%),
+                linear-gradient(135deg, #131A22 0%, #1B2430 58%, #263241 100%);
+            color: #F8FAFC;
+        }
+        [data-theme="dark"] .lp-cta h2 { color: #F8FAFC; }
+        [data-theme="dark"] .lp-cta span { color: #FDBA74; }
+        [data-theme="dark"] .lp-cta p { color: rgba(248, 250, 252, .76); }
+        [data-theme="dark"] .lp-cta a {
+            border-color: rgba(251, 146, 60, .3);
+            background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+            color: #fff;
+        }
+        [data-theme="dark"] .lp-results-head h2 { color: #F8FAFC; }
+
 
         /* Provider card (pc-*) */
         [data-theme="dark"] .pc-card {
-            background: #1E293B;
+            background: #131A22;
             border-color: #334155;
         }
-        [data-theme="dark"] .pc-name { color: #F1F5F9; }
-        [data-theme="dark"] .pc-meta-item { color: #94A3B8; }
+        [data-theme="dark"] .pc-name { color: #F8FAFC; }
+        [data-theme="dark"] .pc-meta-item { color: #CBD5E1; }
         [data-theme="dark"] .pc-tag {
-            background: #0F172A;
+            background: #0D1117;
             border-color: #334155;
-            color: #94A3B8;
+            color: #CBD5E1;
         }
         [data-theme="dark"] .pc-btn--primary { /* keep as-is (orange) */ }
         [data-theme="dark"] .pc-btn--wa {
@@ -751,8 +766,8 @@
 
         /* Desktop ghost button */
         [data-theme="dark"] .delni-btn--ghost {
-            background: #1E293B;
-            color: #F1F5F9;
+            background: #131A22;
+            color: #F8FAFC;
             border-color: #334155;
         }
         /* ── end dark mode overrides ──────────────────────────────────────── */
@@ -870,8 +885,8 @@
         [data-theme="dark"] .pc-fav-toast,
         [data-theme="dark"] .delni-auth-toast {
             border-color: #334155;
-            background: #1E293B;
-            color: #F1F5F9;
+            background: #131A22;
+            color: #F8FAFC;
         }
     </style>
 </head>
@@ -912,21 +927,26 @@
                     <span>{{ config('app.name') }}</span>
                 </a>
 
-                <nav class="delni-nav" aria-label="Primary navigation">
+                <nav class="delni-nav" aria-label="التنقل الرئيسي">
                     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'is-active' : '' }}">الرئيسية</a>
                     <a href="{{ route('public.top-rated') }}" class="{{ request()->routeIs('public.top-rated') ? 'is-active' : '' }}">الأعلى تقييما</a>
                     <a href="{{ route('favorites.index') }}" class="{{ request()->routeIs('favorites.*') ? 'is-active' : '' }}">المفضلة</a>
                     <a href="{{ route('settings') }}" class="{{ request()->routeIs('settings') || request()->routeIs('about') ? 'is-active' : '' }}">الإعدادات</a>
                 </nav>
 
-                <div class="delni-header__quick">
-                    <a href="{{ route('public.search') }}" class="delni-icon-btn" aria-label="بحث">
-                        <x-render-icon icon="heroicon-o-magnifying-glass" />
-                    </a>
-                    <a href="{{ auth()->check() ? route('settings') : route('login') }}" class="delni-icon-btn" aria-label="الحساب">
-                        <x-render-icon icon="app-account" />
-                    </a>
-                </div>
+                <!-- Global City Picker -->
+                @php
+                    $globalCities = \App\Models\City::where('is_active', true)->orderBy('name_ar')->get();
+                    $activeCitySlug = session('active_city_slug');
+                    $activeCity = $activeCitySlug ? $globalCities->firstWhere('slug', $activeCitySlug) : null;
+                @endphp
+                <button type="button" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-black hover:border-primary/20 dark:hover:border-slate-800 transition-all cursor-pointer flex-none" data-global-city-trigger>
+                    <x-render-icon icon="heroicon-o-map-pin" class="w-3.5 h-3.5 text-primary flex-none" />
+                    <span>{{ $activeCity ? ($activeCity->localized_name ?? $activeCity->name) : 'اختر المدينة' }}</span>
+                    <x-render-icon icon="heroicon-o-chevron-down" class="w-3.5 h-3.5 text-slate-400 flex-none" />
+                </button>
+
+
             </div>
         </header>
 
@@ -936,21 +956,35 @@
             </div>
         </main>
 
-        <nav class="pwa-bottom-nav" aria-label="Mobile Navigation Bar">
+        <nav class="pwa-bottom-nav" aria-label="شريط التنقل السفلي">
             <a href="{{ route('home') }}" class="pwa-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
-                <x-render-icon icon="app-home" />
+                <span class="pwa-nav-icon-container">
+                    <x-render-icon icon="app-home" />
+                </span>
                 <span>الرئيسية</span>
             </a>
+            <a href="{{ route('public.categories') }}" class="pwa-nav-item {{ request()->routeIs('public.categories') ? 'active' : '' }}">
+                <span class="pwa-nav-icon-container">
+                    <x-render-icon icon="app-categories" />
+                </span>
+                <span>الفئات</span>
+            </a>
             <a href="{{ route('public.top-rated') }}" class="pwa-nav-item {{ request()->routeIs('public.top-rated') ? 'active' : '' }}">
-                <x-render-icon icon="app-star" />
+                <span class="pwa-nav-icon-container">
+                    <x-render-icon icon="app-star" />
+                </span>
                 <span>الأعلى تقييماً</span>
             </a>
             <a href="{{ route('favorites.index') }}" class="pwa-nav-item {{ request()->routeIs('favorites.*') ? 'active' : '' }}">
-                <x-render-icon icon="app-heart" />
+                <span class="pwa-nav-icon-container">
+                    <x-render-icon icon="app-heart" />
+                </span>
                 <span>المفضلة</span>
             </a>
             <a href="{{ route('settings') }}" class="pwa-nav-item {{ request()->routeIs('settings') || request()->routeIs('about') ? 'active' : '' }}">
-                <x-render-icon icon="app-account" />
+                <span class="pwa-nav-icon-container">
+                    <x-render-icon icon="app-account" />
+                </span>
                 <span>الإعدادات</span>
             </a>
         </nav>
@@ -1013,6 +1047,133 @@
             submitter?.setAttribute('aria-busy', 'true');
         });
 
+        // Global Auto-Filter Script
+        (() => {
+            const pendingTimers = new WeakMap();
+
+            const redirectToCleanFilterUrl = (form, control) => {
+                if (!form || !control) {
+                    return false;
+                }
+
+                // Handle Subcategory (service) routing redirect
+                if (control.name === 'service') {
+                    let urls = {};
+                    try {
+                        urls = JSON.parse(form.dataset.serviceUrls || '{}');
+                    } catch (e) {
+                        urls = {};
+                    }
+                    const targetUrl = control.value ? urls[control.value] : form.dataset.serviceResetUrl;
+                    if (targetUrl) {
+                        const url = new URL(targetUrl, window.location.origin);
+                        const params = new FormData(form);
+                        params.delete('service');
+                        params.delete('page');
+                        for (const [name, value] of params.entries()) {
+                            if (value !== '') {
+                                url.searchParams.append(name, value);
+                            }
+                        }
+                        window.location.assign(url.toString());
+                        return true;
+                    }
+                }
+
+                // Handle City routing redirect
+                if (control.name === 'city') {
+                    let urls = {};
+                    try {
+                        urls = JSON.parse(form.dataset.cityUrls || '{}');
+                    } catch (error) {
+                        urls = {};
+                    }
+                    const targetUrl = control.value ? urls[control.value] : form.dataset.cityResetUrl;
+                    if (targetUrl) {
+                        const url = new URL(targetUrl, window.location.origin);
+                        const params = new FormData(form);
+                        params.delete('city');
+                        params.delete('city_id');
+                        params.delete('page');
+                        for (const [name, value] of params.entries()) {
+                            if (value !== '') {
+                                url.searchParams.append(name, value);
+                            }
+                        }
+                        window.location.assign(url.toString());
+                        return true;
+                    }
+                }
+
+                return false;
+            };
+
+            const submitFilterForm = (form, control = null) => {
+                if (!form || form.dataset.submitting === 'true') {
+                    return;
+                }
+
+                if (redirectToCleanFilterUrl(form, control)) {
+                    return;
+                }
+
+                form.dataset.submitting = 'true';
+                form.classList.add('is-applying');
+                form.setAttribute('aria-busy', 'true');
+                form.querySelectorAll('[name="page"]').forEach((field) => field.remove());
+
+                form.querySelectorAll('input, select').forEach((field) => {
+                    if (field.name && field.value === '') {
+                        field.disabled = true;
+                    }
+                });
+
+                if (form.dataset.cityInPath === 'true' && control?.name !== 'city') {
+                    form.querySelectorAll('[name="city"]').forEach((field) => {
+                        field.disabled = true;
+                    });
+                }
+
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                    return;
+                }
+
+                form.submit();
+            };
+
+            document.addEventListener('change', (event) => {
+                const control = event.target.closest('[data-auto-filter-control]');
+                if (!control) {
+                    return;
+                }
+                submitFilterForm(control.form, control);
+            });
+
+            document.addEventListener('input', (event) => {
+                const input = event.target.closest('[data-auto-filter-input]');
+                if (!input) {
+                    return;
+                }
+                window.clearTimeout(pendingTimers.get(input));
+                pendingTimers.set(input, window.setTimeout(() => {
+                    const value = input.value.trim();
+                    if (value.length === 0 || value.length >= 2) {
+                        submitFilterForm(input.form);
+                    }
+                }, 450));
+            });
+
+            document.addEventListener('keydown', (event) => {
+                const input = event.target.closest('[data-auto-filter-input]');
+                if (!input || event.key !== 'Enter') {
+                    return;
+                }
+                event.preventDefault();
+                submitFilterForm(input.form);
+            });
+        })();
+
         @if($shouldRegisterPublicPwa)
         if ('serviceWorker' in navigator && window.isSecureContext) {
             window.addEventListener('load', () => {
@@ -1020,6 +1181,111 @@
             });
         }
         @endif
+    </script>
+
+    <!-- Global City Selection Drawer (Bottom Sheet) -->
+    <div class="hidden fixed inset-0 z-[100] bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 [&.is-open]:block" data-global-city-close id="globalCityOverlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-[110] max-h-[75vh] overflow-y-auto p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] border border-slate-200 dark:border-slate-800 border-b-0 rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl translate-y-[105%] transition-transform duration-300 [&.is-open]:translate-y-0 w-full max-w-lg mx-auto" id="globalCityDrawer">
+        <div class="flex items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+            <div class="flex items-center gap-2">
+                <x-render-icon icon="heroicon-o-map-pin" class="w-4.5 h-4.5 text-primary flex-none" />
+                <strong class="text-slate-900 dark:text-slate-100 text-sm font-black">اختر المدينة</strong>
+            </div>
+            <button type="button" class="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:text-primary transition-colors cursor-pointer" data-global-city-close aria-label="إغلاق">
+                <x-render-icon icon="heroicon-o-x-mark" class="w-4 h-4" />
+            </button>
+        </div>
+
+        <div class="grid gap-2">
+
+
+            <!-- Individual cities -->
+            @foreach($globalCities as $city)
+                <a href="?city={{ $city->slug }}" class="flex items-center justify-between px-4 py-3 border {{ $activeCitySlug === $city->slug ? 'border-primary bg-orange-50/20 text-primary' : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850' }} rounded-2xl text-xs font-bold transition-all" data-global-city-item data-city-slug="{{ $city->slug }}">
+                    <span>{{ $city->localized_name ?? $city->name }}</span>
+                    @if($activeCitySlug === $city->slug)
+                        <x-render-icon icon="heroicon-o-check" class="w-4 h-4 text-primary" />
+                    @endif
+                </a>
+            @endforeach
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            document.addEventListener('click', (event) => {
+                const trigger = event.target.closest('[data-global-city-trigger]');
+                const close = event.target.closest('[data-global-city-close]');
+
+                const drawer = document.getElementById('globalCityDrawer');
+                const overlay = document.getElementById('globalCityOverlay');
+
+                if (trigger) {
+                    drawer?.classList.add('is-open');
+                    overlay?.classList.add('is-open');
+                    document.body.style.overflow = 'hidden';
+                } else if (close || (overlay && event.target === overlay)) {
+                    drawer?.classList.remove('is-open');
+                    overlay?.classList.remove('is-open');
+                    document.body.style.overflow = '';
+                }
+
+                const cityItem = event.target.closest('[data-global-city-item]');
+                const clearItem = event.target.closest('[data-global-city-clear]');
+                if (cityItem || clearItem) {
+                    event.preventDefault();
+                    const newCity = cityItem ? cityItem.dataset.citySlug : null;
+                    let url = new URL(window.location.href);
+
+                    // Determine clean URL redirection based on current path
+                    const path = url.pathname;
+                    
+                    // Regex patterns
+                    const catPattern = /^\/category\/([^\/]+)(?:\/in\/([^\/]+))?$/;
+                    const subPattern = /^\/subcategory\/([^\/]+)(?:\/in\/([^\/]+))?$/;
+                    const topPattern = /^\/top-rated(?:\/in\/([^\/]+))?$/;
+
+                    if (catPattern.test(path)) {
+                        const match = path.match(catPattern);
+                        const catSlug = match[1];
+                        if (newCity) {
+                            url.pathname = `/category/${catSlug}/in/${newCity}`;
+                        } else {
+                            url.pathname = `/category/${catSlug}`;
+                            url.searchParams.set('clear_city', '1');
+                        }
+                    } else if (subPattern.test(path)) {
+                        const match = path.match(subPattern);
+                        const subSlug = match[1];
+                        if (newCity) {
+                            url.pathname = `/subcategory/${subSlug}/in/${newCity}`;
+                        } else {
+                            url.pathname = `/subcategory/${subSlug}`;
+                            url.searchParams.set('clear_city', '1');
+                        }
+                    } else if (topPattern.test(path)) {
+                        if (newCity) {
+                            url.pathname = `/top-rated/in/${newCity}`;
+                        } else {
+                            url.pathname = `/top-rated`;
+                            url.searchParams.set('clear_city', '1');
+                        }
+                    } else {
+                        // General fallback
+                        if (newCity) {
+                            url.searchParams.set('city', newCity);
+                        } else {
+                            url.searchParams.set('clear_city', '1');
+                        }
+                    }
+
+                    // Reset page pagination param if switching cities
+                    url.searchParams.delete('page');
+
+                    window.location.href = url.toString();
+                }
+            });
+        })();
     </script>
 </body>
 </html>

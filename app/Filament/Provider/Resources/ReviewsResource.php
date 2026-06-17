@@ -61,31 +61,30 @@ class ReviewsResource extends Resource
             Section::make('تفاصيل التقييم')
                 ->description('معلومات التقييم')
                 ->schema([
-                    Tables\Columns\TextColumn::make('user.name')
+                    Forms\Components\Placeholder::make('user.name')
                         ->label('من')
-                        ->getStateUsing(fn ($record) => $record->user?->name ?? 'مستخدم محذوف'),
+                        ->content(fn ($record) => $record->user?->name ?? 'مستخدم محذوف'),
 
-                    Tables\Columns\TextColumn::make('rating')
+                    Forms\Components\Placeholder::make('rating')
                         ->label('التقييم')
-                        ->getStateUsing(function ($record) {
+                        ->content(function ($record) {
                             $stars = str_repeat('⭐', (int) $record->rating);
                             $empty = str_repeat('☆', 5 - (int) $record->rating);
 
                             return "$stars$empty ({$record->rating}/5)";
                         }),
 
-                    Tables\Columns\TextColumn::make('comment')
+                    Forms\Components\Placeholder::make('comment')
                         ->label('التعليق')
-                        ->getStateUsing(fn ($record) => $record->comment ?? 'لا يوجد تعليق'),
+                        ->content(fn ($record) => $record->comment ?? 'لا يوجد تعليق'),
 
-                    Tables\Columns\TextColumn::make('created_at')
+                    Forms\Components\Placeholder::make('created_at')
                         ->label('التاريخ')
-                        ->date('d/m/Y H:i')
-                        ->getStateUsing(fn ($record) => $record->created_at?->format('d/m/Y H:i') ?? '-'),
+                        ->content(fn ($record) => $record->created_at?->format('d/m/Y H:i') ?? '-'),
 
-                    Tables\Columns\TextColumn::make('status')
+                    Forms\Components\Placeholder::make('status')
                         ->label('حالة الموافقة')
-                        ->getStateUsing(function ($record) {
+                        ->content(function ($record) {
                             return match ($record->status) {
                                 'approved' => '✅ موافق عليه',
                                 'pending' => '⏳ قيد الانتظار',

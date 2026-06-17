@@ -103,6 +103,13 @@ class CredentialsResource extends Resource
                     ->label('تاريخ الإصدار')
                     ->date()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('verification_url')
+                    ->label('رابط التحقق')
+                    ->url()
+                    ->limit(30),
+                Tables\Columns\TextColumn::make('notes')
+                    ->label('ملاحظات')
+                    ->limit(50),
             ])
             ->filters([])
             ->recordActions([

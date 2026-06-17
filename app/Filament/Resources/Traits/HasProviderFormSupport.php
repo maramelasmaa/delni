@@ -4,45 +4,26 @@ namespace App\Filament\Resources\Traits;
 
 use App\Models\Profile;
 use App\Models\ProviderType;
-use App\Models\Subscription;
-use App\Models\SubscriptionPlan;
 use App\Models\User;
-use App\Services\SubscriptionValidationService;
+use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 trait HasProviderFormSupport
 {
-    protected static function subscriptionSchema(): array
+    protected static function accessSchema(): array
     {
         return [
-            Section::make('الاشتراك الحالي / الأخير')
+            Section::make('صلاحية الظهور')
+                ->description('يتحكم متى يظهر مقدم الخدمة على الموقع العام.')
                 ->schema([
-                    Forms\Components\Hidden::make('subscription.id'),
-                    Forms\Components\Select::make('subscription.plan_id')
-                        ->label(__('filament.fields.plan'))
-                        ->options(fn () => SubscriptionPlan::query()
-                            ->where('is_active', true)
-                            ->orderBy('name')
-                            ->pluck('name', 'id'))
-                        ->searchable()
-                        ->live(),
-                    Forms\Components\DatePicker::make('subscription.starts_at')
-                        ->label(__('filament.fields.started_at'))
-                        ->required(fn ($get) => filled($get('subscription.plan_id'))),
-                    Forms\Components\DatePicker::make('subscription.ends_at')
-                        ->label(__('filament.fields.ends_at'))
-                        ->required(fn ($get) => filled($get('subscription.plan_id'))),
-                    Forms\Components\Toggle::make('subscription.is_active')
-                        ->label(__('filament.fields.active'))
-                        ->default(true),
-                    Forms\Components\Textarea::make('subscription.notes')
-                        ->label('ملاحظات')
-                        ->placeholder('أي ملاحظات إضافية')
+                    Forms\Components\DateTimePicker::make('profile.provider_access_ends_at')
+                        ->label('تاريخ انتهاء الظهور')
+                        ->helperText('لن يظهر مقدم الخدمة في الموقع العام بعد هذا التاريخ.')
+                        ->nullable()
                         ->columnSpanFull(),
                 ])
                 ->columns(2),
@@ -61,27 +42,6 @@ trait HasProviderFormSupport
                         ->label('مميز في الرئيسية حتى')
                         ->visible(fn ($get) => $get('marketplace.homepage_featured'))
                         ->required(fn ($get) => $get('marketplace.homepage_featured')),
-                    Forms\Components\Toggle::make('marketplace.top_search')
-                        ->label('أعلى البحث')
-                        ->live(),
-                    Forms\Components\DatePicker::make('marketplace.top_search_until')
-                        ->label('أعلى البحث حتى')
-                        ->visible(fn ($get) => $get('marketplace.top_search'))
-                        ->required(fn ($get) => $get('marketplace.top_search')),
-                    Forms\Components\Toggle::make('marketplace.top_category')
-                        ->label('أعلى التصنيف')
-                        ->live(),
-                    Forms\Components\DatePicker::make('marketplace.top_category_until')
-                        ->label('أعلى التصنيف حتى')
-                        ->visible(fn ($get) => $get('marketplace.top_category'))
-                        ->required(fn ($get) => $get('marketplace.top_category')),
-                    Forms\Components\Toggle::make('marketplace.top_subcategory')
-                        ->label('أعلى الفئة الفرعية')
-                        ->live(),
-                    Forms\Components\DatePicker::make('marketplace.top_subcategory_until')
-                        ->label('أعلى الفئة الفرعية حتى')
-                        ->visible(fn ($get) => $get('marketplace.top_subcategory'))
-                        ->required(fn ($get) => $get('marketplace.top_subcategory')),
                 ])
                 ->columns(2),
         ];
@@ -114,7 +74,7 @@ trait HasProviderFormSupport
                         ->content(fn (?User $record) => $record?->profile?->category?->localized_name ?? '-'),
                     Forms\Components\Placeholder::make('profile_subcategories')
                         ->label(__('filament.fields.subcategories'))
-                        ->content(fn (?User $record) => $record?->profile?->subcategories?->pluck('localized_name')->join(', ') ?: '-'),
+                        ->content(fn (?User $record) => $record?->profile?->subcategories?->pluck('localized_name')?->join(', ') ?: '-'),
                     Forms\Components\Placeholder::make('profile_service_area_note')
                         ->label('ملاحظات نطاق الخدمة')
                         ->content(fn (?User $record) => $record?->profile?->service_area_note ?? '-')
@@ -163,76 +123,60 @@ trait HasProviderFormSupport
         return $slug;
     }
 
-    protected static function saveProviderSubscription(User $record, array $subscriptionData): void
+    protected static function saveProviderAccess(Profile $profile, ?string $accessEndsAt): void
     {
-        if (! filled($subscriptionData['plan_id'] ?? null)) {
-            return;
-        }
-
-        if (filled($subscriptionData['id'] ?? null)) {
-            Subscription::query()
-                ->where('user_id', $record->id)
-                ->findOrFail($subscriptionData['id'])
-                ->update([
-                    'ends_at' => $subscriptionData['ends_at'],
-                    'is_active' => $subscriptionData['is_active'] ?? false,
-                    'notes' => $subscriptionData['notes'] ?? null,
-                ]);
-
-            return;
-        }
-
-        app(SubscriptionValidationService::class)->createForProvider($record, [
-            'plan_id' => $subscriptionData['plan_id'],
-            'starts_at' => $subscriptionData['starts_at'],
-            'ends_at' => $subscriptionData['ends_at'],
-            'notes' => $subscriptionData['notes'] ?? null,
+        $profile->update([
+            'provider_access_ends_at' => filled($accessEndsAt) ? Carbon::parse($accessEndsAt) : null,
         ]);
     }
 
-    protected static function validateSubscriptionData(User $record, array $subscription): void
+    protected static function saveHomepagePlacement(Profile $profile, array $marketplaceData): void
     {
-        if (! filled($subscription['plan_id'] ?? null)) {
+        $homepageFeatured = (bool) ($marketplaceData['homepage_featured'] ?? false);
+
+        $profile->stats()->firstOrCreate(['profile_id' => $profile->id])->update([
+            'is_homepage_featured' => $homepageFeatured,
+            'homepage_featured_until' => $homepageFeatured
+                ? ($marketplaceData['homepage_featured_until'] ?? null)
+                : null,
+            'is_top_search' => false,
+            'top_search_until' => null,
+            'is_top_category' => false,
+            'top_category_until' => null,
+            'is_top_subcategory' => false,
+            'top_subcategory_until' => null,
+        ]);
+    }
+
+    protected static function extendProviderAccess(User $record, int $days): void
+    {
+        $profile = $record->profile;
+
+        if (! $profile) {
+            Notification::make()
+                ->title('لا يوجد ملف لمقدم الخدمة')
+                ->danger()
+                ->send();
+
             return;
         }
 
-        if (! filled($subscription['starts_at'] ?? null) || ! filled($subscription['ends_at'] ?? null)) {
-            throw ValidationException::withMessages([
-                'subscription.starts_at' => 'تاريخ بداية الاشتراك وتاريخ انتهائه مطلوبان.',
-            ]);
-        }
+        $current = $profile->provider_access_ends_at;
+        $base = $current && $current->isFuture() ? $current : Carbon::now();
+        $newDate = $base->copy()->addDays($days);
 
-        $startsAt = Carbon::parse($subscription['starts_at'])->startOfDay();
-        $endsAt = Carbon::parse($subscription['ends_at'])->startOfDay();
+        $profile->update(['provider_access_ends_at' => $newDate]);
 
-        if ($endsAt->lessThanOrEqualTo($startsAt)) {
-            throw ValidationException::withMessages([
-                'subscription.ends_at' => 'يجب أن يكون تاريخ انتهاء الاشتراك بعد تاريخ البداية.',
-            ]);
-        }
-
-        $overlaps = Subscription::query()
-            ->where('user_id', $record->id)
-            ->when($subscription['id'] ?? null, fn (Builder $query, $id) => $query->whereKeyNot($id))
-            ->whereDate('starts_at', '<=', $endsAt)
-            ->whereDate('ends_at', '>=', $startsAt)
-            ->exists();
-
-        if ($overlaps) {
-            throw ValidationException::withMessages([
-                'subscription.starts_at' => 'هذا الاشتراك يتداخل مع اشتراك آخر لنفس مقدم الخدمة.',
-            ]);
-        }
+        Notification::make()
+            ->title('تم تمديد صلاحية الظهور')
+            ->body('ينتهي الظهور في: '.$newDate->format('Y-m-d H:i'))
+            ->success()
+            ->send();
     }
 
     protected static function validateMarketplaceData(array $marketplace): void
     {
-        foreach ([
-            'homepage_featured' => 'homepage_featured_until',
-            'top_search' => 'top_search_until',
-            'top_category' => 'top_category_until',
-            'top_subcategory' => 'top_subcategory_until',
-        ] as $enabledField => $untilField) {
+        foreach (['homepage_featured' => 'homepage_featured_until'] as $enabledField => $untilField) {
             if (! ($marketplace[$enabledField] ?? false)) {
                 continue;
             }

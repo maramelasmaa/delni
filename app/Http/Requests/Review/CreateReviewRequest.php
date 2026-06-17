@@ -27,7 +27,6 @@ use Illuminate\Validation\Validator;
  *
  * Security: This request enforces all eligibility checks via middleware and policy.
  * Eligibility middleware (EnsureReviewEligible) on the route ensures:
- *   - Account is at least 24 hours old
  *   - User has not exceeded 10 reviews/day limit
  *
  * @see EnsureReviewEligible middleware
@@ -52,7 +51,7 @@ class CreateReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'rating' => ['nullable', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -60,6 +59,12 @@ class CreateReviewRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v): void {
+            if (empty($this->rating) && empty($this->comment)) {
+                $v->errors()->add('rating', 'يجب إدخال تقييم بالنجوم أو كتابة تعليق لإرسال المراجعة.');
+
+                return;
+            }
+
             $profile = $this->route('profile');
 
             if (! $profile instanceof Profile) {
@@ -77,7 +82,7 @@ class CreateReviewRequest extends FormRequest
             }
 
             if (! $this->visibility->isDiscoverable($profile)) {
-                $v->errors()->add('profile', 'This profile is not currently available for reviews.');
+                $v->errors()->add('profile', __('messages.profile_not_discoverable'));
 
                 return;
             }
@@ -90,7 +95,7 @@ class CreateReviewRequest extends FormRequest
                 ->exists();
 
             if ($alreadyReviewed) {
-                $v->errors()->add('profile', 'You have already submitted a review for this profile.');
+                $v->errors()->add('profile', __('messages.already_reviewed'));
             }
         });
     }

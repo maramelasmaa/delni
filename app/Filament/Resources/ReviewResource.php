@@ -51,7 +51,7 @@ class ReviewResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('معلومات التقييم')
+                Section::make(__('filament.sections.review_info'))
                     ->collapsible()
                     ->collapsed()
                     ->schema([
@@ -71,11 +71,11 @@ class ReviewResource extends Resource
                     ])
                     ->columns(2),
 
-                Section::make('المراجعة')
+                Section::make(__('filament.sections.review_moderation'))
                     ->schema([
                         Forms\Components\Select::make('status')
                             ->label(__('filament.fields.status'))
-                            ->placeholder('اختر القرار')
+                            ->placeholder(__('filament.placeholders.review_decision'))
                             ->options([
                                 ReviewStatus::PENDING->value => __('filament.status.pending'),
                                 ReviewStatus::APPROVED->value => __('filament.status.approved'),
@@ -83,8 +83,8 @@ class ReviewResource extends Resource
                             ])
                             ->required(),
                         Forms\Components\Textarea::make('moderation_note')
-                            ->label('ملاحظات المراجعة')
-                            ->placeholder('سبب الرفض أو ملاحظات الاعتماد')
+                            ->label(__('filament.fields.moderation_notes'))
+                            ->placeholder(__('filament.placeholders.review_moderation_note'))
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
@@ -118,14 +118,14 @@ class ReviewResource extends Resource
                     ->label(__('filament.fields.flagged')),
                 Tables\Columns\IconColumn::make('flag_handled_at')
                     ->boolean()
-                    ->label('Flag handled')
+                    ->label(__('filament.fields.flag_handled_at'))
                     ->getStateUsing(fn (Review $record): bool => $record->flag_handled_at !== null),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('filament.fields.created_at'))
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('deleted_at')
-                    ->label('Deleted at')
+                    ->label(__('filament.fields.deleted_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -142,31 +142,29 @@ class ReviewResource extends Resource
                     ->label(__('filament.filters.flagged_only')),
                 Tables\Filters\Filter::make('unhandled_flags')
                     ->query(fn ($query) => $query->where('is_flagged', true)->whereNull('flag_handled_at'))
-                    ->label('Unhandled flags'),
+                    ->label(__('filament.filters.unhandled_flags')),
                 Tables\Filters\Filter::make('deleted')
                     ->query(fn ($query) => $query->onlyTrashed())
-                    ->label('Deleted reviews'),
+                    ->label(__('filament.filters.deleted_reviews')),
             ])
             ->paginated([25, 50, 100])
             ->recordActions([
                 Action::make('acceptFlag')
-                    ->label('قبول البلاغ وإخفاء التقييم')
-                    ->translateLabel()
+                    ->label(__('filament.actions.accept_flag_hide_review'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalHeading('تأكيد قبول البلاغ')
+                    ->modalHeading(__('filament.headings.accept_flag_confirmation'))
                     ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->acceptFlag($record);
                     }),
                 Action::make('rejectFlag')
-                    ->label('رفض البلاغ وإبقاء التقييم')
-                    ->translateLabel()
+                    ->label(__('filament.actions.reject_flag_keep_review'))
                     ->icon('heroicon-o-x-circle')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->modalHeading('تأكيد رفض البلاغ')
+                    ->modalHeading(__('filament.headings.reject_flag_confirmation'))
                     ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->rejectFlag($record);
@@ -180,7 +178,7 @@ class ReviewResource extends Resource
                         $service->approve($record);
                     }),
                 Action::make('reject')
-                    ->label('رفض التقييم')
+                    ->label(__('filament.actions.reject_review'))
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
                     ->visible(fn (Review $record): bool => ! $record->is_flagged && $record->status === ReviewStatus::APPROVED->value && ! $record->trashed())
@@ -212,7 +210,7 @@ class ReviewResource extends Resource
                         $records->each(fn ($review) => $service->reject($review));
                     }),
                 BulkAction::make('acceptFlags')
-                    ->label('قبول البلاغات المحددة')
+                    ->label(__('filament.actions.accept_selected_flags'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
@@ -222,7 +220,7 @@ class ReviewResource extends Resource
                             ->each(fn (Review $review) => $service->acceptFlag($review));
                     }),
                 BulkAction::make('rejectFlags')
-                    ->label('رفض البلاغات المحددة')
+                    ->label(__('filament.actions.reject_selected_flags'))
                     ->icon('heroicon-o-x-circle')
                     ->color('warning')
                     ->requiresConfirmation()

@@ -22,8 +22,14 @@ class EnsureSuperAdminCommand extends Command
         );
 
         $email = config('app.super_admin_email') ?? env('SUPER_ADMIN_EMAIL');
-        $name = config('app.super_admin_name') ?? env('SUPER_ADMIN_NAME', 'Super Admin');
+        $name = config('app.super_admin_name') ?? env('SUPER_ADMIN_NAME');
         $password = env('SUPER_ADMIN_PASSWORD');
+
+        if (! $name) {
+            $this->error('SUPER_ADMIN_NAME is not set in .env');
+
+            return self::FAILURE;
+        }
 
         if (! $email) {
             $this->error('SUPER_ADMIN_EMAIL is not set in .env');

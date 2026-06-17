@@ -2,11 +2,13 @@
 
 use App\Http\Middleware\EnsureAccountNotLocked;
 use App\Http\Middleware\EnsureAdminRole;
+use App\Http\Middleware\EnsureProviderHasActiveSubscription;
 use App\Http\Middleware\EnsureProviderHasProfile;
 use App\Http\Middleware\EnsureProviderRole;
 use App\Http\Middleware\EnsureReviewEligible;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserNotSuspended;
+use App\Http\Middleware\HandlePersistentCity;
 use App\Http\Middleware\ProviderAuthenticate;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
@@ -42,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SetLocale::class,
             SecurityHeaders::class,
+            HandlePersistentCity::class,
         ]);
         $middleware->alias([
             'account.locked' => EnsureAccountNotLocked::class,
@@ -51,6 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'provider' => EnsureProviderRole::class,
             'provider.authenticate' => ProviderAuthenticate::class,
             'provider.has_profile' => EnsureProviderHasProfile::class,
+            'provider.active_subscription' => EnsureProviderHasActiveSubscription::class,
             'review.eligible' => EnsureReviewEligible::class,
         ]);
     })
@@ -64,6 +68,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e instanceof AuthenticationException) {
                 if ($request->is('provider', 'provider/*')) {
                     return redirect()->route('filament.provider.auth.login');
+                }
+
+                $adminPath = env('FILAMENT_PATH', 'cp/admin');
+                if ($request->is($adminPath, $adminPath.'/*')) {
+                    return redirect()->route('filament.admin.auth.login');
                 }
 
                 return redirect()->route('login');

@@ -14,15 +14,11 @@ class ProfileVisibilityResult
         public readonly bool $is_visible,
         public readonly ?ProfileHiddenReason $primary_reason = null,
         public readonly array $reasons = [],
-        public readonly ?string $subscription_status = null,
-        public readonly ?string $subscription_expires_at = null,
         public readonly ?string $user_status = null,
         public readonly array $missing_fields = [],
+        public readonly ?string $access_ends_at = null,
     ) {}
 
-    /**
-     * Human-readable description of why profile is hidden.
-     */
     public function getDescription(): string
     {
         if ($this->is_visible) {
@@ -34,35 +30,21 @@ class ProfileVisibilityResult
             ProfileHiddenReason::USER_INACTIVE => 'User account is inactive',
             ProfileHiddenReason::USER_SUSPENDED => 'User account is suspended',
             ProfileHiddenReason::PROFILE_INCOMPLETE => 'Profile is incomplete (missing: '.implode(', ', $this->missing_fields).')',
-            ProfileHiddenReason::NO_ACTIVE_SUBSCRIPTION => 'No active subscription',
-            ProfileHiddenReason::SUBSCRIPTION_EXPIRED => 'Subscription expired on '.$this->subscription_expires_at,
+            ProfileHiddenReason::ACCESS_EXPIRED => 'Provider listing access has expired or was not granted',
             default => 'Profile is hidden',
         };
     }
 
-    /**
-     * Is this profile hidden due to completeness issues?
-     */
     public function isIncomplete(): bool
     {
         return $this->primary_reason === ProfileHiddenReason::PROFILE_INCOMPLETE;
     }
 
-    /**
-     * Is this profile hidden due to subscription issues?
-     */
-    public function isSubscriptionIssue(): bool
+    public function isAccessExpired(): bool
     {
-        return in_array(
-            $this->primary_reason,
-            [ProfileHiddenReason::NO_ACTIVE_SUBSCRIPTION, ProfileHiddenReason::SUBSCRIPTION_EXPIRED],
-            true
-        );
+        return $this->primary_reason === ProfileHiddenReason::ACCESS_EXPIRED;
     }
 
-    /**
-     * Is this profile hidden due to user account issues?
-     */
     public function isUserAccountIssue(): bool
     {
         return in_array(
@@ -73,8 +55,6 @@ class ProfileVisibilityResult
     }
 
     /**
-     * Array representation for JSON responses.
-     *
      * @return array<string, mixed>
      */
     public function toArray(): array
@@ -84,8 +64,7 @@ class ProfileVisibilityResult
             'primary_reason' => $this->primary_reason?->value,
             'description' => $this->getDescription(),
             'user_status' => $this->user_status,
-            'subscription_status' => $this->subscription_status,
-            'subscription_expires_at' => $this->subscription_expires_at,
+            'access_ends_at' => $this->access_ends_at,
             'missing_fields' => $this->missing_fields,
         ];
     }

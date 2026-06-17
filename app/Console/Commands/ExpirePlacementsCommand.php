@@ -12,14 +12,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('placements:expire')]
-#[Description('Clear all expired placement flags (featured, top-search, etc.)')]
+#[Description('Clear expired homepage featured placement flags')]
 class ExpirePlacementsCommand extends Command
 {
     private const PLACEMENTS = [
         ['flag' => 'is_homepage_featured', 'until' => 'homepage_featured_until'],
-        ['flag' => 'is_top_search', 'until' => 'top_search_until'],
-        ['flag' => 'is_top_category', 'until' => 'top_category_until'],
-        ['flag' => 'is_top_subcategory', 'until' => 'top_subcategory_until'],
     ];
 
     public function handle(): int

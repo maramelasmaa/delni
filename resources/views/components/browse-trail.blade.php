@@ -5,65 +5,17 @@
 @endphp
 
 @if($trailItems->isNotEmpty())
-    <nav class="browse-trail" aria-label="مسار التصفح">
-        @foreach($trailItems as $item)
+    <nav class="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-bold px-1.5 py-1" aria-label="مسار التصفح">
+        @foreach($trailItems as $index => $item)
+            @if($index > 0)
+                <x-render-icon icon="heroicon-o-chevron-left" class="w-3 h-3 text-slate-400 dark:text-slate-600 flex-none" />
+            @endif
             @if(! empty($item['url']) && empty($item['active']))
-                <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+                <a href="{{ $item['url'] }}" class="hover:text-primary transition-colors text-slate-500 dark:text-slate-400">{{ $item['label'] }}</a>
             @else
-                <span class="is-active">{{ $item['label'] }}</span>
+                <span class="text-slate-800 dark:text-slate-200 font-extrabold">{{ $item['label'] }}</span>
             @endif
         @endforeach
     </nav>
 @endif
 
-@once
-    @push('styles')
-        <style>
-            .browse-trail {
-                display: flex;
-                align-items: center;
-                gap: .4rem;
-                overflow-x: auto;
-                padding: .05rem .05rem .15rem;
-                scrollbar-width: none;
-                -webkit-overflow-scrolling: touch;
-            }
-            .browse-trail::-webkit-scrollbar { display: none; }
-
-            .browse-trail a,
-            .browse-trail span {
-                flex: 0 0 auto;
-                min-height: 30px;
-                display: inline-flex;
-                align-items: center;
-                padding: .32rem .62rem;
-                border: 1px solid var(--delni-border);
-                border-radius: 999px;
-                background: #fff;
-                color: #64748B;
-                font-size: .74rem;
-                font-weight: 900;
-                text-decoration: none;
-                white-space: nowrap;
-            }
-
-            .browse-trail .is-active {
-                border-color: rgba(241,98,15,.22);
-                background: #FFF7ED;
-                color: var(--delni-primary);
-            }
-
-            [data-theme="dark"] .browse-trail a,
-            [data-theme="dark"] .browse-trail span {
-                background: #1E293B;
-                border-color: #334155;
-                color: #CBD5E1;
-            }
-            [data-theme="dark"] .browse-trail .is-active {
-                background: rgba(241,98,15,.12);
-                border-color: rgba(241,98,15,.28);
-                color: #FB923C;
-            }
-        </style>
-    @endpush
-@endonce

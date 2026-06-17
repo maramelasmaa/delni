@@ -3,16 +3,17 @@
 namespace App\Filament\Resources\ReviewResource\Pages;
 
 use App\Filament\Resources\ReviewResource;
+use App\Filament\Support\Pages\EditRecordWithBack;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
 
-class EditReview extends EditRecord
+class EditReview extends EditRecordWithBack
 {
     protected static string $resource = ReviewResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->getBackHeaderAction(),
             Actions\DeleteAction::make()
                 ->visible(fn ($record): bool => ! $record->trashed()),
             Actions\RestoreAction::make()

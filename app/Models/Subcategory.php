@@ -31,6 +31,15 @@ class Subcategory extends Model
         return $this->belongsTo(Icon::class);
     }
 
+    public function getIconAttribute()
+    {
+        if ($this->relationLoaded('icon')) {
+            return $this->getRelationValue('icon');
+        }
+
+        return $this->icon()->getResults();
+    }
+
     public function profiles(): BelongsToMany
     {
         return $this->belongsToMany(Profile::class, 'profile_subcategory', 'subcategory_id', 'profile_id')->withTimestamps();

@@ -48,56 +48,56 @@ class SubcategoryResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Category')
+                Section::make(__('filament.sections.category_section'))
                     ->schema([
                         Forms\Components\Select::make('category_id')
                             ->label(__('filament.fields.category'))
-                            ->placeholder('Select main category')
+                            ->placeholder(__('filament.placeholders.select_category'))
                             ->relationship('category', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->localized_name)
                             ->required(),
                     ]),
 
-                Section::make('Translations')
+                Section::make(__('filament.sections.translations'))
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label(__('filament.fields.name_en'))
-                            ->placeholder('Emergency Repairs')
+                            ->placeholder(__('filament.placeholders.subcategory_name_en'))
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('name_ar')
                             ->label(__('filament.fields.name_ar'))
-                            ->placeholder('Example: Emergency Repairs')
+                            ->placeholder(__('filament.placeholders.subcategory_name_ar'))
                             ->required()
                             ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Section::make('Display')
+                Section::make(__('filament.sections.display'))
                     ->schema([
                         Forms\Components\TextInput::make('slug')
-                            ->label('Slug')
+                            ->label(__('filament.fields.slug'))
                             ->placeholder('emergency-repairs')
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255)
-                            ->hint('A suitable identifier for the URL'),
+                            ->hint(__('filament.help_text.slug')),
                         Forms\Components\FileUpload::make('svg_file')
-                            ->label('Upload SVG Icon')
+                            ->label(__('filament.fields.icon'))
                             ->acceptedFileTypes(['image/svg+xml'])
                             ->maxSize(500)
                             ->storeFiles(false)
                             ->nullable()
-                            ->hint('Upload SVG (will be auto-orange & 24x24px)'),
+                            ->hint(__('filament.help_text.svg_upload')),
                         Forms\Components\TextInput::make('sort_order')
-                            ->placeholder('0')
+                            ->placeholder(__('filament.placeholders.sort_order'))
                             ->numeric()
                             ->default(0)
-                            ->hint('Display order within category'),
+                            ->hint(__('filament.help_text.sort_order')),
                     ])
                     ->columns(3),
 
-                Section::make('Status')
+                Section::make(__('filament.sections.status_section'))
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->required()
@@ -121,11 +121,11 @@ class SubcategoryResource extends Resource
                     ->label(__('filament.fields.name'))
                     ->searchable('name')
                     ->sortable('name'),
-                Tables\Columns\TextColumn::make('slug')->label('Slug')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('slug')->label(__('filament.fields.slug'))->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('icon.name')
-                    ->label('Icon')
+                    ->label(__('filament.fields.icon'))
                     ->formatStateUsing(fn ($state, $record) => $state ? "🎨 {$state}" : '—')
-                    ->description(fn ($record) => $record->icon ? route('icon.show', $record->icon) : 'No icon')
+                    ->description(fn ($record) => $record->icon ? route('icon.show', $record->icon) : __('filament.help_text.icon_none'))
                     ->searchable('icon.name')
                     ->sortable('icon.name'),
                 Tables\Columns\IconColumn::make('is_active')

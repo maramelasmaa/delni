@@ -3,24 +3,32 @@
 @section('title', 'جميع الفئات - ' . config('app.name'))
 
 @section('content')
-<div class="lp-wrapper market-browse">
-    <x-marketplace-header
-        eyebrow="دليل الخدمات"
-        title="تصفح الفئات"
-        :count="$categories->count() . ' فئة'"
-        :back-url="route('home')"
-        back-label="الرئيسية"
-        description="اختر المجال المناسب ثم انتقل للخدمات الفرعية ومزودي الخدمة المتاحين."
-    />
+<div class="grid gap-4 max-w-2xl mx-auto py-2.5 px-1 w-full">
+    <!-- Custom Hero Banner matching the design mockup -->
+    <div class="relative overflow-hidden rounded-3xl bg-[#FFF6F0] dark:bg-slate-900/60 p-5 md:p-6.5 flex items-center justify-between border border-orange-100/40 dark:border-slate-800/60 shadow-2xs">
+        <!-- Right Side Text (RTL) -->
+        <div class="flex-1 min-w-0 z-1 pr-1 pl-20 sm:pl-32 text-right">
+            <h1 class="text-[#0B1A34] dark:text-slate-100 text-lg md:text-xl font-black mb-1 leading-tight">تصفح الفئات</h1>
+            <p class="text-[#5D5959] dark:text-slate-400 text-[11px] md:text-xs font-bold leading-relaxed max-w-[240px] sm:max-w-md">
+                اختر المجال المناسب ثم انتقل للخدمات الفرعية ومزودي الخدمة المتاحين.
+            </p>
+        </div>
+        <!-- Left Side Image: Floating illustration -->
+        <div class="absolute left-2.5 bottom-0 top-0 w-24 sm:w-32 flex items-center justify-center pointer-events-none">
+            <img src="{{ asset('images/categories_hero.png') }}" alt="" class="object-contain max-h-[92%] drop-shadow-md">
+        </div>
+    </div>
 
-    <div class="market-browse__toolbar">
-        <label class="market-search">
-            <x-render-icon icon="heroicon-o-magnifying-glass" />
-            <input type="search" id="categorySearch" placeholder="ابحث عن فئة أو خدمة" autocomplete="off">
+    <!-- Search Input Bar -->
+    <div class="z-4 my-1">
+        <label class="flex items-center gap-3 min-h-[46px] px-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 shadow-3xs focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+            <x-render-icon icon="heroicon-o-magnifying-glass" class="w-4.5 h-4.5 text-slate-400 flex-none" />
+            <input type="search" id="categorySearch" placeholder="ابحث عن فئة أو خدمة..." autocomplete="off" class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-900 dark:text-slate-50 font-bold text-xs md:text-sm placeholder-slate-400">
         </label>
     </div>
 
-    <section class="market-browse__grid" id="categoryGrid">
+    <!-- Categories list cards stack -->
+    <section class="grid gap-3 grid-cols-1 w-full" id="categoryGrid">
         @forelse($categories as $category)
             <x-category-discovery-card :category="$category" />
         @empty
@@ -32,107 +40,32 @@
         @endforelse
     </section>
 
+    <!-- Join as Provider CTA -->
     <div class="lp-cta">
-        <div>
+        <div class="text-right">
             <span>تقدم خدمة؟</span>
-            <h2>اجعل ملفك مرئيا للعملاء</h2>
+            <h2>اجعل ملفك مرئياً للعملاء</h2>
         </div>
         <a href="{{ $ctaWhatsappUrl ?? route('contact') }}"
            @if($ctaWhatsappUrl ?? false) target="_blank" rel="noopener" @endif>سجل كمزود</a>
     </div>
 </div>
 
-@push('styles')
-<style>
-    .market-browse {
-        display: grid;
-        gap: .85rem;
-        max-width: 1120px;
-        margin-inline: auto;
-    }
-
-    .market-browse__toolbar {
-        display: grid;
-        gap: .65rem;
-        position: sticky;
-        top: calc(var(--pwa-header-height) + env(safe-area-inset-top) + .35rem);
-        z-index: 4;
-    }
-
-    .market-search {
-        min-height: 46px;
-        display: flex;
-        align-items: center;
-        gap: .55rem;
-        padding: 0 .85rem;
-        border: 1px solid var(--delni-border);
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: var(--delni-shadow-sm);
-    }
-
-    .market-search svg {
-        width: 19px;
-        height: 19px;
-        color: #94A3B8;
-        flex: 0 0 auto;
-    }
-
-    .market-search input {
-        width: 100%;
-        min-width: 0;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: var(--delni-navy);
-        font: inherit;
-        font-size: .9rem;
-        font-weight: 750;
-    }
-
-    .market-search input::placeholder {
-        color: #94A3B8;
-    }
-
-    .market-browse__grid {
-        display: grid;
-        gap: .65rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: stretch;
-    }
-
-    .cat-card.is-filtered {
-        display: none;
-    }
-
-    [data-theme="dark"] .market-search {
-        background: #1E293B;
-        border-color: #334155;
-    }
-    [data-theme="dark"] .market-search input { color: #F1F5F9; }
-    @media (min-width: 760px) {
-        .market-browse__grid {
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: .85rem;
-        }
-    }
-</style>
-@endpush
-
 @push('scripts')
 <script>
     (() => {
         const input = document.getElementById('categorySearch');
-        const cards = Array.from(document.querySelectorAll('#categoryGrid .cat-card'));
+        const cards = Array.from(document.querySelectorAll('#categoryGrid > article'));
         if (!input || cards.length === 0) { return; }
 
         input.addEventListener('input', () => {
             const value = input.value.trim().toLowerCase();
             cards.forEach((card) => {
-                card.classList.toggle('is-filtered', value !== '' && !card.textContent.toLowerCase().includes(value));
+                card.classList.toggle('hidden', value !== '' && !card.textContent.toLowerCase().includes(value));
             });
         });
     })();
 </script>
 @endpush
 @endsection
+

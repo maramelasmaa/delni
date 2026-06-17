@@ -1,72 +1,19 @@
 @props(['paginator'])
 
 @if($paginator->hasPages())
-    <nav class="mp-pagination" aria-label="Pagination">
+    <nav class="flex items-center justify-center gap-2.5 mt-5" aria-label="التنقل بين الصفحات">
         @if($paginator->onFirstPage())
-            <span class="is-disabled">السابق</span>
+            <span class="flex-none inline-flex items-center justify-center min-h-[40px] px-4 border border-slate-100 dark:border-slate-900 rounded-2xl bg-slate-100 dark:bg-slate-950 text-slate-400 dark:text-slate-600 text-[11px] font-bold cursor-not-allowed">السابق</span>
         @else
-            <a href="{{ $paginator->appends(request()->query())->previousPageUrl() }}">السابق</a>
+            <a href="{{ $paginator->appends(request()->query())->previousPageUrl() }}" class="flex-none inline-flex items-center justify-center min-h-[40px] px-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-[11px] font-black text-decoration-none hover:border-primary/20 hover:text-primary transition-all">السابق</a>
         @endif
 
-        <strong>{{ $paginator->currentPage() }} / {{ $paginator->lastPage() }}</strong>
+        <strong class="text-slate-500 dark:text-slate-400 text-xs font-black px-1">{{ $paginator->currentPage() }} / {{ $paginator->lastPage() }}</strong>
 
         @if($paginator->hasMorePages())
-            <a href="{{ $paginator->appends(request()->query())->nextPageUrl() }}">التالي</a>
+            <a href="{{ $paginator->appends(request()->query())->nextPageUrl() }}" class="flex-none inline-flex items-center justify-center min-h-[40px] px-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-[11px] font-black text-decoration-none hover:border-primary/20 hover:text-primary transition-all">التالي</a>
         @else
-            <span class="is-disabled">التالي</span>
+            <span class="flex-none inline-flex items-center justify-center min-h-[40px] px-4 border border-slate-100 dark:border-slate-900 rounded-2xl bg-slate-100 dark:bg-slate-950 text-slate-400 dark:text-slate-600 text-[11px] font-bold cursor-not-allowed">التالي</span>
         @endif
     </nav>
 @endif
-
-@once
-    @push('styles')
-        <style>
-            .mp-pagination {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: .6rem;
-                margin-top: 1rem;
-            }
-
-            .mp-pagination a,
-            .mp-pagination span {
-                min-height: 42px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: .55rem .9rem;
-                border-radius: 14px;
-                border: 1px solid var(--delni-border);
-                background: #fff;
-                color: var(--delni-navy);
-                font-size: .82rem;
-                font-weight: 900;
-                text-decoration: none;
-            }
-
-            .mp-pagination strong {
-                color: #64748B;
-                font-size: .78rem;
-                font-weight: 900;
-            }
-
-            .mp-pagination .is-disabled {
-                background: #F1F5F9;
-                color: #94A3B8;
-            }
-
-            [data-theme="dark"] .mp-pagination a,
-            [data-theme="dark"] .mp-pagination span {
-                background: #1E293B;
-                border-color: #334155;
-                color: #F1F5F9;
-            }
-            [data-theme="dark"] .mp-pagination strong { color: #94A3B8; }
-            [data-theme="dark"] .mp-pagination .is-disabled {
-                background: #0F172A;
-                color: #475569;
-            }
-        </style>
-    @endpush
-@endonce

@@ -250,7 +250,7 @@ Fix options:
 
 Seeder readiness:
 
-- `DatabaseSeeder` runs only `RoleSeeder` and `AdminUserSeeder`.
+- `DatabaseSeeder` runs only `RoleSeeder`; admin creation is handled separately from `SUPER_ADMIN_*` environment variables.
 - `MalamProviderSeeder` exists but is not called by default.
 - Do not run demo/provider seeders in production unless intentionally approved.
 
@@ -474,7 +474,7 @@ Coolify + Libya Spider recommended path:
 - Post-deploy command:
 
 ```bash
-php artisan migrate --force && php artisan storage:link && php artisan delni:setup-admin && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan event:cache && php artisan queue:restart
+php artisan migrate --force && php artisan storage:link && php artisan delni:ensure-super-admin && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan event:cache && php artisan queue:restart
 ```
 
 - Worker command:
@@ -522,7 +522,7 @@ One-time only:
 
 ```bash
 php artisan key:generate
-php artisan delni:setup-admin
+php artisan delni:ensure-super-admin
 ```
 
 VPS services:

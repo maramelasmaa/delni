@@ -14,12 +14,19 @@ class FlagReviewTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    private function makeVisibleProfile(User $provider): Profile
+    {
+        return Profile::factory([
+            'user_id' => $provider->id,
+            'provider_access_ends_at' => now()->addYear(),
+        ])->complete()->create();
+    }
+
     public function test_provider_can_flag_review_on_own_profile(): void
     {
         $provider = User::factory()->create();
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
@@ -42,8 +49,7 @@ class FlagReviewTest extends TestCase
         $provider1->assignRole('provider');
         $provider2 = User::factory()->create();
         $provider2->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider2->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider2->id])->create();
+        $profile = $this->makeVisibleProfile($provider2);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
@@ -61,8 +67,7 @@ class FlagReviewTest extends TestCase
     {
         $provider = User::factory()->create();
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $provider->id])->create();
 
         $response = $this->actingAs($provider)
@@ -80,8 +85,7 @@ class FlagReviewTest extends TestCase
         $user1->assignRole('user');
         $provider = User::factory()->create();
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
@@ -100,8 +104,7 @@ class FlagReviewTest extends TestCase
     {
         $provider = User::factory()->create();
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
@@ -119,8 +122,7 @@ class FlagReviewTest extends TestCase
     {
         $provider = User::factory()->create();
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
@@ -138,8 +140,7 @@ class FlagReviewTest extends TestCase
     {
         $provider = User::factory()->create(['is_suspended' => true]);
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
@@ -158,8 +159,7 @@ class FlagReviewTest extends TestCase
     {
         $provider = User::factory()->create();
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
@@ -179,8 +179,7 @@ class FlagReviewTest extends TestCase
     {
         $provider1 = User::factory()->create();
         $provider1->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider1->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider1->id])->create();
+        $profile = $this->makeVisibleProfile($provider1);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id, 'is_flagged' => true])->create();
@@ -198,8 +197,7 @@ class FlagReviewTest extends TestCase
     {
         $provider = User::factory()->create();
         $provider->assignRole('provider');
-        $profile = Profile::factory(['user_id' => $provider->id])->complete()->create();
-        \App\Models\Subscription::factory(['user_id' => $provider->id])->create();
+        $profile = $this->makeVisibleProfile($provider);
         $reviewer = User::factory()->create();
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();

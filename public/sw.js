@@ -1,5 +1,5 @@
 // Update this version string on every deploy (or use: sed -i "s/delni-public-[^']*/delni-public-$(git rev-parse --short HEAD)/" public/sw.js)
-const CACHE_VERSION = 'delni-public-2026-06-15-1';
+const CACHE_VERSION = 'delni-public-2026-06-16-10';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
@@ -28,10 +28,10 @@ const PUBLIC_HTML_ALLOW = [
     /^\/$/,
     /^\/search$/,
     /^\/categories$/,
-    /^\/category\/[^/]+$/,
-    /^\/subcategory\/[^/]+$/,
+    /^\/category\/[^/]+(?:\/in\/[^/]+)?$/,
+    /^\/subcategory\/[^/]+(?:\/in\/[^/]+)?$/,
     /^\/city\/[^/]+$/,
-    /^\/top-rated$/,
+    /^\/top-rated(?:\/in\/[^/]+)?$/,
     /^\/providers\/[^/]+$/,
     /^\/contact$/,
     /^\/privacy$/,

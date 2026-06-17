@@ -51,45 +51,45 @@ class CategoryResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Translations')
+                Section::make(__('filament.sections.translations'))
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label(__('filament.fields.name_en'))
-                            ->placeholder('Plumbing Services')
+                            ->placeholder(__('filament.placeholders.category_name_en'))
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('name_ar')
                             ->label(__('filament.fields.name_ar'))
-                            ->placeholder('Example: Plumbing Services')
+                            ->placeholder(__('filament.placeholders.category_name_ar'))
                             ->required()
                             ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Section::make('Display')
+                Section::make(__('filament.sections.display'))
                     ->schema([
                         Forms\Components\TextInput::make('slug')
-                            ->placeholder('plumbing-services')
-                            ->label('Slug')
+                            ->placeholder(__('filament.placeholders.slug_category'))
+                            ->label(__('filament.fields.slug'))
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
                         Forms\Components\FileUpload::make('svg_file')
-                            ->label('Upload SVG Icon')
+                            ->label(__('filament.fields.icon'))
                             ->acceptedFileTypes(['image/svg+xml'])
                             ->maxSize(500)
                             ->storeFiles(false)
                             ->nullable()
-                            ->hint('Upload SVG (will be auto-orange & 24x24px)'),
+                            ->hint(__('filament.help_text.svg_upload')),
                         Forms\Components\TextInput::make('sort_order')
-                            ->placeholder('0')
+                            ->placeholder(__('filament.placeholders.sort_order'))
                             ->numeric()
                             ->default(0)
-                            ->hint('Display order in menus'),
+                            ->hint(__('filament.help_text.sort_order')),
                     ])
                     ->columns(3),
 
-                Section::make('Status')
+                Section::make(__('filament.sections.status_section'))
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->required()
@@ -115,9 +115,9 @@ class CategoryResource extends Resource
                     ->sortable('name'),
                 Tables\Columns\TextColumn::make('slug')->label('الرابط المختصر')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('icon.name')
-                    ->label('الأيقونة')
+                    ->label(__('filament.fields.icon'))
                     ->formatStateUsing(fn ($state, $record) => $state ? "🎨 {$state}" : '—')
-                    ->description(fn ($record) => $record->icon ? route('icon.show', $record->icon) : 'No icon')
+                    ->description(fn ($record) => $record->icon ? route('icon.show', $record->icon) : 'لا توجد أيقونة')
                     ->searchable('icon.name')
                     ->sortable('icon.name'),
                 Tables\Columns\IconColumn::make('is_active')
@@ -174,7 +174,7 @@ class CategoryResource extends Resource
     private static function getIconPreview(?string $icon): string
     {
         if (empty($icon)) {
-            return 'No icon set';
+            return __('filament.help_text.icon_none');
         }
 
         // Check if it's an emoji

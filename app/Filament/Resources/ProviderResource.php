@@ -63,7 +63,7 @@ class ProviderResource extends Resource
                     ->tabs([
                         Tabs\Tab::make('الحساب')->schema(static::accountSchema()),
                         Tabs\Tab::make('الملف')->schema(static::profileSummarySchema()),
-                        Tabs\Tab::make('الاشتراك')->schema(static::subscriptionSchema()),
+                        Tabs\Tab::make('صلاحية الظهور')->schema(static::accessSchema()),
                         Tabs\Tab::make('السوق')->schema(static::marketplaceSchema()),
                     ])
                     ->columnSpanFull(),
@@ -76,11 +76,16 @@ class ProviderResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label(__('filament.fields.id'))->sortable(),
                 Tables\Columns\TextColumn::make('name')->label(__('filament.fields.name'))->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('email')->label('البريد الإلكتروني')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('email')->label(__('filament.fields.email'))->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('phone')->label(__('filament.fields.phone')),
                 Tables\Columns\IconColumn::make('is_active')->label(__('filament.fields.active'))->boolean()->sortable(),
                 Tables\Columns\IconColumn::make('is_suspended')->label(__('filament.fields.suspended'))->boolean()->sortable(),
                 Tables\Columns\IconColumn::make('security_flagged')->label(__('filament.fields.security_flagged'))->boolean()->sortable(),
+                Tables\Columns\TextColumn::make('profile.provider_access_ends_at')
+                    ->label(__('filament.widgets.subscription_ends'))
+                    ->dateTime()
+                    ->sortable()
+                    ->placeholder(__('filament.widgets.unavailable')),
                 Tables\Columns\TextColumn::make('created_at')->label(__('filament.fields.created_at'))->dateTime()->sortable(),
             ])
             ->filters([
@@ -90,22 +95,46 @@ class ProviderResource extends Resource
                 Tables\Filters\Filter::make('suspended')
                     ->query(fn ($query) => $query->where('is_suspended', true))
                     ->label(__('filament.filters.suspended')),
+                Tables\Filters\Filter::make('has_access')
+                    ->query(fn ($query) => $query->whereHas('profile', fn ($q) => $q->whereNotNull('provider_access_ends_at')->where('provider_access_ends_at', '>=', now())))
+                    ->label('لديه صلاحية ظهور نشطة'),
             ])
             ->paginated([25, 50, 100])
             ->recordActions([
                 EditAction::make()
                     ->modal(),
 
+                Action::make('extend_access_30')
+                    ->label('تمديد 30 يوم')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(fn (User $record) => static::extendProviderAccess($record, 30)),
+
+                Action::make('extend_access_90')
+                    ->label('تمديد 90 يوم')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(fn (User $record) => static::extendProviderAccess($record, 90)),
+
+                Action::make('extend_access_365')
+                    ->label('تمديد سنة')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(fn (User $record) => static::extendProviderAccess($record, 365)),
+
                 Action::make('generate_onboarding_link')
-                    ->label('Generate setup link')
+                    ->label(__('filament.actions.generate_setup_link'))
                     ->icon('heroicon-o-arrow-path')
                     ->color('info')
                     ->action(function (User $record, OnboardingLinkService $service) {
                         try {
                             $setupLink = $service->createOrRefreshLink($record);
                             Notification::make()
-                                ->title('Provider setup link ready')
-                                ->body("Copy this link and send it manually to {$record->email}: {$setupLink}")
+                                ->title(__('filament.notifications.provider_setup_link_ready'))
+                                ->body(__('filament.notifications.setup_link_copy_send', ['email' => $record->email, 'link' => $setupLink]))
                                 ->success()
                                 ->persistent()
                                 ->send();
@@ -124,7 +153,7 @@ class ProviderResource extends Resource
 
                             Notification::make()
                                 ->title(__('filament.notifications.error'))
-                                ->body('Setup link could not be generated. Check the Laravel logs.')
+                                ->body(__('filament.help_text.setup_link_logs'))
                                 ->danger()
                                 ->send();
                         }
@@ -179,20 +208,15 @@ class ProviderResource extends Resource
     {
         return parent::getEloquentQuery()
             ->whereHas('roles', fn (Builder $query) => $query->where('name', 'provider'))
-            ->with(['profile.stats', 'subscriptions']);
+            ->with(['profile.stats']);
     }
 
     public static function fillProviderFormData(array $data, ?User $record): array
     {
-        $record?->loadMissing(['profile.stats', 'profile.subcategories', 'subscriptions']);
+        $record?->loadMissing(['profile.stats', 'profile.subcategories']);
 
         $profile = $record?->profile;
         $stats = $profile?->stats;
-
-        $subscription = $record?->subscriptions
-            ->sortByDesc('starts_at')
-            ->sortByDesc('id')
-            ->first();
 
         $subcategoryId = $profile?->subcategories?->first()?->id;
 
@@ -208,26 +232,11 @@ class ProviderResource extends Resource
             'map_url' => $profile?->map_url,
             'whatsapp' => $profile?->whatsapp,
             'phone' => $profile?->phone,
-        ];
-        $data['subscription'] = [
-            'id' => $subscription?->id,
-            'plan_id' => $subscription?->plan_id,
-            'starts_at' => $subscription?->starts_at,
-            'ends_at' => $subscription?->ends_at,
-            'is_active' => $subscription?->is_active ?? false,
-            'approved_at' => $subscription?->approved_at,
-            'processed_at' => $subscription?->processed_at,
-            'notes' => $subscription?->notes,
+            'provider_access_ends_at' => $profile?->provider_access_ends_at,
         ];
         $data['marketplace'] = [
             'homepage_featured' => $stats?->is_homepage_featured ?? false,
             'homepage_featured_until' => $stats?->homepage_featured_until,
-            'top_search' => $stats?->is_top_search ?? false,
-            'top_search_until' => $stats?->top_search_until,
-            'top_category' => $stats?->is_top_category ?? false,
-            'top_category_until' => $stats?->top_category_until,
-            'top_subcategory' => $stats?->is_top_subcategory ?? false,
-            'top_subcategory_until' => $stats?->top_subcategory_until,
         ];
 
         return $data;
@@ -238,17 +247,13 @@ class ProviderResource extends Resource
         static::validateProviderData($record, $data);
 
         $profileData = $data['profile'] ?? [];
-        $subscriptionData = $data['subscription'] ?? [];
         $marketplaceData = $data['marketplace'] ?? [];
 
-        $hasEditableProfileData = collect($profileData)->contains(fn ($value) => filled($value));
-        $hasMarketplaceData = collect($marketplaceData)->contains(fn ($value) => filled($value) && $value !== false);
-
-        if (! $hasEditableProfileData && ! $hasMarketplaceData) {
-            static::saveProviderSubscription($record, $subscriptionData);
-
-            return;
-        }
+        $hasEditableProfileData = collect($profileData)
+            ->except('provider_access_ends_at')
+            ->contains(fn ($value) => filled($value));
+        $hasMarketplaceData = array_key_exists('homepage_featured', $marketplaceData)
+            || array_key_exists('homepage_featured_until', $marketplaceData);
 
         $profile = $record->profile;
 
@@ -273,24 +278,14 @@ class ProviderResource extends Resource
         }
 
         if (! $profile) {
-            static::saveProviderSubscription($record, $subscriptionData);
-
             return;
         }
 
-        $stats = $profile->stats()->firstOrCreate(['profile_id' => $profile->id]);
-        $stats->update([
-            'is_homepage_featured' => $marketplaceData['homepage_featured'] ?? false,
-            'homepage_featured_until' => $marketplaceData['homepage_featured_until'] ?? null,
-            'is_top_search' => $marketplaceData['top_search'] ?? false,
-            'top_search_until' => $marketplaceData['top_search_until'] ?? null,
-            'is_top_category' => $marketplaceData['top_category'] ?? false,
-            'top_category_until' => $marketplaceData['top_category_until'] ?? null,
-            'is_top_subcategory' => $marketplaceData['top_subcategory'] ?? false,
-            'top_subcategory_until' => $marketplaceData['top_subcategory_until'] ?? null,
-        ]);
+        static::saveProviderAccess($profile, $profileData['provider_access_ends_at'] ?? null);
 
-        static::saveProviderSubscription($record, $subscriptionData);
+        if ($hasMarketplaceData) {
+            static::saveHomepagePlacement($profile, $marketplaceData);
+        }
     }
 
     protected static function accountSchema(): array
@@ -300,11 +295,11 @@ class ProviderResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('name')
                         ->label(__('filament.fields.name'))
-                        ->placeholder('مثال: أحمد حسن')
+                        ->placeholder(__('filament.placeholders.provider_name'))
                         ->required()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('email')
-                        ->label('البريد الإلكتروني')
+                        ->label(__('filament.fields.email'))
                         ->email()
                         ->placeholder('provider@example.com')
                         ->required()
@@ -312,7 +307,7 @@ class ProviderResource extends Resource
                         ->unique(User::class, 'email', ignoreRecord: true),
                     Forms\Components\TextInput::make('phone')
                         ->label(__('filament.fields.phone'))
-                        ->placeholder('+218910000000')
+                        ->placeholder(__('filament.placeholders.phone'))
                         ->maxLength(20),
                 ])
                 ->columns(2),
@@ -346,7 +341,6 @@ class ProviderResource extends Resource
             }
         }
 
-        static::validateSubscriptionData($record, $data['subscription'] ?? []);
         static::validateMarketplaceData($data['marketplace'] ?? []);
     }
 

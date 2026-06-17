@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 @import './components.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -30,4 +31,24 @@
     --color-green-500: #22C55E;
     --color-amber-500: #F59E0B;
 }
+
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 20s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 

@@ -51,34 +51,34 @@ class CityResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Translations')
+                Section::make(__('filament.sections.translations'))
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label(__('filament.fields.name_en'))
-                            ->placeholder('Tripoli')
+                            ->placeholder(__('filament.placeholders.city_name_en'))
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('name_ar')
                             ->label(__('filament.fields.name_ar'))
-                            ->placeholder('Example: Tripoli')
+                            ->placeholder(__('filament.placeholders.city_name_ar'))
                             ->required()
                             ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Section::make('Display')
+                Section::make(__('filament.sections.display'))
                     ->schema([
                         Forms\Components\TextInput::make('slug')
-                            ->label('Slug')
-                            ->placeholder('tripoli')
+                            ->label(__('filament.fields.slug'))
+                            ->placeholder(__('filament.placeholders.slug_city'))
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255)
-                            ->hint('A suitable identifier for the URL'),
+                            ->hint(__('filament.help_text.slug_city')),
                     ])
                     ->columns(2),
 
-                Section::make('Status')
+                Section::make(__('filament.sections.status_section'))
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->required()

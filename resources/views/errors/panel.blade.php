@@ -86,8 +86,8 @@
 <body>
     <main class="panel-error">
         <span class="panel-error__code">!</span>
-        <h1>Unable to complete this request</h1>
-        <p>Please try again. If the issue continues, contact support.</p>
+        <h1>تعذر إكمال هذا الطلب</h1>
+        <p>يرجى المحاولة مرة أخرى. إذا استمرت المشكلة، فتواصل مع الدعم.</p>
 
         @if(config('app.debug') && isset($exception))
             <div class="panel-error__debug">
@@ -98,7 +98,7 @@
             </div>
         @endif
 
-        <button type="button" onclick="history.back()">Go back</button>
+        <button type="button" onclick="history.back()">رجوع</button>
     </main>
 </body>
 </html>

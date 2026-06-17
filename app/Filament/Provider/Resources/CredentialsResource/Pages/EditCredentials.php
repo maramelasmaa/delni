@@ -3,16 +3,17 @@
 namespace App\Filament\Provider\Resources\CredentialsResource\Pages;
 
 use App\Filament\Provider\Resources\CredentialsResource;
+use App\Filament\Support\Pages\EditRecordWithBack;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
 
-class EditCredentials extends EditRecord
+class EditCredentials extends EditRecordWithBack
 {
     protected static string $resource = CredentialsResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->getBackHeaderAction(),
             Actions\DeleteAction::make(),
         ];
     }

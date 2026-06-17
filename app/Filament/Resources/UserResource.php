@@ -8,7 +8,6 @@ use App\Models\ActivityLog;
 use App\Models\Profile;
 use App\Models\Review;
 use App\Models\Subcategory;
-use App\Models\Subscription;
 use App\Models\User;
 use App\Services\SuperAdminGuardService;
 use App\Services\UserSuspensionService;
@@ -63,22 +62,22 @@ class UserResource extends Resource
     {
         return $schema
             ->schema([
-                Tabs::make('إدارة المستخدم')
+                Tabs::make(__('filament.labels.manage_user'))
                     ->tabs([
-                        Tabs\Tab::make('الحساب')->schema(static::accountSchema()),
-                        Tabs\Tab::make('الملف')
+                        Tabs\Tab::make(__('filament.labels.account_tab'))->schema(static::accountSchema()),
+                        Tabs\Tab::make(__('filament.labels.profile_tab'))
                             ->schema(static::profileSummarySchema())
                             ->visible(fn (?User $record) => (bool) $record?->hasRole('provider')),
-                        Tabs\Tab::make('الاشتراك')
-                            ->schema(static::subscriptionSchema())
+                        Tabs\Tab::make(__('filament.labels.visibility_tab'))
+                            ->schema(static::accessSchema())
                             ->visible(fn ($get, ?User $record) => $record?->hasRole('provider') || $get('role') === 'provider'),
-                        Tabs\Tab::make('السوق')
+                        Tabs\Tab::make(__('filament.labels.marketplace_tab'))
                             ->schema(static::marketplaceSchema())
                             ->visible(fn ($get, ?User $record) => $record?->hasRole('provider') || $get('role') === 'provider'),
-                        Tabs\Tab::make('التقييمات')
+                        Tabs\Tab::make(__('filament.labels.reviews_tab'))
                             ->schema(static::reviewsSchema())
                             ->visible(fn (?User $record) => (bool) $record?->hasRole('provider')),
-                        Tabs\Tab::make('النشاط')
+                        Tabs\Tab::make(__('filament.labels.activity_tab'))
                             ->schema(static::activitySchema())
                             ->visibleOn('edit'),
                     ])
@@ -92,7 +91,7 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label(__('filament.fields.id'))->sortable(),
                 Tables\Columns\TextColumn::make('name')->label(__('filament.fields.name'))->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('email')->label('البريد الإلكتروني')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('email')->label(__('filament.fields.email'))->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('phone')->label(__('filament.fields.phone')),
                 Tables\Columns\IconColumn::make('is_active')->label(__('filament.fields.active'))->boolean()->sortable(),
                 Tables\Columns\IconColumn::make('is_suspended')->label(__('filament.fields.suspended'))->boolean()->sortable(),
@@ -165,10 +164,6 @@ class UserResource extends Resource
     {
         $profile = $record?->profile;
         $stats = $profile?->stats;
-        $subscription = $record?->subscriptions()
-            ->latest('starts_at')
-            ->latest('id')
-            ->first();
 
         $data['role'] = $record?->roles()->value('name') ?? ($data['role'] ?? 'user');
         $data['profile'] = [
@@ -179,26 +174,11 @@ class UserResource extends Resource
             'subcategory_id' => $profile?->subcategories()->value('subcategories.id'),
             'whatsapp' => $profile?->whatsapp,
             'phone' => $profile?->phone,
-        ];
-        $data['subscription'] = [
-            'id' => $subscription?->id,
-            'plan_id' => $subscription?->plan_id,
-            'starts_at' => $subscription?->starts_at,
-            'ends_at' => $subscription?->ends_at,
-            'is_active' => $subscription?->is_active ?? false,
-            'approved_at' => $subscription?->approved_at,
-            'processed_at' => $subscription?->processed_at,
-            'notes' => $subscription?->notes,
+            'provider_access_ends_at' => $profile?->provider_access_ends_at,
         ];
         $data['marketplace'] = [
             'homepage_featured' => $stats?->is_homepage_featured ?? false,
             'homepage_featured_until' => $stats?->homepage_featured_until,
-            'top_search' => $stats?->is_top_search ?? false,
-            'top_search_until' => $stats?->top_search_until,
-            'top_category' => $stats?->is_top_category ?? false,
-            'top_category_until' => $stats?->top_category_until,
-            'top_subcategory' => $stats?->is_top_subcategory ?? false,
-            'top_subcategory_until' => $stats?->top_subcategory_until,
         ];
 
         return $data;
@@ -213,17 +193,13 @@ class UserResource extends Resource
         static::validateProviderTabs($record, $data);
 
         $profileData = $data['profile'] ?? [];
-        $subscriptionData = $data['subscription'] ?? [];
         $marketplaceData = $data['marketplace'] ?? [];
 
-        $hasEditableProfileData = collect($profileData)->contains(fn ($value) => filled($value));
-        $hasMarketplaceData = collect($marketplaceData)->contains(fn ($value) => filled($value) && $value !== false);
-
-        if (! $hasEditableProfileData && ! $hasMarketplaceData) {
-            static::saveProviderSubscription($record, $subscriptionData);
-
-            return;
-        }
+        $hasEditableProfileData = collect($profileData)
+            ->except('provider_access_ends_at')
+            ->contains(fn ($value) => filled($value));
+        $hasMarketplaceData = array_key_exists('homepage_featured', $marketplaceData)
+            || array_key_exists('homepage_featured_until', $marketplaceData);
 
         $profile = $record->profile;
 
@@ -246,24 +222,14 @@ class UserResource extends Resource
         }
 
         if (! $profile) {
-            static::saveProviderSubscription($record, $subscriptionData);
-
             return;
         }
 
-        $stats = $profile->stats()->firstOrCreate(['profile_id' => $profile->id]);
-        $stats->update([
-            'is_homepage_featured' => $marketplaceData['homepage_featured'] ?? false,
-            'homepage_featured_until' => $marketplaceData['homepage_featured_until'] ?? null,
-            'is_top_search' => $marketplaceData['top_search'] ?? false,
-            'top_search_until' => $marketplaceData['top_search_until'] ?? null,
-            'is_top_category' => $marketplaceData['top_category'] ?? false,
-            'top_category_until' => $marketplaceData['top_category_until'] ?? null,
-            'is_top_subcategory' => $marketplaceData['top_subcategory'] ?? false,
-            'top_subcategory_until' => $marketplaceData['top_subcategory_until'] ?? null,
-        ]);
+        static::saveProviderAccess($profile, $profileData['provider_access_ends_at'] ?? null);
 
-        static::saveProviderSubscription($record, $subscriptionData);
+        if ($hasMarketplaceData) {
+            static::saveHomepagePlacement($profile, $marketplaceData);
+        }
     }
 
     protected static function accountSchema(): array
@@ -273,42 +239,42 @@ class UserResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('name')
                         ->label(__('filament.fields.name'))
-                        ->placeholder('الاسم الكامل')
+                        ->placeholder(__('filament.fields.name'))
                         ->required()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('email')
-                        ->label('البريد الإلكتروني')
+                        ->label(__('filament.fields.email'))
                         ->email()
-                        ->placeholder('user@example.com')
+                        ->placeholder(__('filament.placeholders.email'))
                         ->required()
                         ->maxLength(255)
                         ->unique(User::class, 'email', ignoreRecord: true),
                     Forms\Components\TextInput::make('phone')
                         ->label(__('filament.fields.phone'))
-                        ->placeholder('+218910000000')
+                        ->placeholder(__('filament.placeholders.phone_local'))
                         ->maxLength(20),
                     Forms\Components\TextInput::make('password')
-                        ->label('كلمة المرور')
+                        ->label(__('filament.fields.password'))
                         ->password()
-                        ->placeholder('8 أحرف على الأقل')
+                        ->placeholder(__('filament.placeholders.password'))
                         ->required(fn (string $operation) => $operation === 'create')
                         ->dehydrated(fn (?string $state) => filled($state))
                         ->maxLength(255),
                 ])
                 ->columns(2),
-            Section::make('الدور')
+            Section::make(__('filament.sections.role'))
                 ->schema([
                     Forms\Components\Select::make('role')
-                        ->label('الدور')
-                        ->placeholder('اختر الدور')
+                        ->label(__('filament.fields.role'))
+                        ->placeholder(__('filament.placeholders.select_role'))
                         ->options([
-                            'provider' => 'مقدم خدمة',
-                            'user' => 'مستخدم',
+                            'provider' => __('filament.models.provider'),
+                            'user' => __('filament.models.user'),
                         ])
                         ->required()
                         ->live()
                         ->hiddenOn('edit')
-                        ->helperText('Super admin role cannot be assigned through this panel. Use: php artisan delni:ensure-super-admin'),
+                        ->helperText(__('filament.help_text.super_admin_assignment')),
                 ]),
             Section::make(__('filament.sections.account_status'))
                 ->schema([
@@ -326,7 +292,7 @@ class UserResource extends Resource
     protected static function reviewsSchema(): array
     {
         return [
-            Section::make('التقييمات')
+            Section::make(__('filament.sections.reviews'))
                 ->schema([
                     Forms\Components\Placeholder::make('reviews_table')
                         ->label('')
@@ -338,7 +304,7 @@ class UserResource extends Resource
     protected static function activitySchema(): array
     {
         return [
-            Section::make('النشاط')
+            Section::make(__('filament.sections.activity'))
                 ->schema([
                     Forms\Components\Placeholder::make('activity_table')
                         ->label('')
@@ -359,19 +325,18 @@ class UserResource extends Resource
 
             if (! $validSubcategory) {
                 throw ValidationException::withMessages([
-                    'profile.subcategory_id' => 'يجب أن تكون الفئة الفرعية تابعة للتصنيف المحدد.',
+                    'profile.subcategory_id' => __('filament.messages.invalid_subcategory_for_category'),
                 ]);
             }
         }
 
-        static::validateSubscriptionData($record, $data['subscription'] ?? []);
         static::validateMarketplaceData($data['marketplace'] ?? []);
     }
 
     protected static function reviewsTable(?User $record): string
     {
         if (! $record?->profile) {
-            return '<p>لا يوجد ملف بعد.</p>';
+            return '<p>'.e(__('filament.help_text.no_profile_yet')).'</p>';
         }
 
         $rows = Review::query()
@@ -382,38 +347,39 @@ class UserResource extends Resource
             ->get()
             ->map(fn (Review $review) => sprintf(
                 '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
-                e($review->user?->name ?? 'غير معروف'),
+                e($review->user?->name ?? __('filament.fields.unknown')),
                 e((string) $review->rating),
                 e(static::reviewStatus($review)),
-                $review->is_flagged ? 'نعم' : 'لا',
+                $review->is_flagged ? __('filament.labels.yes') : __('filament.labels.no'),
                 e($review->created_at?->format('Y-m-d H:i') ?? '-'),
             ))
             ->implode('');
 
-        return static::tableHtml(['المقيم', 'التقييم', 'الحالة', 'مبلغ عنه', 'تاريخ الإنشاء'], $rows);
+        return static::tableHtml([
+            __('filament.labels.reviews_reviewer'),
+            __('filament.fields.rating'),
+            __('filament.fields.status'),
+            __('filament.labels.reviews_flagged'),
+            __('filament.labels.created_at_short'),
+        ], $rows);
     }
 
     protected static function activityTable(?User $record): string
     {
         if (! $record) {
-            return '<p>يظهر النشاط بعد إنشاء المستخدم.</p>';
+            return '<p>'.e(__('filament.help_text.activity_after_create')).'</p>';
         }
 
         $profileId = $record->profile?->id;
-        $subscriptionIds = $record->subscriptions()->pluck('id');
 
         $rows = ActivityLog::query()
             ->with('user')
-            ->where(function (Builder $query) use ($record, $profileId, $subscriptionIds): void {
+            ->where(function (Builder $query) use ($record, $profileId): void {
                 $query->where('user_id', $record->id)
                     ->orWhere(fn (Builder $query) => $query->where('subject_type', User::class)->where('subject_id', $record->id));
 
                 if ($profileId) {
                     $query->orWhere(fn (Builder $query) => $query->where('subject_type', Profile::class)->where('subject_id', $profileId));
-                }
-
-                if ($subscriptionIds->isNotEmpty()) {
-                    $query->orWhere(fn (Builder $query) => $query->where('subject_type', Subscription::class)->whereIn('subject_id', $subscriptionIds));
                 }
             })
             ->latest()
@@ -421,14 +387,19 @@ class UserResource extends Resource
             ->get()
             ->map(fn (ActivityLog $log) => sprintf(
                 '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
-                e($log->user?->name ?? 'النظام'),
+                e($log->user?->name ?? __('filament.fields.system')),
                 e($log->action),
                 e(Str::limit($log->description ?? '', 80)),
                 e($log->created_at?->format('Y-m-d H:i') ?? '-'),
             ))
             ->implode('');
 
-        return static::tableHtml(['المستخدم', 'الإجراء', 'الوصف', 'تاريخ الإنشاء'], $rows);
+        return static::tableHtml([
+            __('filament.labels.activity_user'),
+            __('filament.fields.action'),
+            __('filament.fields.description'),
+            __('filament.labels.created_at_short'),
+        ], $rows);
     }
 
     protected static function tableHtml(array $headers, string $rows): string
@@ -437,7 +408,7 @@ class UserResource extends Resource
             ->map(fn (string $header) => '<th style="text-align:right;padding:8px;border-bottom:1px solid #ddd;">'.e($header).'</th>')
             ->implode('');
 
-        return '<table dir="rtl" style="width:100%;border-collapse:collapse;"><thead><tr>'.$headerHtml.'</tr></thead><tbody>'.($rows ?: '<tr><td colspan="'.count($headers).'" style="padding:8px;">لا توجد سجلات.</td></tr>').'</tbody></table>';
+        return '<table dir="rtl" style="width:100%;border-collapse:collapse;"><thead><tr>'.$headerHtml.'</tr></thead><tbody>'.($rows ?: '<tr><td colspan="'.count($headers).'" style="padding:8px;">'.e(__('filament.help_text.no_records')).'</td></tr>').'</tbody></table>';
     }
 
     protected static function reviewStatus(Review $review): string
@@ -454,7 +425,7 @@ class UserResource extends Resource
         if (! SuperAdminGuardService::canBulkDeleteUsers($selectedRecordKeys)) {
             $this->notify(
                 'danger',
-                'Cannot delete the sole super admin user',
+                __('filament.help_text.super_admin_delete_blocked'),
             );
 
             $action->cancel();

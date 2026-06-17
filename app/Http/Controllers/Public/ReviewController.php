@@ -10,21 +10,29 @@ use App\Http\Requests\Review\FlagReviewRequest;
 use App\Models\Profile;
 use App\Models\Review;
 use App\Services\ReviewCreationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 
 class ReviewController extends Controller
 {
-    public function store(CreateReviewRequest $request, Profile $profile, ReviewCreationService $reviews): RedirectResponse
+    public function store(CreateReviewRequest $request, Profile $profile, ReviewCreationService $reviews): JsonResponse|RedirectResponse
     {
         $reviews->create(
             user: $request->user(),
             profile: $profile,
-            rating: $request->integer('rating'),
-            comment: $request->string('comment')->value(),
+            rating: $request->filled('rating') ? $request->integer('rating') : null,
+            comment: $request->filled('comment') ? $request->string('comment')->value() : null,
         );
 
-        return back()->with('success', __('messages.review_submitted'));
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('messages.review_submitted'),
+            ]);
+        }
+
+        return redirect()->to(url()->previous().'#reviews')->with('success', __('messages.review_submitted'));
     }
 
     public function flag(FlagReviewRequest $request, Review $review): RedirectResponse

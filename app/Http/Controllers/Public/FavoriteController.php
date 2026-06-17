@@ -21,8 +21,9 @@ class FavoriteController extends Controller
         $favorites = collect();
 
         if ($request->user()) {
-            $query = $request->user()
-                ->favoriteProfiles()
+            $query = Profile::query()
+                ->join('user_favorites', 'user_favorites.profile_id', '=', 'profiles.id')
+                ->where('user_favorites.user_id', $request->user()->id)
                 ->select('profiles.*')
                 ->withPublicReviewAggregates()
                 ->with(['city', 'category', 'subcategories'])
