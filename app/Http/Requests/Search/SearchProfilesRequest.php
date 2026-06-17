@@ -62,7 +62,7 @@ class SearchProfilesRequest extends FormRequest
                 Rule::exists('provider_types', 'code')->where('is_active', true),
             ],
             'remote' => ['nullable', 'boolean'],
-            'keyword' => ['nullable', 'string', 'min:2', 'max:100'],
+            'keyword' => ['nullable', 'string', 'min:1', 'max:100'],
             'sort' => ['nullable', Rule::in(['rating', 'reviews', 'featured', 'newest'])],
             'per_page' => ['nullable', 'integer', 'min:5', 'max:50'],
             'page' => ['nullable', 'integer', 'min:1'],
