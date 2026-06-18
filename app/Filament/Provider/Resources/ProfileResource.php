@@ -122,7 +122,6 @@ class ProfileResource extends Resource
                                 ])
                                 ->all();
                         })
-                        ->searchable()
                         ->live(),
                     Forms\Components\Select::make('city_id')
                         ->label('المدينة')

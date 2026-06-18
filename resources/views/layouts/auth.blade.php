@@ -8,6 +8,7 @@
     <title>@yield('title', config('app.name'))</title>
 
     <meta name="theme-color" content="#0B1A34">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest.json">

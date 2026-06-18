@@ -2,9 +2,11 @@
     'action',
     'cities' => collect(),
     'categories' => collect(),
+    'subcategories' => collect(),
     'resetUrl',
     'showKeyword' => false,
     'showCategory' => false,
+    'showSubcategory' => false,
     'showCity' => true,
     'sort' => true,
     'cityUrls' => [],
@@ -14,8 +16,13 @@
 
 @php
     $activeCategorySlug = request('category') ?: $categories->firstWhere('id', (int) request('category_id'))?->slug;
+    $activeCategoryId = $categories->firstWhere('slug', $activeCategorySlug)?->id ?: ((int) request('category_id') ?: null);
     $activeCitySlug = request('city') ?: $cities->firstWhere('id', (int) request('city_id'))?->slug;
-    $hasFilters = request()->anyFilled(['keyword', 'category', 'category_id', 'city', 'city_id', 'sort']);
+    $activeSubcategorySlug = request('service') ?: $subcategories->firstWhere('id', (int) request('subcategory_id'))?->slug;
+    $filteredSubcategories = $activeCategoryId
+        ? $subcategories->where('category_id', $activeCategoryId)->values()
+        : collect();
+    $hasFilters = request()->anyFilled(['keyword', 'category', 'category_id', 'city', 'city_id', 'sort', 'service', 'subcategory_id']);
 @endphp
 
 <button type="button" class="inline-flex md:hidden items-center gap-1.5 min-h-[42px] px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-full bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-200 text-xs font-black shadow-xs cursor-pointer hover:border-primary/20 transition-all [&>svg]:w-4.5 [&>svg]:h-4.5 [&>svg]:text-primary" data-filter-sheet-trigger>
@@ -70,6 +77,20 @@
                 @foreach($categories as $category)
                     <option value="{{ $category->slug }}" @selected($activeCategorySlug === $category->slug)>
                         {{ $category->localized_name ?? $category->name }}
+                    </option>
+                @endforeach
+            </select>
+        </label>
+    @endif
+
+    @if($showSubcategory && $filteredSubcategories->isNotEmpty())
+        <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">التخصص الفرعي</span>
+            <select name="service" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-base md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
+                <option value="">كل الخدمات</option>
+                @foreach($filteredSubcategories as $subcategory)
+                    <option value="{{ $subcategory->slug }}" @selected($activeSubcategorySlug === $subcategory->slug)>
+                        {{ $subcategory->localized_name ?? $subcategory->name }}
                     </option>
                 @endforeach
             </select>

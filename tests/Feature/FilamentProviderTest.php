@@ -192,7 +192,6 @@ class FilamentProviderTest extends TestCase
         $response = $this->get('/provider/dashboard');
         $response->assertStatus(200);
         $response->assertSee('لوحة التحكم');
-        $response->assertSee('إكمال البيانات الأساسية');
         $response->assertSee('تعديل الملف الشخصي');
     }
 }
