@@ -278,6 +278,14 @@
         text-decoration: none;
     }
 
+    .st-guest .st-identity__info strong {
+        color: var(--delni-navy);
+    }
+
+    .st-guest .st-identity__info span {
+        color: var(--delni-muted);
+    }
+
     /* Setting Lists Structural Grid Layouts */
     .st-group {
         margin-top: 1.1rem;
