@@ -76,18 +76,47 @@ class ProfileSearchService
         }
 
         if ($filters->keyword !== null) {
-            // Normalize search keyword for Arabic matching
-            // This allows users to find providers regardless of:
-            // - Hamza placement (أحمد, احمد, أحمد all match)
-            // - Diacritics (تقنيّة, تقنية match)
-            // - Final ta variants (تقنيه, تقنية match)
-            // - Other Arabic variants
             $normalizedKeyword = $this->normalization->normalize($filters->keyword);
             $keyword = '%'.addcslashes($normalizedKeyword, '%_\\').'%';
+            $rawKeyword = '%'.addcslashes($filters->keyword, '%_\\').'%';
 
-            $query->where(function (Builder $q) use ($keyword): void {
+            $query->where(function (Builder $q) use ($keyword, $rawKeyword): void {
                 $q->where('profiles.search_business_name', 'like', $keyword)
-                    ->orWhere('profiles.search_bio', 'like', $keyword);
+                    ->orWhere('profiles.search_bio', 'like', $keyword)
+                    ->orWhereExists(function ($sub) use ($keyword, $rawKeyword): void {
+                        $sub->select(DB::raw(1))
+                            ->from('profile_subcategory')
+                            ->join('subcategories', 'subcategories.id', '=', 'profile_subcategory.subcategory_id')
+                            ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
+                            ->where('subcategories.is_active', true)
+                            ->where(function ($q2) use ($keyword, $rawKeyword): void {
+                                $q2->where('subcategories.name_ar', 'like', $keyword)
+                                    ->orWhere('subcategories.name_ar', 'like', $rawKeyword)
+                                    ->orWhere('subcategories.name', 'like', $rawKeyword);
+                            });
+                    })
+                    ->orWhereExists(function ($sub) use ($keyword, $rawKeyword): void {
+                        $sub->select(DB::raw(1))
+                            ->from('categories')
+                            ->whereColumn('categories.id', 'profiles.category_id')
+                            ->where('categories.is_active', true)
+                            ->where(function ($q2) use ($keyword, $rawKeyword): void {
+                                $q2->where('categories.name_ar', 'like', $keyword)
+                                    ->orWhere('categories.name_ar', 'like', $rawKeyword)
+                                    ->orWhere('categories.name', 'like', $rawKeyword);
+                            });
+                    })
+                    ->orWhereExists(function ($sub) use ($keyword, $rawKeyword): void {
+                        $sub->select(DB::raw(1))
+                            ->from('cities')
+                            ->whereColumn('cities.id', 'profiles.city_id')
+                            ->where('cities.is_active', true)
+                            ->where(function ($q2) use ($keyword, $rawKeyword): void {
+                                $q2->where('cities.name_ar', 'like', $keyword)
+                                    ->orWhere('cities.name_ar', 'like', $rawKeyword)
+                                    ->orWhere('cities.name', 'like', $rawKeyword);
+                            });
+                    });
             });
         }
     }
