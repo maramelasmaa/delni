@@ -28,24 +28,18 @@
                 :cityUrls="[]"
             />
         @else
-            {{-- Keyword search + browse button on homepage --}}
-            <form action="{{ route('public.search') }}" method="GET" class="relative flex items-center gap-2">
-                <div class="relative flex-1 flex items-center">
-                    <span class="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                        <x-render-icon icon="heroicon-o-magnifying-glass" class="w-5 h-5" />
-                    </span>
-                    <input
-                        type="text"
-                        name="keyword"
-                        value="{{ request('keyword') }}"
-                        placeholder="ابحث عن خدمة أو مقدم خدمة..."
-                        class="w-full pr-10 pl-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 text-base md:text-xs font-bold shadow-xs focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                    >
-                </div>
-                <button type="submit" class="flex-none flex items-center gap-1.5 min-h-[48px] px-4 rounded-2xl bg-primary text-white text-sm font-black shadow-xs hover:bg-primary-dark transition-colors whitespace-nowrap">
-                    <x-render-icon icon="heroicon-o-adjustments-horizontal" class="w-4 h-4" />
-                    <span>تصفية</span>
-                </button>
+            {{-- Keyword search on homepage --}}
+            <form action="{{ route('public.search') }}" method="GET" class="relative">
+                <span class="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                    <x-render-icon icon="heroicon-o-magnifying-glass" class="w-5 h-5" />
+                </span>
+                <input
+                    type="text"
+                    name="keyword"
+                    value="{{ request('keyword') }}"
+                    placeholder="ابحث عن خدمة أو مقدم خدمة..."
+                    class="w-full pr-10 pl-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 text-base md:text-xs font-bold shadow-xs focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                >
             </form>
         @endif
     </section>
