@@ -34,7 +34,9 @@ RUN apk add --no-cache \
         intl \
         opcache \
         pdo_mysql \
-        zip
+        zip \
+    && sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf \
+    && chown -R www-data:www-data /var/lib/nginx /var/log/nginx
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_PROCESS_TIMEOUT=1200
