@@ -19,6 +19,7 @@ use App\Observers\ProfileObserver;
 use App\Observers\ProfilePublicCacheObserver;
 use App\Observers\ProviderAssetLimitObserver;
 use App\Observers\ReviewObserver;
+use App\Observers\SubcategoryObserver;
 use App\Observers\UserObserver;
 use App\Policies\ActivityLogPolicy;
 use App\Policies\CategoryPolicy;
@@ -70,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         PortfolioImage::observe(ProviderAssetLimitObserver::class);
         PortfolioImage::observe(PortfolioImageObserver::class);
         Review::observe(ReviewObserver::class);
+        Subcategory::observe(SubcategoryObserver::class);
         Gate::policy(Profile::class, ProfilePolicy::class);
         Gate::policy(Review::class, ReviewPolicy::class);
         Gate::policy(User::class, UserPolicy::class);

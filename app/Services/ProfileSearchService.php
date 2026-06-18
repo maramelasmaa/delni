@@ -90,8 +90,7 @@ class ProfileSearchService
                             ->whereColumn('profile_subcategory.profile_id', 'profiles.id')
                             ->where('subcategories.is_active', true)
                             ->where(function ($q2) use ($keyword, $rawKeyword): void {
-                                $q2->where('subcategories.name_ar', 'like', $keyword)
-                                    ->orWhere('subcategories.name_ar', 'like', $rawKeyword)
+                                $q2->where('subcategories.search_name', 'like', $keyword)
                                     ->orWhere('subcategories.name', 'like', $rawKeyword);
                             });
                     })

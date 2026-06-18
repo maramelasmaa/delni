@@ -20,10 +20,13 @@ class SubcategoryFactory extends Factory
      */
     public function definition(): array
     {
+        $nameAr = $this->faker->word();
+
         return [
             'category_id' => Category::factory(),
             'name' => $this->faker->word(),
-            'name_ar' => $this->faker->word(),
+            'name_ar' => $nameAr,
+            'search_name' => $nameAr,
             'slug' => $this->faker->slug(),
             'is_active' => true,
         ];

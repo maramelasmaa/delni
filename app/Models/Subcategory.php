@@ -14,7 +14,7 @@ class Subcategory extends Model
     use HasFactory, HasLocalizedName, SoftDeletes;
 
     protected $fillable = [
-        'category_id', 'name', 'name_ar', 'slug', 'icon_id', 'sort_order', 'is_active',
+        'category_id', 'name', 'name_ar', 'search_name', 'slug', 'icon_id', 'sort_order', 'is_active',
     ];
 
     protected $casts = [
