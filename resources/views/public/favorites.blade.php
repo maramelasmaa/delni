@@ -12,7 +12,7 @@
                     ['label' => 'المفضلة', 'active' => true],
                 ]" />
 
-                <div class="flex items-start gap-3">
+                <div class="flex items-center gap-3">
                     <div class="flex h-16 w-16 flex-none items-center justify-center rounded-[1.4rem] bg-orange-50/50 text-primary shadow-xs ring-1 ring-orange-100/50 dark:bg-slate-950 dark:ring-slate-800">
                         <x-render-icon icon="app-heart-filled" class="h-8 w-8" />
                     </div>

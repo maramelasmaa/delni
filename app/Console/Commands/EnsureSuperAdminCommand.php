@@ -12,7 +12,7 @@ class EnsureSuperAdminCommand extends Command
 {
     protected $signature = 'delni:ensure-super-admin {--force}';
 
-    protected $description = 'Ensure exactly one super admin user exists. Reads from env: SUPER_ADMIN_NAME, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD.';
+    protected $description = 'Ensure exactly one super admin user exists.';
 
     public function handle(): int
     {
@@ -21,24 +21,24 @@ class EnsureSuperAdminCommand extends Command
             ['name' => 'super_admin', 'guard_name' => 'web']
         );
 
-        $email = config('app.super_admin_email') ?? env('SUPER_ADMIN_EMAIL');
-        $name = config('app.super_admin_name') ?? env('SUPER_ADMIN_NAME');
-        $password = env('SUPER_ADMIN_PASSWORD');
+        $email = config('app.super_admin_email');
+        $name = config('app.super_admin_name');
+        $password = config('app.super_admin_password');
 
         if (! $name) {
-            $this->error('SUPER_ADMIN_NAME is not set in .env');
+            $this->error('SUPER_ADMIN_NAME is not configured.');
 
             return self::FAILURE;
         }
 
         if (! $email) {
-            $this->error('SUPER_ADMIN_EMAIL is not set in .env');
+            $this->error('SUPER_ADMIN_EMAIL is not configured.');
 
             return self::FAILURE;
         }
 
         if (! $password) {
-            $this->error('SUPER_ADMIN_PASSWORD is not set in .env');
+            $this->error('SUPER_ADMIN_PASSWORD is not configured.');
 
             return self::FAILURE;
         }

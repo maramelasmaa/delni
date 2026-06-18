@@ -31,7 +31,7 @@ class StatsOverviewWidget extends BaseWidget
 
         $ratingAvg = (float) ($profile->stats?->rating_avg ?? 0.0);
         $reviewsCount = $profile->stats?->reviews_count ?? 0;
-        $stats[] = Stat::make(__('filament.widgets.average_rating'), number_format($ratingAvg, 1).' ⭐')
+        $stats[] = Stat::make(__('filament.widgets.average_rating'), number_format($ratingAvg, 1))
             ->description($reviewsCount.' '.__('filament.widgets.ratings'))
             ->color($ratingAvg >= 4 ? 'success' : ($ratingAvg > 0 ? 'info' : 'gray'));
 

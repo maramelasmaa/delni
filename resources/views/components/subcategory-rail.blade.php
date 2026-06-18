@@ -65,7 +65,7 @@
 
                 <label class="flex items-center gap-2 min-h-[44px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-950 text-slate-400 focus-within:border-primary/45 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
                     <x-render-icon icon="heroicon-o-magnifying-glass" class="w-4.5 h-4.5" />
-                    <input type="search" class="w-100 min-w-0 border-0 outline-none bg-transparent text-slate-950 dark:text-slate-50 font-semibold text-xs md:text-sm placeholder-slate-400" placeholder="{{ __('messages.public.search_service') }}" autocomplete="off" data-service-sheet-search>
+                    <input type="search" class="w-100 min-w-0 border-0 outline-none bg-transparent text-slate-950 dark:text-slate-50 font-semibold text-base md:text-sm placeholder-slate-400" placeholder="{{ __('messages.public.search_service') }}" autocomplete="off" data-service-sheet-search>
                 </label>
 
                 <div class="grid gap-1.5 overflow-y-auto pr-0.5" style="max-height: calc(78vh - 180px);">

@@ -145,8 +145,7 @@
         .pwa-shell {
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            height: -webkit-fill-available;
+            height: 100%;
         }
 
         /* Custom Header Wrapper */

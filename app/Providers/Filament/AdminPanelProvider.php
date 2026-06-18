@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path(env('FILAMENT_PATH', 'cp/admin'))
+            ->favicon(asset('images/icon-192.png'))
             ->brandLogo(fn () => new HtmlString('
                 <div style="display: flex; align-items: center; gap: 10px; flex-direction: row;">
                     <img src="'.asset('images/logo.jpg').'" style="height: 36px; border-radius: 8px; display: inline-block;" alt="دلني" />

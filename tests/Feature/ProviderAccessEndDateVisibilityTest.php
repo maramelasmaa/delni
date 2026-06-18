@@ -409,7 +409,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
 
     public function test_provider_with_access_ending_in_future_is_visible(): void
     {
-        $profile = $this->makeVisibleProfile(['provider_access_ends_at' => now()->addSecond()]);
+        $profile = $this->makeVisibleProfile(['provider_access_ends_at' => now()->addMinutes(5)]);
 
         $this->get(route('public.provider', $profile->slug))
             ->assertStatus(200);

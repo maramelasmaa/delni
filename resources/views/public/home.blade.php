@@ -22,7 +22,7 @@
                     name="keyword"
                     value="{{ request('keyword') }}"
                     placeholder="ابحث عن خدمة أو مقدم خدمة..."
-                    class="w-full pr-10 pl-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 text-xs font-bold shadow-xs focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    class="w-full pr-10 pl-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 text-base md:text-xs font-bold shadow-xs focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     required
                 >
             </div>

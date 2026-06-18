@@ -14,8 +14,8 @@
             </p>
         </div>
         <!-- Left Side Image: Floating illustration -->
-        <div class="absolute left-2.5 bottom-0 top-0 w-24 sm:w-32 flex items-center justify-center pointer-events-none">
-            <img src="{{ asset('images/categories_hero.png') }}" alt="" class="object-contain max-h-[92%] drop-shadow-md">
+        <div class="absolute left-3.5 bottom-0 top-0 w-24 sm:w-32 flex items-center justify-center pointer-events-none">
+            <img src="{{ asset('images/categories_hero.png') }}" alt="" class="rounded-full object-cover w-16 h-16 sm:w-24 sm:h-24 border-2 border-white dark:border-slate-800 shadow-md">
         </div>
     </div>
 
@@ -23,7 +23,7 @@
     <div class="z-4 my-1">
         <label class="flex items-center gap-3 min-h-[46px] px-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 shadow-3xs focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
             <x-render-icon icon="heroicon-o-magnifying-glass" class="w-4.5 h-4.5 text-slate-400 flex-none" />
-            <input type="search" id="categorySearch" placeholder="ابحث عن تخصص أو خدمة..." autocomplete="off" class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-900 dark:text-slate-50 font-bold text-xs md:text-sm placeholder-slate-400">
+            <input type="search" id="categorySearch" placeholder="ابحث عن تخصص أو خدمة..." autocomplete="off" class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-900 dark:text-slate-50 font-bold text-base md:text-sm placeholder-slate-400">
         </label>
     </div>
 

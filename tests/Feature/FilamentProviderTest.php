@@ -30,7 +30,6 @@ class FilamentProviderTest extends TestCase
 
         $this->actingAs($admin);
 
-        // Verify Livewire page loads without 500 error (e.g. no join on null error)
         Livewire::test(CreateProvider::class)
             ->assertStatus(200)
             ->fillForm([
@@ -41,20 +40,16 @@ class FilamentProviderTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        // Assert User is created and has correct role
         $provider = User::where('email', 'john.provider@example.com')->first();
         $this->assertNotNull($provider);
         $this->assertTrue($provider->hasRole('provider'));
 
-        // Assert Profile is created
         $profile = Profile::where('user_id', $provider->id)->first();
         $this->assertNotNull($profile);
 
-        // Assert ProfileStats is created
         $stats = ProfileStats::where('profile_id', $profile->id)->first();
         $this->assertNotNull($stats);
 
-        // Assert OnboardingToken is created
         $token = OnboardingToken::where('user_id', $provider->id)->first();
         $this->assertNotNull($token);
     }
@@ -80,14 +75,11 @@ class FilamentProviderTest extends TestCase
         $provider = User::where('email', 'john.provider2@example.com')->first();
         $token = OnboardingToken::where('user_id', $provider->id)->first();
 
-        // Log out admin
         auth()->logout();
 
-        // Visit onboarding URL
         $response = $this->get(route('onboarding.show', ['token' => $token->token]));
         $response->assertStatus(200);
 
-        // Submit set password form
         $response2 = $this->post(route('onboarding.set-password'), [
             'token' => $token->token,
             'password' => 'NewSecurePassword123!',
@@ -96,7 +88,6 @@ class FilamentProviderTest extends TestCase
 
         $response2->assertRedirect(route('filament.provider.auth.login'));
 
-        // Assert token is marked as used
         $this->assertNotNull($token->fresh()->used_at);
     }
 
@@ -183,5 +174,25 @@ class FilamentProviderTest extends TestCase
 
         $this->assertSame($newerNormalProfile->id, $ids[0]);
         $this->assertSame($olderTopSearchProfile->id, $ids[1]);
+    }
+
+    public function test_provider_dashboard_page_loads_successfully(): void
+    {
+        $provider = $this->createProvider([
+            'is_active' => true,
+            'is_suspended' => false,
+        ]);
+
+        $provider->profile->update([
+            'provider_access_ends_at' => now()->addMonth(),
+        ]);
+
+        $this->actingAs($provider);
+
+        $response = $this->get('/provider/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('لوحة التحكم');
+        $response->assertSee('إكمال البيانات الأساسية');
+        $response->assertSee('تعديل الملف الشخصي');
     }
 }

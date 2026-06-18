@@ -55,7 +55,7 @@
                     maxlength="100"
                     placeholder="{{ $keywordPlaceholder }}"
                     autocomplete="off"
-                    class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-950 dark:text-slate-50 font-semibold text-xs md:text-sm placeholder-slate-400"
+                    class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-950 dark:text-slate-50 font-semibold text-base md:text-sm placeholder-slate-400"
                     data-auto-filter-input
                 >
             </span>
@@ -65,7 +65,7 @@
     @if($showCategory && $categories->isNotEmpty())
         <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
             <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">التخصص</span>
-            <select name="category" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
+            <select name="category" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-base md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
                 <option value="">كل التخصصات</option>
                 @foreach($categories as $category)
                     <option value="{{ $category->slug }}" @selected($activeCategorySlug === $category->slug)>
@@ -79,7 +79,7 @@
     @if($showCity && $cities->isNotEmpty())
         <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
             <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">المدينة</span>
-            <select name="city" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
+            <select name="city" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-base md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
                 <option value="">كل المدن</option>
                 @foreach($cities as $city)
                     <option value="{{ $city->slug }}" @selected($activeCitySlug === $city->slug)>
@@ -105,7 +105,7 @@
     @if($sort)
         <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
             <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">الترتيب</span>
-            <select name="sort" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
+            <select name="sort" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-base md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
 
                 <option value="rating" @selected(request('sort') === 'rating')>الأعلى تقييما</option>
                 <option value="reviews" @selected(request('sort') === 'reviews')>الأكثر تقييما</option>

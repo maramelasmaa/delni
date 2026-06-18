@@ -10,15 +10,15 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('SUPER_ADMIN_EMAIL');
-        $name = env('SUPER_ADMIN_NAME');
-        $password = env('SUPER_ADMIN_PASSWORD');
+        $email = config('app.super_admin_email');
+        $name = config('app.super_admin_name');
+        $password = config('app.super_admin_password');
 
         if (! $name || ! $email || ! $password) {
-            throw new \RuntimeException('SUPER_ADMIN_NAME, SUPER_ADMIN_EMAIL, and SUPER_ADMIN_PASSWORD must be set before seeding an admin user.');
+            throw new \RuntimeException('SUPER_ADMIN_NAME, SUPER_ADMIN_EMAIL, and SUPER_ADMIN_PASSWORD must be configured before seeding the super admin user.');
         }
 
-        $admin = User::firstOrCreate(
+        $superAdmin = User::firstOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
@@ -30,9 +30,8 @@ class AdminUserSeeder extends Seeder
             ]
         );
 
-        // Assign role only if not already assigned — U1: exactly one role
-        if (! $admin->hasRole('super_admin')) {
-            $admin->assignRole('super_admin');
+        if (! $superAdmin->hasRole('super_admin')) {
+            $superAdmin->assignRole('super_admin');
         }
     }
 }

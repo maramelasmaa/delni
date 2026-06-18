@@ -67,7 +67,7 @@
                         maxlength="100"
                         placeholder="ابحث في {{ $subcategory->localized_name ?? $subcategory->name }}..."
                         autocomplete="off"
-                        class="min-w-0 flex-1 border-0 bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-50"
+                        class="min-w-0 flex-1 border-0 bg-transparent text-base md:text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-50"
                         data-auto-filter-input
                     >
                 </label>
@@ -75,7 +75,7 @@
                 <div class="grid grid-cols-2 gap-3 md:contents">
                     <label class="relative flex items-center rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200 transition-all focus-within:bg-white focus-within:ring-primary/30 dark:bg-slate-950 dark:ring-slate-800 dark:focus-within:ring-sky-500/30">
                         <x-render-icon icon="heroicon-o-building-office-2" class="pointer-events-none absolute right-4 h-4 w-4 text-slate-400" />
-                        <select name="provider_type" class="w-full appearance-none border-0 bg-transparent pr-7 text-sm font-black text-slate-800 outline-none dark:text-slate-200" data-auto-filter-control>
+                        <select name="provider_type" class="w-full appearance-none border-0 bg-transparent pr-7 text-base md:text-sm font-black text-slate-800 outline-none dark:text-slate-200" data-auto-filter-control>
                             <option value="">نوع النشاط</option>
                             @foreach(($providerTypes ?? []) as $typeCode => $typeLabel)
                                 <option value="{{ $typeCode }}" @selected(request('provider_type') === $typeCode)>{{ $typeLabel }}</option>
