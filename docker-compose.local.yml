@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
     ports:
       - "8088:8080"
     environment:
@@ -42,6 +43,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
     command: php artisan queue:work --queue=default --max-jobs=100 --max-time=3600 --tries=3
     environment:
       APP_NAME: "دلني"
@@ -73,6 +75,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
     command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
     environment:
       APP_NAME: "دلني"

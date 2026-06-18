@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\ReviewStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Search\SearchProfilesRequest;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\ContactInfo;
 use App\Models\Profile;
+use App\Models\Review;
 use App\Models\Subcategory;
 use App\Services\PublicFrontendService;
 use Illuminate\Http\RedirectResponse;
@@ -175,11 +177,20 @@ class FrontendController extends Controller
     {
         $payload = $this->frontendService->provider($profile);
 
+        // Determine whether the authenticated user already has an active review
+        // (approved or pending). A rejected review does NOT block resubmission.
+        $userHasActiveReview = $request->user() !== null && Review::query()
+            ->where('profile_id', $profile->id)
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', [ReviewStatus::APPROVED->value, ReviewStatus::PENDING->value])
+            ->exists();
+
         return view('public.provider', $payload['data'] + [
             'queryStats' => $payload['queryStats'],
             'isFavorited' => (bool) $request->user()?->favorites()
                 ->where('profile_id', $profile->id)
                 ->exists(),
+            'userHasActiveReview' => $userHasActiveReview,
         ]);
     }
 

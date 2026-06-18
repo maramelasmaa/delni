@@ -82,7 +82,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PortfolioImage::class, PortfolioImagePolicy::class);
         Gate::policy(ProviderCredential::class, ProviderCredentialPolicy::class);
 
-        View::composer('components.provider-card', function ($view): void {
+        View::composer(['components.provider-card', 'components.public.provider-card'], function ($view): void {
             $user = request()->user();
             $favoriteProfileIds = [];
 
@@ -112,6 +112,8 @@ class AppServiceProvider extends ServiceProvider
                         ]);
                     }
                 }
+            } catch (ValidationException $e) {
+                throw $e;
             } catch (\Exception $e) {
                 // Database unavailable, skip check
             }
@@ -137,6 +139,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request): Limit {
             return Limit::perMinutes(15, 10)
                 ->by($request->input('email').'|'.$request->ip());
+        });
+
+        RateLimiter::for('onboarding.show', function (Request $request): Limit {
+            return Limit::perMinute(20)->by($request->ip());
         });
 
         RateLimiter::for('onboarding.set-password', function (Request $request): Limit {

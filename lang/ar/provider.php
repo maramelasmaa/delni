@@ -2,17 +2,17 @@
 
 return [
     'sections' => [
-        'links' => 'روابط مقدم الخدمة',
-        'credentials' => 'اعتمادات مقدم الخدمة',
+        'links' => 'روابط التواصل والشبكات',
+        'credentials' => 'الشهادات والمؤهلات',
     ],
 
     'fields' => [
         'link' => 'رابط',
         'link_label' => 'العنوان',
         'url' => 'الرابط',
-        'credential' => 'اعتماد',
-        'credential_title' => 'العنوان',
-        'issuer' => 'الجهة المصدرة',
+        'credential' => 'مؤهل أو شهادة',
+        'credential_title' => 'مسمى الشهادة/المؤهل',
+        'issuer' => 'الجهة المانحة',
         'verification_url' => 'رابط التحقق',
         'issue_date' => 'تاريخ الإصدار',
         'notes' => 'ملاحظات',
@@ -21,7 +21,7 @@ return [
     'actions' => [
         'add_image' => 'إضافة صورة',
         'add_link' => 'إضافة رابط',
-        'add_credential' => 'إضافة اعتماد',
+        'add_credential' => 'إضافة شهادة/مؤهل',
     ],
 
     'help' => [

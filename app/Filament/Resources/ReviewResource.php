@@ -68,6 +68,13 @@ class ReviewResource extends Resource
                             ->label(__('filament.fields.comment'))
                             ->content(fn ($record) => $record?->comment ?? '—')
                             ->columnSpanFull(),
+                        Forms\Components\Placeholder::make('flagged_by')
+                            ->label(__('filament.fields.flagged_by'))
+                            ->content(fn ($record) => $record?->flaggedBy?->name ?? '—'),
+                        Forms\Components\Placeholder::make('flagged_reason')
+                            ->label(__('filament.fields.flagged_reason'))
+                            ->content(fn ($record) => $record?->flagged_reason ?? '—')
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
@@ -116,6 +123,11 @@ class ReviewResource extends Resource
                 Tables\Columns\IconColumn::make('is_flagged')
                     ->boolean()
                     ->label(__('filament.fields.flagged')),
+                Tables\Columns\TextColumn::make('flagged_reason')
+                    ->label(__('filament.fields.flagged_reason'))
+                    ->limit(50)
+                    ->wrap()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('flag_handled_at')
                     ->boolean()
                     ->label(__('filament.fields.flag_handled_at'))
@@ -234,7 +246,7 @@ class ReviewResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->withTrashed()->with(['user', 'profile']);
+        return parent::getEloquentQuery()->withTrashed()->with(['user', 'profile', 'flaggedBy']);
     }
 
     public static function getRelations(): array

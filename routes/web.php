@@ -92,6 +92,7 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::get('/onboarding/{token}', [OnboardingController::class, 'showSetPasswordForm'])
+    ->middleware('throttle:onboarding.show')
     ->name('onboarding.show');
 Route::post('/onboarding/set-password', [OnboardingController::class, 'setPassword'])
     ->middleware('throttle:onboarding.set-password')

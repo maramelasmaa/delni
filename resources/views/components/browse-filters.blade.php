@@ -64,9 +64,9 @@
 
     @if($showCategory && $categories->isNotEmpty())
         <label class="flex-none w-full md:w-[150px] flex flex-col gap-1">
-            <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">الفئة</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">التخصص</span>
             <select name="category" class="min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm outline-none cursor-pointer focus:border-primary/45 focus:ring-4 focus:ring-primary/10 transition-all w-full" data-auto-filter-control>
-                <option value="">كل الفئات</option>
+                <option value="">كل التخصصات</option>
                 @foreach($categories as $category)
                     <option value="{{ $category->slug }}" @selected($activeCategorySlug === $category->slug)>
                         {{ $category->localized_name ?? $category->name }}
@@ -91,7 +91,7 @@
     @endif
 
     <label class="flex-none w-full md:w-[140px] flex flex-col gap-1 cursor-pointer select-none">
-        <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">نوع العمل</span>
+        <span class="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider px-1">مكان العمل</span>
         <div class="flex items-center justify-between min-h-[42px] px-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-semibold text-xs md:text-sm hover:border-primary/20 dark:hover:border-slate-800 transition-all relative">
             <span class="flex items-center gap-1.5">
                 <x-render-icon icon="heroicon-o-globe-alt" class="w-4 h-4 text-primary" />

@@ -64,22 +64,15 @@
         {{-- Section 3: Category Rail --}}
         <x-public.category-rail :categories="$categories" />
 
-        {{-- Section 4: Paid Featured Providers --}}
         @if(isset($featuredProviders) && $featuredProviders->isNotEmpty())
-            <section class="mt-8">
-                <div class="flex items-center justify-between gap-4 mb-3 px-1">
-                    <div>
-                        <span class="inline-flex items-center gap-1 bg-primary text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mb-0.5">مميز</span>
-                        <h2 class="m-0 text-slate-900 dark:text-slate-100 text-sm md:text-base font-black">مميزون في دلني</h2>
-                    </div>
-                </div>
-
-                {{-- Horizontal scroll rail on mobile, grid on desktop --}}
-                <div class="flex gap-3 overflow-x-auto scrollbar-none py-2 px-1 scroll-smooth snap-x snap-mandatory lg:grid lg:grid-cols-3 lg:gap-4 lg:overflow-x-visible">
-                    @foreach($featuredProviders as $provider)
-                        <x-public.provider-card :provider="$provider" />
-                    @endforeach
-                </div>
+            <section class="mt-6">
+                <x-provider-grid
+                    :providers="$featuredProviders"
+                    :columns="2"
+                    :mobile-columns="2"
+                    card-variant="grid"
+                    title="مقدمو خدمات مميزون"
+                />
             </section>
         @endif
 
@@ -93,10 +86,9 @@
             <div>
                 <span>تقدم خدمة؟</span>
                 <h2>اجعل ملفك مرئياً للعملاء</h2>
-                <p>أنشئ حساب مزود وابدأ في الظهور في نتائج البحث والفئات.</p>
             </div>
             <a href="{{ $ctaWhatsappUrl ?? route('contact') }}"
-               @if($ctaWhatsappUrl ?? false) target="_blank" rel="noopener" @endif>سجّل كمزود</a>
+               @if($ctaWhatsappUrl ?? false) target="_blank" rel="noopener" @endif>سجّل كمقدم خدمة</a>
         </div>
 
     @endif

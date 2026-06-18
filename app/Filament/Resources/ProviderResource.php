@@ -336,7 +336,7 @@ class ProviderResource extends Resource
 
             if (! $validSubcategory) {
                 throw ValidationException::withMessages([
-                    'profile.subcategory_id' => 'يجب أن تكون الفئة الفرعية تابعة للتصنيف المحدد.',
+                    'profile.subcategory_id' => 'يجب أن يكون التخصص الفرعي تابعاً للتصنيف المحدد.',
                 ]);
             }
         }

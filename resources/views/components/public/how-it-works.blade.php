@@ -13,7 +13,7 @@
             </span>
             <div class="min-w-0">
                 <h3 class="m-0 text-slate-900 dark:text-slate-100 text-xs font-black leading-tight">ابحث عن الخدمة</h3>
-                <p class="m-0 text-slate-500 dark:text-slate-400 text-[10px] font-bold mt-1 leading-relaxed">اكتب الخدمة أو اختر الفئة المناسبة.</p>
+                <p class="m-0 text-slate-500 dark:text-slate-400 text-[10px] font-bold mt-1 leading-relaxed">اكتب الخدمة أو اختر التخصص المناسب.</p>
             </div>
         </div>
 

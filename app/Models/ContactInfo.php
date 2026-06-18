@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ContactInfo extends Model
 {
-    protected $fillable = ['whatsapp', 'phone', 'email', 'address'];
+    protected $fillable = ['whatsapp', 'phone', 'email', 'address', 'facebook'];
 
     public static function instance(): self
     {

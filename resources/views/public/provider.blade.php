@@ -1,10 +1,10 @@
 @extends('public.layout')
 
-@section('title', ($profile->business_name ?? $profile->user?->name ?? 'مزود خدمة') . ' - ' . config('app.name'))
+@section('title', ($profile->business_name ?? $profile->user?->name ?? 'مقدم خدمة') . ' - ' . config('app.name'))
 
 @section('content')
 @php
-    $businessName = $profile->business_name ?? $profile->user?->name ?? 'مزود خدمة';
+    $businessName = $profile->business_name ?? $profile->user?->name ?? 'مقدم خدمة';
 
     $logo = $profile->logo ? \Illuminate\Support\Facades\Storage::disk('public')->url($profile->logo) : null;
     $cover = $profile->cover_image ? \Illuminate\Support\Facades\Storage::disk('public')->url($profile->cover_image) : null;
@@ -96,27 +96,43 @@
         ] : null,
     ])->filter();
 
-    $facts = collect([
-        $categoryName ? ['label' => 'الفئة', 'value' => $categoryName] : null,
-        $cityName ? ['label' => 'المدينة', 'value' => $cityName] : null,
-        $profile->provider_type ? ['label' => 'نوع المزود', 'value' => \App\Models\ProviderType::labelFor($profile->provider_type)] : null,
-        $profile->experience_years ? ['label' => 'الخبرة', 'value' => $profile->experience_years . ' سنوات'] : null,
-        $profile->offers_remote_work ? ['label' => 'الخدمة عن بعد', 'value' => 'متاحة'] : null,
-    ])->filter();
+    // Facts are shown in header meta to prevent repetition.
+
 @endphp
 
 <article class="provider-profile">
     <section class="pp-identity">
         <div class="pp-identity__media">
-        <a href="{{ $backUrl }}" class="pp-back" aria-label="رجوع">
-            <x-render-icon icon="heroicon-o-arrow-right" />
-            <span>رجوع</span>
-        </a>
+            <a href="{{ $backUrl }}" class="pp-back" aria-label="رجوع">
+                <x-render-icon icon="heroicon-o-arrow-right" />
+            </a>
 
-        @if($cover)
-            <img src="{{ $cover }}" alt="{{ $businessName }}" class="pp-cover" loading="eager" decoding="async">
-        @endif
+            @auth
+                <button
+                    class="pp-favorite pp-favorite-btn {{ $isFavorited ? 'is-favorited' : '' }}"
+                    data-profile-id="{{ $profile->id }}"
+                    data-toggle-url="{{ route('favorites.toggle', $profile) }}"
+                    type="button"
+                    aria-label="{{ $isFavorited ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة' }}"
+                >
+                    <span class="pp-favorite-icon pp-favorite-icon--outline">
+                        <x-render-icon icon="app-heart" />
+                    </span>
+                    <span class="pp-favorite-icon pp-favorite-icon--filled">
+                        <x-render-icon icon="app-heart-filled" />
+                    </span>
+                </button>
+            @else
+                <button class="pp-favorite pp-favorite-btn is-favorite-guest" type="button" aria-label="أضف للمفضلة">
+                    <span class="pp-favorite-icon pp-favorite-icon--outline">
+                        <x-render-icon icon="app-heart" />
+                    </span>
+                </button>
+            @endauth
 
+            @if($cover)
+                <img src="{{ $cover }}" alt="{{ $businessName }}" class="pp-cover" loading="eager" decoding="async">
+            @endif
         </div>
 
         <div class="pp-identity__content">
@@ -134,6 +150,14 @@
                 @endif
 
                 <h1>{{ $businessName }}</h1>
+
+                @if($reviewsCount > 0)
+                    <a href="#reviews" class="pp-header-rating">
+                        <span class="pp-header-rating__star">★</span>
+                        <strong class="pp-header-rating__score">{{ number_format($rating, 1) }}</strong>
+                        <span class="pp-header-rating__count">({{ $reviewsCount }})</span>
+                    </a>
+                @endif
 
                 @php
                     $metaParts = collect([
@@ -153,187 +177,205 @@
                         @endforeach
                     </div>
                 @endif
-
             </div>
-
         </div>
-    </section>
 
-    @if($contactActions->isNotEmpty())
-        <nav class="pp-actions" aria-label="طرق التواصل السريعة">
-            @foreach($contactActions->where('primary', true) as $action)
-                <a href="{{ $action['url'] }}"
-                   class="pp-action-primary {{ $action['class'] }}"
-                   aria-label="{{ $action['label'] }}"
-                   @if($action['external']) target="_blank" rel="noopener noreferrer nofollow" @endif>
-                    <x-render-icon :icon="$action['icon']" />
-                    <span>{{ $action['label'] }}</span>
-                </a>
-            @endforeach
+        @if($contactActions->isNotEmpty())
+            <nav class="pp-actions" aria-label="طرق التواصل السريعة">
+                <div class="pp-actions-primary-row">
+                    @foreach($contactActions->where('primary', true) as $action)
+                        <a href="{{ $action['url'] }}"
+                           class="pp-action-primary {{ $action['class'] }}"
+                           aria-label="{{ $action['label'] }}"
+                           @if($action['external']) target="_blank" rel="noopener noreferrer nofollow" @endif>
+                            <x-render-icon :icon="$action['icon']" />
+                            <span>{{ $action['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
 
-            @foreach($contactActions->where('primary', false) as $action)
-                <a href="{{ $action['url'] }}"
-                   class="pp-action-icon {{ $action['class'] }}"
-                   aria-label="{{ $action['label'] }}"
-                   title="{{ $action['label'] }}"
-                   @if($action['external']) target="_blank" rel="noopener noreferrer nofollow" @endif>
-                    <x-render-icon :icon="$action['icon']" />
-                </a>
-            @endforeach
-        </nav>
-    @endif
-
-    <div class="pp-layout">
-        <main class="pp-main">
-            @if($profile->bio)
-                <section id="about" class="pp-card">
-                    <x-profile-section-title eyebrow="نبذة" title="عن المزود" />
-                    <p class="pp-text">{{ $profile->bio }}</p>
-                </section>
-            @endif
-
-            @if($subcategories->isNotEmpty())
-                <section class="pp-card">
-                    <x-profile-section-title eyebrow="الخدمات" title="ما يقدمه" />
-                    <div class="pp-service-list">
-                        @foreach($subcategories as $subcategory)
-                            <a href="{{ route('public.subcategory', $subcategory->slug) }}">
-                                {{ $subcategory->localized_name ?? $subcategory->name }}
+                @if($contactActions->where('primary', false)->isNotEmpty())
+                    <div class="pp-actions-secondary-row">
+                        @foreach($contactActions->where('primary', false) as $action)
+                            <a href="{{ $action['url'] }}"
+                               class="pp-action-icon {{ $action['class'] }}"
+                               aria-label="{{ $action['label'] }}"
+                               title="{{ $action['label'] }}"
+                               @if($action['external']) target="_blank" rel="noopener noreferrer nofollow" @endif>
+                                <x-render-icon :icon="$action['icon']" />
                             </a>
                         @endforeach
                     </div>
+                @endif
+            </nav>
+        @endif
+    </section>
 
-                </section>
-            @endif
+    <div class="pp-layout">
+        <main class="pp-main">
+            @if($profile->bio || $subcategories->isNotEmpty() || $profile->service_area_note || $profile->map_url)
+                <section class="pp-card pp-info-group">
+                    @if($profile->bio)
+                        <div class="pp-info-section">
+                            <h2 class="pp-info-section__title">
+                                <x-render-icon icon="heroicon-o-user" />
+                                <span>عن مقدم الخدمة</span>
+                            </h2>
+                            <p class="pp-text">{{ $profile->bio }}</p>
+                        </div>
+                    @endif
 
-            @if($facts->isNotEmpty() || $profile->service_area_note || $profile->map_url)
-                <section class="pp-card">
-                    <x-profile-section-title eyebrow="التغطية" title="نطاق العمل" />
-                    <div class="pp-facts">
-                        @foreach($facts as $fact)
-                            <div>
-                                <span>{{ $fact['label'] }}</span>
-                                <strong>{{ $fact['value'] }}</strong>
+                    @if($subcategories->isNotEmpty())
+                        <div class="pp-info-section">
+                            <h2 class="pp-info-section__title">
+                                <x-render-icon icon="heroicon-o-wrench-screwdriver" />
+                                <span>الخدمات المتاحة</span>
+                            </h2>
+                            <div class="pp-service-list">
+                                @foreach($subcategories as $subcategory)
+                                    <a href="{{ route('public.subcategory', $subcategory->slug) }}">
+                                        {{ $subcategory->localized_name ?? $subcategory->name }}
+                                    </a>
+                                @endforeach
                             </div>
-                        @endforeach
-                    </div>
-
-                    @if($profile->service_area_note)
-                        <p class="pp-note">{{ $profile->service_area_note }}</p>
+                        </div>
                     @endif
 
-                    @if($profile->map_url)
-                        <a href="{{ $profile->map_url }}" class="pp-inline-link" target="_blank" rel="noopener noreferrer nofollow">
-                            <x-render-icon icon="heroicon-o-map-pin" />
-                            <span>فتح الموقع على الخريطة</span>
-                        </a>
+                    @if($profile->service_area_note || $profile->map_url)
+                        <div class="pp-info-section">
+                            <h2 class="pp-info-section__title">
+                                <x-render-icon icon="heroicon-o-map" />
+                                <span>نطاق التغطية والعمل</span>
+                            </h2>
+
+                            @if($profile->service_area_note)
+                                <p class="pp-note">{{ $profile->service_area_note }}</p>
+                            @endif
+
+                            @if($profile->map_url)
+                                <a href="{{ $profile->map_url }}" class="pp-inline-link" target="_blank" rel="noopener noreferrer nofollow">
+                                    <x-render-icon icon="heroicon-o-map-pin" />
+                                    <span>فتح الموقع على الخريطة</span>
+                                </a>
+                            @endif
+                        </div>
                     @endif
                 </section>
             @endif
 
-            @if($portfolioItems->isNotEmpty())
-                <section id="portfolio" class="pp-card">
-                    <x-profile-section-title eyebrow="الأعمال" title="نماذج من العمل" />
-                    <div class="pp-gallery">
-                        @foreach($portfolioItems as $itemIdx => $item)
-                            @php
-                                $images = $item->images?->sortBy('sort_order')->values() ?? collect();
-                                $imgCount = $images->count();
-                                $sliderId = 'proj-' . $itemIdx;
-                            @endphp
-                            <article class="pp-proj">
-                                <div class="pp-proj-slider" id="{{ $sliderId }}">
-                                    <div class="pp-proj-slides">
-                                        @if($imgCount > 0)
-                                            @foreach($images as $img)
-                                                <div class="pp-proj-slide">
-                                                    @php
-                                                        $imageUrl = Storage::disk('public')->url($img->path);
-                                                        $imageAlt = $img->alt ?: $item->title;
-                                                    @endphp
-                                                    <button
-                                                        type="button"
-                                                        class="pp-proj-image"
-                                                        data-portfolio-image="{{ $imageUrl }}"
-                                                        data-portfolio-alt="{{ e($imageAlt) }}"
-                                                        aria-label="عرض صورة {{ $imageAlt }}"
-                                                    >
-                                                        <img src="{{ $imageUrl }}" alt="{{ $imageAlt }}" loading="lazy" decoding="async">
-                                                    </button>
-                                                </div>
-                                            @endforeach
-                                        @else
-                                            <div class="pp-proj-slide">
-                                                <div class="pp-gallery__empty"><x-render-icon icon="heroicon-o-photo" /></div>
+            @if($portfolioItems->isNotEmpty() || $credentials->isNotEmpty())
+                <section class="pp-card pp-showcase-group">
+                    @if($portfolioItems->isNotEmpty())
+                        <div class="pp-showcase-section">
+                            <h2 class="pp-info-section__title">
+                                <x-render-icon icon="heroicon-o-photo" />
+                                <span>نماذج من الأعمال</span>
+                            </h2>
+                            <div class="pp-gallery">
+                                @foreach($portfolioItems as $itemIdx => $item)
+                                    @php
+                                        $images = $item->images?->sortBy('sort_order')->values() ?? collect();
+                                        $imgCount = $images->count();
+                                        $sliderId = 'proj-' . $itemIdx;
+                                    @endphp
+                                    <article class="pp-proj">
+                                        <div class="pp-proj-slider" id="{{ $sliderId }}">
+                                            <div class="pp-proj-slides">
+                                                @if($imgCount > 0)
+                                                    @foreach($images as $img)
+                                                        <div class="pp-proj-slide">
+                                                            @php
+                                                                $imageUrl = Storage::disk('public')->url($img->path);
+                                                                $imageAlt = $img->alt ?: $item->title;
+                                                            @endphp
+                                                            <button
+                                                                type="button"
+                                                                class="pp-proj-image"
+                                                                data-portfolio-image="{{ $imageUrl }}"
+                                                                data-portfolio-alt="{{ e($imageAlt) }}"
+                                                                aria-label="عرض صورة {{ $imageAlt }}"
+                                                            >
+                                                                <img src="{{ $imageUrl }}" alt="{{ $imageAlt }}" loading="lazy" decoding="async">
+                                                            </button>
+                                                        </div>
+                                                    @endforeach
+                                                @else
+                                                    <div class="pp-proj-slide">
+                                                        <div class="pp-gallery__empty"><x-render-icon icon="heroicon-o-photo" /></div>
+                                                    </div>
+                                                @endif
                                             </div>
-                                        @endif
-                                    </div>
 
-                                    @if($imgCount > 1)
-                                        <button type="button" class="pp-proj-nav pp-proj-nav--prev" data-slider-nav="{{ $sliderId }}" data-dir="-1" aria-label="الصورة السابقة">
-                                            <x-render-icon icon="heroicon-o-chevron-right" />
-                                        </button>
-                                        <button type="button" class="pp-proj-nav pp-proj-nav--next" data-slider-nav="{{ $sliderId }}" data-dir="1" aria-label="الصورة التالية">
-                                            <x-render-icon icon="heroicon-o-chevron-left" />
-                                        </button>
-                                        <span class="pp-proj-counter" aria-live="polite">1 / {{ $imgCount }}</span>
-                                        <div class="pp-proj-dots" role="tablist" aria-label="صور المشروع">
-                                            @foreach($images as $di => $img)
-                                                <button class="pp-proj-dot {{ $di === 0 ? 'is-active' : '' }}"
-                                                        data-slider="{{ $sliderId }}"
-                                                        data-idx="{{ $di }}"
-                                                        role="tab"
-                                                        aria-label="صورة {{ $di + 1 }}"
-                                                        aria-selected="{{ $di === 0 ? 'true' : 'false' }}"
-                                                        type="button"></button>
-                                            @endforeach
+                                            @if($imgCount > 1)
+                                                <button type="button" class="pp-proj-nav pp-proj-nav--prev" data-slider-nav="{{ $sliderId }}" data-dir="-1" aria-label="الصورة السابقة">
+                                                    <x-render-icon icon="heroicon-o-chevron-right" />
+                                                </button>
+                                                <button type="button" class="pp-proj-nav pp-proj-nav--next" data-slider-nav="{{ $sliderId }}" data-dir="1" aria-label="الصورة التالية">
+                                                    <x-render-icon icon="heroicon-o-chevron-left" />
+                                                </button>
+                                                <span class="pp-proj-counter" aria-live="polite">1 / {{ $imgCount }}</span>
+                                                <div class="pp-proj-dots" role="tablist" aria-label="صور المشروع">
+                                                    @foreach($images as $di => $img)
+                                                        <button class="pp-proj-dot {{ $di === 0 ? 'is-active' : '' }}"
+                                                                data-slider="{{ $sliderId }}"
+                                                                data-idx="{{ $di }}"
+                                                                role="tab"
+                                                                aria-label="صورة {{ $di + 1 }}"
+                                                                aria-selected="{{ $di === 0 ? 'true' : 'false' }}"
+                                                                type="button"></button>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
-                                </div>
 
-                                <div class="pp-proj-info">
-                                    <h3>{{ $item->title }}</h3>
-                                    @if($item->short_description)
-                                        <p>{{ $item->short_description }}</p>
-                                    @elseif($item->description)
-                                        <p>{{ Str::limit(strip_tags($item->description), 120) }}</p>
-                                    @endif
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
+                                        <div class="pp-proj-info">
+                                            <h3>{{ $item->title }}</h3>
+                                            @if($item->short_description)
+                                                <p>{{ $item->short_description }}</p>
+                                            @elseif($item->description)
+                                                <p>{{ Str::limit(strip_tags($item->description), 120) }}</p>
+                                            @endif
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
 
-                    <div class="pp-lightbox" id="portfolioLightbox" aria-hidden="true" role="dialog" aria-label="معاينة الصورة">
-                        <button type="button" class="pp-lightbox__close" aria-label="إغلاق">
-                            <x-render-icon icon="heroicon-o-x-mark" />
-                        </button>
-                        <img src="" alt="">
-                    </div>
-                </section>
-            @endif
+                            <div class="pp-lightbox" id="portfolioLightbox" aria-hidden="true" role="dialog" aria-label="معاينة الصورة">
+                                <button type="button" class="pp-lightbox__close" aria-label="إغلاق">
+                                    <x-render-icon icon="heroicon-o-x-mark" />
+                                </button>
+                                <img src="" alt="">
+                            </div>
+                        </div>
+                    @endif
 
-            @if($credentials->isNotEmpty())
-                <section id="credentials" class="pp-card">
-                    <x-profile-section-title eyebrow="الثقة" title="الشهادات والاعتمادات" />
-                    <div class="pp-credentials">
-                        @foreach($credentials as $credential)
-                            <article>
-                                <h3>{{ $credential->title }}</h3>
-                                @if($credential->issuer)<p>{{ $credential->issuer }}</p>@endif
-                                <div>
-                                    @if($credential->issue_date)<span>{{ optional($credential->issue_date)->format('Y') }}</span>@endif
-                                    @if($credential->verification_url)
-                                        <a href="{{ $credential->verification_url }}" target="_blank" rel="noopener noreferrer nofollow">تحقق</a>
-                                    @endif
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
+                    @if($credentials->isNotEmpty())
+                        <div class="pp-showcase-section {{ $portfolioItems->isNotEmpty() ? 'has-divider' : '' }}">
+                            <h2 class="pp-info-section__title">
+                                <x-render-icon icon="heroicon-o-academic-cap" />
+                                <span>الشهادات والمؤهلات</span>
+                            </h2>
+                            <div class="pp-credentials">
+                                @foreach($credentials as $credential)
+                                    <article>
+                                        <h3>{{ $credential->title }}</h3>
+                                        @if($credential->issuer)<p>{{ $credential->issuer }}</p>@endif
+                                        <div>
+                                            @if($credential->issue_date)<span>{{ optional($credential->issue_date)->format('Y') }}</span>@endif
+                                            @if($credential->verification_url)
+                                                <a href="{{ $credential->verification_url }}" target="_blank" rel="noopener noreferrer nofollow">تحقق</a>
+                                            @endif
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </section>
             @endif
 
             <section id="reviews" class="pp-card">
-                <x-profile-section-title title="التقييمات" />
+                <x-profile-section-title title="التقييمات والآراء" />
 
                 @if(session('success'))
                     <div class="pp-review-flash is-success">{{ session('success') }}</div>
@@ -363,33 +405,43 @@
 
                 @if(!auth()->check())
                     <div class="pp-review-notice">
-                        <span>سجل الدخول لكتابة تقييم بعد التعامل مع المزود.</span>
-                        <a href="{{ route('login') }}">دخول</a>
+                        <span>سجل الدخول لكتابة تقييم بعد التعامل مع مقدم الخدمة.</span>
+                        <a href="{{ route('login') }}">تسجيل الدخول</a>
                     </div>
                 @elseif(!auth()->user()->hasRole('user'))
-                    <div class="pp-review-notice">مزودو الخدمات لا يمكنهم كتابة تقييمات.</div>
+                    <div class="pp-review-notice">مقدمو الخدمات لا يمكنهم كتابة تقييمات.</div>
                 @elseif($profile->user_id === auth()->id())
                     <div class="pp-review-notice">لا يمكنك تقييم ملفك الخاص.</div>
+                @elseif($userHasActiveReview ?? false)
+                    <div class="pp-review-notice">لقد أضفت تقييماً لمقدم الخدمة هذا من قبل.</div>
                 @else
-                    <form method="POST" action="{{ route('review.store', $profile) }}" class="pp-review-form" id="reviewForm">
+                    <button type="button" class="pp-write-review-toggle" id="writeReviewToggleBtn">
+                        <x-render-icon icon="heroicon-o-pencil-square" />
+                        <span>كتابة تقييم أو رأي</span>
+                    </button>
+
+                    <form method="POST" action="{{ route('review.store', $profile) }}" class="pp-review-form is-collapsed" id="reviewForm" style="display: none;">
                         @csrf
-                        <label>التقييم <span class="pp-optional-label">(اختياري)</span></label>
-                        <div class="pp-star-selector" id="starSelector" dir="ltr">
-                            @for($r = 1; $r <= 5; $r++)
-                                <button type="button" class="pp-star-btn" data-value="{{ $r }}" aria-label="تقييم {{ $r }} من 5">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                                    </svg>
-                                </button>
-                            @endfor
+                        <div class="pp-form-rating-row">
+                            <span>التقييم بالنجوم:</span>
+                            <div class="pp-star-selector" id="starSelector" dir="ltr">
+                                @for($r = 1; $r <= 5; $r++)
+                                    <button type="button" class="pp-star-btn" data-value="{{ $r }}" aria-label="تقييم {{ $r }} من 5">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                        </svg>
+                                    </button>
+                                @endfor
+                            </div>
+                            <input type="hidden" name="rating" id="ratingValue" value="{{ old('rating') }}">
                         </div>
-                        <input type="hidden" name="rating" id="ratingValue" value="{{ old('rating') }}">
 
-                        <label for="comment">رأيك <span class="pp-optional-label">(اختياري)</span></label>
-                        <textarea id="comment" name="comment" rows="4" maxlength="2000" placeholder="شارك تجربتك باختصار...">{{ old('comment') }}</textarea>
-                        <span class="pp-review-tip">يمكنك اختيار تقييم بالنجوم، أو كتابة تعليق، أو الاثنين معاً.</span>
-
-                        <button type="submit" id="submitReviewBtn">إرسال التقييم</button>
+                        <textarea id="comment" name="comment" rows="2" maxlength="2000" placeholder="اكتب تعليقك هنا (اختياري)...">{{ old('comment') }}</textarea>
+                        
+                        <div class="pp-form-actions">
+                            <button type="submit" id="submitReviewBtn">إرسال التقييم</button>
+                            <button type="button" class="pp-form-cancel" id="cancelReviewBtn">إلغاء</button>
+                        </div>
                     </form>
                 @endif
 
@@ -419,79 +471,118 @@
                 @endif
             </section>
         </main>
-
-        <aside class="pp-sidebar" id="contact">
-            @auth
-                <button
-                    class="pp-favorite {{ $isFavorited ? 'is-favorited' : '' }}"
-                    data-profile-id="{{ $profile->id }}"
-                    data-toggle-url="{{ route('favorites.toggle', $profile) }}"
-                    type="button"
-                >
-                    <x-render-icon icon="{{ $isFavorited ? 'app-heart-filled' : 'app-heart' }}" />
-                    <span>{{ $isFavorited ? 'في المفضلة' : 'أضف للمفضلة' }}</span>
-                </button>
-            @else
-                <button class="pp-favorite is-favorite-guest" type="button" aria-label="أضف إلى المفضلة">
-                    <x-render-icon icon="app-heart" />
-                    <span>أضف للمفضلة</span>
-                </button>
-            @endauth
-        </aside>
     </div>
 </article>
 
 @push('styles')
 <style>
     .provider-profile {
+        max-width: 760px;
+        margin-inline: auto;
         display: grid;
-        gap: .85rem;
+        gap: .75rem;
         padding-bottom: 2rem;
+        width: 100%;
+    }
+
+    .pp-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: .75rem;
+        width: 100%;
+    }
+
+    .pp-main {
+        display: grid;
+        gap: .75rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .pp-card {
+        padding: 1.25rem;
+        border: 1px solid var(--delni-border);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: var(--delni-shadow-sm);
     }
 
     .pp-identity {
         position: relative;
         overflow: hidden;
-        display: grid;
         border: 1px solid var(--delni-border);
-        border-radius: 20px;
+        border-radius: 16px;
         background: #fff;
         color: var(--delni-navy);
         box-shadow: var(--delni-shadow-sm);
+        display: flex;
+        flex-direction: column;
     }
 
     .pp-identity__media {
         position: relative;
-        min-height: clamp(120px, 18vw, 170px);
-        overflow: hidden;
+        height: 140px;
         background: linear-gradient(135deg, #0B1A34 0%, #1E293B 100%);
     }
+    @media (min-width: 640px) {
+        .pp-identity__media {
+            height: 180px;
+        }
+    }
 
-    .pp-back {
+    .pp-back, .pp-favorite-btn {
         position: absolute;
-        top: .85rem;
-        inset-inline-start: .85rem;
+        top: .75rem;
         z-index: 2;
-        min-height: 40px;
+        width: 38px;
+        height: 38px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: .38rem;
-        padding: .5rem .75rem;
         border-radius: 999px;
         border: 1px solid rgba(15,23,42,.1);
         background: rgba(255,255,255,.92);
         color: var(--delni-navy);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        font-size: .82rem;
-        font-weight: 900;
-        text-decoration: none;
+        cursor: pointer;
+        transition: all .2s ease;
     }
 
-    .pp-back svg {
+    .pp-back {
+        inset-inline-start: .75rem;
+    }
+    .pp-favorite-btn {
+        inset-inline-end: .75rem;
+    }
+
+    .pp-back:hover, .pp-favorite-btn:hover {
+        background: #fff;
+        transform: scale(1.05);
+    }
+
+    .pp-back svg, .pp-favorite-btn svg {
         width: 18px;
         height: 18px;
+    }
+
+    html[dir="rtl"] .pp-back svg {
+        transform: scaleX(-1);
+    }
+
+    .pp-back span {
+        display: none;
+    }
+
+    .pp-favorite-icon--filled {
+        display: none;
+    }
+    .pp-favorite-btn.is-favorited .pp-favorite-icon--outline {
+        display: none;
+    }
+    .pp-favorite-btn.is-favorited .pp-favorite-icon--filled {
+        display: inline-flex;
+        color: var(--delni-primary);
     }
 
     .pp-cover {
@@ -507,375 +598,311 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(to top, rgba(11,26,52,.28), rgba(11,26,52,.04));
+        background: linear-gradient(to top, rgba(11,26,52,.35), rgba(11,26,52,.05));
     }
 
     .pp-identity__content {
         position: relative;
         z-index: 1;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 1.35rem;
-        align-items: flex-start;
-        padding: 2rem 2rem 1.35rem;
+        display: flex;
+        gap: 1.25rem;
+        padding: 1.25rem;
         background: #fff;
+    }
+    @media (max-width: 640px) {
+        .pp-identity__content {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.75rem;
+        }
     }
 
     .pp-avatar {
-        width: clamp(90px, 12vw, 120px);
-        height: clamp(90px, 12vw, 120px);
+        width: 80px;
+        height: 80px;
         display: grid;
         place-items: center;
         overflow: hidden;
-        align-self: start;
-        margin-top: -3rem;
-        border-radius: 20px;
+        margin-top: -3.5rem;
+        border-radius: 16px;
         border: 4px solid #fff;
         background: linear-gradient(135deg, #0B1A34 0%, #1E293B 100%);
-        box-shadow: 0 18px 48px rgba(15,23,42,.24);
+        box-shadow: 0 10px 30px rgba(15,23,42,.2);
         flex-shrink: 0;
+        z-index: 2;
     }
     .pp-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .pp-avatar span { color: var(--delni-primary); font-size: 2.8rem; font-weight: 950; }
+    .pp-avatar span { color: var(--delni-primary); font-size: 2.2rem; font-weight: 950; }
+
+    .pp-title {
+        display: flex;
+        flex-direction: column;
+        gap: .35rem;
+        flex: 1;
+        min-width: 0;
+    }
+    @media (max-width: 640px) {
+        .pp-title {
+            align-items: center;
+        }
+    }
 
     .pp-eyebrow {
         width: fit-content;
-        max-width: 100%;
-        display: inline-flex;
-        align-items: center;
         color: var(--delni-primary);
-        border: 1.5px solid rgba(241,98,15,.24);
+        border: 1px solid rgba(241,98,15,.2);
         border-radius: 999px;
-        background: rgba(241,98,15,.08);
-        padding: .35rem .68rem;
-        font-size: .74rem;
-        font-weight: 900;
-        line-height: 1.2;
-        overflow-wrap: anywhere;
-        letter-spacing: .3px;
-    }
-
-    .pp-title {
-        display: grid;
-        gap: .68rem;
-        align-content: start;
+        background: rgba(241,98,15,.06);
+        padding: .25rem .5rem;
+        font-size: .7rem;
+        font-weight: 850;
+        line-height: 1.1;
     }
 
     .pp-title h1 {
         margin: 0;
         color: var(--delni-navy);
-        font-size: clamp(1.65rem, 4vw, 2.5rem);
-        line-height: 1.15;
-        font-weight: 970;
-        letter-spacing: -.3px;
+        font-size: 1.4rem;
+        line-height: 1.25;
+        font-weight: 900;
         overflow-wrap: anywhere;
     }
 
+    .pp-header-rating {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        font-size: .8rem;
+        color: var(--delni-navy);
+        width: fit-content;
+        text-decoration: none;
+    }
+    .pp-header-rating__star {
+        color: #F59E0B;
+        font-size: .95rem;
+    }
+    .pp-header-rating__score {
+        font-weight: 900;
+    }
+    .pp-header-rating__count {
+        color: var(--delni-muted);
+    }
+
     .pp-meta {
-        display: grid;
-        grid-auto-rows: max-content;
-        gap: .6rem;
-        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        margin-top: .2rem;
+    }
+    @media (max-width: 640px) {
+        .pp-meta {
+            justify-content: center;
+        }
     }
 
     .pp-meta > span {
-        min-height: 32px;
         display: inline-flex;
         align-items: center;
-        gap: .38rem;
-        max-width: 100%;
-        padding: .38rem .68rem;
-        border: 1.2px solid #E2E8F0;
-        border-radius: 999px;
-        background: linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
-        color: #334155;
-        font-size: .76rem;
-        font-weight: 850;
-        line-height: 1.35;
-        transition: all .2s ease;
-    }
-
-    .pp-meta > span:hover {
-        border-color: #CBD5E1;
+        gap: .25rem;
+        padding: .2rem .5rem;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
         background: #F8FAFC;
+        color: #475569;
+        font-size: .72rem;
+        font-weight: 750;
     }
-
-    .pp-meta > span:not(:last-child)::after {
-        content: none;
-    }
-
     .pp-meta svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         color: var(--delni-primary);
         flex-shrink: 0;
     }
 
-    .pp-meta > span > span {
-        min-width: 0;
-        color: inherit;
-        overflow-wrap: anywhere;
-    }
-
-    .pp-rating-chip {
-        gap: .55rem;
-        min-width: 120px;
-        padding: .85rem .95rem;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
-        border: 1.5px solid #FED7AA;
-        color: var(--delni-navy);
-        font-size: .85rem;
-        font-weight: 900;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all .2s ease;
-        align-self: start;
-        margin-top: 0;
-    }
-
-    .pp-rating-chip:hover {
-        border-color: #FDBA74;
-        background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 8px 20px rgba(241,98,15,.12);
-    }
-
-    .pp-rating-chip b { color: #F59E0B; font-style: normal; }
-    .pp-rating-chip span { opacity: 1; }
-
-    .pp-rating-chip__star {
-        width: 36px;
-        height: 36px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        background: #F59E0B;
-        color: #fff;
-        font-size: 1.1rem;
-        line-height: 1;
-        flex-shrink: 0;
-    }
-
-    .pp-rating-chip__body {
-        display: grid;
-        gap: .12rem;
-    }
-
-    .pp-rating-chip strong {
-        color: var(--delni-navy);
-        font-size: 1.1rem;
-        font-weight: 950;
-        line-height: 1;
-    }
-
-    .pp-rating-chip small {
-        color: #64748B;
-        font-size: .75rem;
-        font-weight: 850;
-        line-height: 1.25;
-        white-space: nowrap;
-    }
-
-    .is-muted { opacity: .28; }
-
     .pp-actions {
         display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: .6rem;
-        padding: 0 2rem 1.35rem;
-        justify-content: flex-start;
+        flex-direction: column;
+        gap: .5rem;
+        padding: 1rem 1.25rem 1.25rem;
+        border-top: 1px solid var(--delni-border);
+        background: #FAFAFA;
     }
 
-    .pp-action-primary,
-    .pp-favorite {
-        min-height: 48px;
+    .pp-actions-primary-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: .5rem;
+    }
+
+    .pp-action-primary {
+        min-height: 42px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: .5rem;
-        padding: 0 1.35rem;
-        border-radius: 16px;
-        border: 1.2px solid #E2E8F0;
-        background: linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
+        gap: .4rem;
+        padding: .5rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        background: #fff;
         color: var(--delni-navy);
-        font: inherit;
-        font-size: .87rem;
-        font-weight: 950;
+        font-size: .84rem;
+        font-weight: 900;
         text-decoration: none;
         cursor: pointer;
         transition: all .2s ease;
-        flex: 0 1 auto;
     }
-
-    .pp-action-primary:hover,
-    .pp-favorite:hover {
+    .pp-action-primary:hover {
         border-color: #CBD5E1;
-        background: #F1F5F9;
+        background: #F8FAFC;
         transform: translateY(-1px);
     }
-
-    .pp-action-icon {
-        width: 48px;
-        height: 48px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-        border: 1.2px solid #E2E8F0;
-        background: linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
-        color: var(--delni-navy);
-        text-decoration: none;
-        flex-shrink: 0;
-        transition: all .2s ease;
-    }
-
-    .pp-action-icon:hover {
-        border-color: #CBD5E1;
-        background: #F1F5F9;
-        transform: translateY(-1px);
-    }
-
-    .pp-action-primary svg,
-    .pp-action-icon svg,
-    .pp-favorite svg { width: 20px; height: 20px; }
 
     .pp-action-primary.is-whatsapp {
         background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
         border-color: #22C55E;
         color: #fff;
     }
-
     .pp-action-primary.is-whatsapp:hover {
         border-color: #16A34A;
         background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
     }
 
-    .pp-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-        gap: .9rem;
-        align-items: start;
+    .pp-action-primary svg {
+        width: 18px;
+        height: 18px;
     }
-    .pp-main { display: grid; gap: .85rem; min-width: 0; }
-    .pp-card {
-        padding: 1rem;
-        border: 1px solid var(--delni-border);
-        border-radius: 20px;
+
+    .pp-actions-secondary-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: .5rem;
+        margin-top: .25rem;
+    }
+
+    .pp-action-icon {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid #E2E8F0;
         background: #fff;
-        box-shadow: var(--delni-shadow-sm);
+        color: #475569;
+        text-decoration: none;
+        transition: all .2s ease;
     }
-
-    .profile-section-title { margin-bottom: .75rem; }
-    .profile-section-title span {
-        display: block;
-        color: var(--delni-primary);
-        font-size: .72rem;
-        font-weight: 950;
-    }
-    .profile-section-title h2 {
-        margin: .12rem 0 0;
+    .pp-action-icon:hover {
+        border-color: #CBD5E1;
+        background: #F8FAFC;
+        transform: translateY(-1px);
         color: var(--delni-navy);
-        font-size: 1.08rem;
-        line-height: 1.35;
-        font-weight: 950;
-        letter-spacing: 0;
+    }
+    .pp-action-icon svg {
+        width: 18px;
+        height: 18px;
     }
 
-    .pp-text,
-    .pp-note,
-    .pp-proj-info p,
-    .pp-credentials p,
-    .pp-review-list p {
+    .pp-info-group {
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .pp-info-section:not(:first-child) {
+        border-top: 1px solid var(--delni-border);
+        padding-top: 1.25rem;
+    }
+
+    .pp-info-section__title {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        margin: 0 0 .75rem 0;
+        color: var(--delni-navy);
+        font-size: .95rem;
+        font-weight: 900;
+    }
+    .pp-info-section__title svg {
+        width: 18px;
+        height: 18px;
+        color: var(--delni-primary);
+        flex-shrink: 0;
+    }
+
+    .pp-text, .pp-note {
         margin: 0;
         color: var(--delni-muted);
-        font-size: .92rem;
-        line-height: 1.85;
-        font-weight: 650;
+        font-size: .86rem;
+        line-height: 1.75;
+        font-weight: 500;
     }
 
     .pp-service-list {
         display: flex;
         flex-wrap: wrap;
-        gap: .45rem;
+        gap: .4rem;
     }
     .pp-service-list a {
-        min-height: 36px;
         display: inline-flex;
         align-items: center;
-        padding: .45rem .7rem;
-        border-radius: 999px;
-        border: 1px solid rgba(241,98,15,.14);
-        background: rgba(241,98,15,.07);
+        padding: .25rem .6rem;
+        border-radius: 8px;
+        border: 1px solid rgba(241,98,15,.12);
+        background: rgba(241,98,15,.04);
         color: var(--delni-primary);
-        font-size: .8rem;
-        font-weight: 900;
-        text-decoration: none;
+        font-size: .75rem;
+        font-weight: 800;
+        transition: all .2s ease;
+    }
+    .pp-service-list a:hover {
+        background: rgba(241,98,15,.08);
+        transform: translateY(-1px);
     }
 
-    .pp-facts {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: .55rem;
-    }
-    .pp-facts div {
-        padding: .75rem;
-        border-radius: 16px;
-        background: #FCFBFB;
-        border: 1px solid var(--delni-border);
-    }
-    .pp-facts span,
-    .pp-facts strong {
-        display: block;
-    }
-    .pp-facts span {
-        color: #64748B;
-        font-size: .72rem;
-        font-weight: 900;
-    }
-    .pp-facts strong {
-        margin-top: .15rem;
-        color: var(--delni-navy);
-        font-size: .9rem;
-        font-weight: 950;
-    }
-    .pp-note { margin-top: .75rem; }
     .pp-inline-link {
-        margin-top: .75rem;
-        min-height: 40px;
+        margin-top: .5rem;
         display: inline-flex;
         align-items: center;
-        gap: .4rem;
+        gap: .3rem;
         color: var(--delni-primary);
-        font-size: .84rem;
-        font-weight: 950;
-        text-decoration: none;
+        font-size: .8rem;
+        font-weight: 850;
     }
-    .pp-inline-link svg { width: 18px; height: 18px; }
+    .pp-inline-link svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .pp-showcase-group {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .pp-showcase-section:not(:first-child) {
+        border-top: 1px solid var(--delni-border);
+        padding-top: 1.5rem;
+    }
 
     .pp-gallery {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-        gap: .85rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: .75rem;
     }
 
     .pp-proj {
         overflow: hidden;
         border: 1px solid var(--delni-border);
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: 0 10px 28px rgba(11, 26, 52, .055);
+        border-radius: 12px;
+        background: #FAF8F8;
     }
 
     .pp-proj-slider {
         position: relative;
         overflow: hidden;
         background: #0B1A34;
-        height: 210px;
+        height: 150px;
     }
     .pp-proj-slides {
         display: flex;
@@ -902,14 +929,10 @@
         background: transparent;
         cursor: zoom-in;
     }
-    .pp-proj-image:focus-visible {
-        outline: 3px solid rgba(241,98,15,.55);
-        outline-offset: -5px;
-    }
     .pp-proj-slide img,
     .pp-gallery__empty {
         width: 100%;
-        height: 210px;
+        height: 150px;
         object-fit: cover;
         display: block;
         background: #0B1A34;
@@ -917,82 +940,128 @@
     .pp-gallery__empty {
         display: grid;
         place-items: center;
-        color: rgba(255,255,255,.55);
+        color: rgba(255,255,255,.45);
     }
 
     .pp-proj-nav {
         position: absolute;
         top: 50%;
         z-index: 2;
-        width: 38px;
-        height: 38px;
+        width: 30px;
+        height: 30px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         transform: translateY(-50%);
-        border: 1px solid rgba(255,255,255,.24);
+        border: 1px solid rgba(255,255,255,.15);
         border-radius: 999px;
-        background: rgba(15,23,42,.72);
+        background: rgba(15,23,42,.6);
         color: #fff;
-        box-shadow: 0 12px 24px rgba(2,6,23,.22);
-        backdrop-filter: blur(10px);
         cursor: pointer;
-        transition: background .16s ease, transform .16s ease;
+        transition: all .2s;
     }
     .pp-proj-nav:hover {
-        background: rgba(15,23,42,.9);
-        transform: translateY(-50%) scale(1.04);
+        background: rgba(15,23,42,.8);
     }
     .pp-proj-nav svg {
-        width: 18px;
-        height: 18px;
+        width: 14px;
+        height: 14px;
     }
-    .pp-proj-nav--prev { inset-inline-start: .65rem; }
-    .pp-proj-nav--next { inset-inline-end: .65rem; }
+    .pp-proj-nav--prev { inset-inline-start: .5rem; }
+    .pp-proj-nav--next { inset-inline-end: .5rem; }
 
     .pp-proj-counter {
         position: absolute;
-        inset-inline-start: .7rem;
-        bottom: .7rem;
+        inset-inline-start: .5rem;
+        bottom: .5rem;
         z-index: 2;
-        display: inline-flex;
-        align-items: center;
-        min-height: 28px;
-        padding: .22rem .58rem;
-        border: 1px solid rgba(255,255,255,.24);
+        padding: .15rem .45rem;
+        border: 1px solid rgba(255,255,255,.15);
         border-radius: 999px;
-        background: rgba(15,23,42,.7);
+        background: rgba(15,23,42,.6);
         color: #fff;
-        font-size: .72rem;
-        font-weight: 900;
-        backdrop-filter: blur(10px);
+        font-size: .65rem;
+        font-weight: 800;
+        backdrop-filter: blur(8px);
     }
 
     .pp-proj-dots {
         position: absolute;
         inset-inline: 0;
-        bottom: .75rem;
+        bottom: .5rem;
         z-index: 2;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: .28rem;
+        gap: .2rem;
         pointer-events: none;
     }
     .pp-proj-dot {
-        width: 7px;
-        height: 7px;
+        width: 5px;
+        height: 5px;
         border-radius: 999px;
         border: none;
-        background: rgba(255,255,255,.48);
+        background: rgba(255,255,255,.4);
         cursor: pointer;
         padding: 0;
-        transition: width .2s, background .2s;
+        transition: width .2s;
         pointer-events: auto;
     }
     .pp-proj-dot.is-active {
-        width: 22px;
+        width: 14px;
         background: #fff;
+    }
+
+    .pp-proj-info {
+        padding: .6rem;
+    }
+    .pp-proj-info h3 {
+        margin: 0;
+        color: var(--delni-navy);
+        font-size: .84rem;
+        font-weight: 850;
+    }
+    .pp-proj-info p {
+        margin: .15rem 0 0;
+        font-size: .75rem;
+        line-height: 1.5;
+        color: var(--delni-muted);
+    }
+
+    .pp-credentials {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: .5rem;
+    }
+    .pp-credentials article {
+        padding: .65rem;
+        border-radius: 12px;
+        background: #FAF8F8;
+        border: 1px solid var(--delni-border);
+    }
+    .pp-credentials h3 {
+        margin: 0 0 .15rem;
+        color: var(--delni-navy);
+        font-size: .82rem;
+        font-weight: 850;
+    }
+    .pp-credentials p {
+        margin: 0;
+        font-size: .74rem;
+        color: var(--delni-muted);
+    }
+    .pp-credentials article > div {
+        margin-top: .4rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: .72rem;
+        color: var(--delni-gray);
+        font-weight: 700;
+    }
+    .pp-credentials a {
+        color: var(--delni-primary);
+        text-decoration: none;
     }
 
     .pp-lightbox {
@@ -1002,184 +1071,72 @@
         display: none;
         align-items: center;
         justify-content: center;
-        padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
-        background: rgba(2,6,23,.86);
+        padding: 1rem;
+        background: rgba(2,6,23,.85);
     }
     .pp-lightbox.is-open {
         display: flex;
     }
     .pp-lightbox img {
-        max-width: min(100%, 980px);
-        max-height: 86vh;
-        border-radius: 18px;
+        max-width: min(100%, 900px);
+        max-height: 80vh;
+        border-radius: 12px;
         object-fit: contain;
-        box-shadow: 0 24px 70px rgba(0,0,0,.42);
     }
     .pp-lightbox__close {
         position: absolute;
-        top: max(1rem, env(safe-area-inset-top));
+        top: 1rem;
         inset-inline-end: 1rem;
-        width: 44px;
-        height: 44px;
+        width: 36px;
+        height: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        border: 1px solid rgba(255,255,255,.18);
-        background: rgba(15,23,42,.72);
+        border: 1px solid rgba(255,255,255,.15);
+        background: rgba(15,23,42,.6);
         color: #fff;
         cursor: pointer;
     }
-    .pp-lightbox__close svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .pp-proj-info { padding: .85rem; }
-    .pp-proj-info p {
-        margin: .25rem 0 0;
-        font-size: .82rem;
-        line-height: 1.65;
-    }
-
-    .pp-gallery h3,
-    .pp-credentials h3 {
-        margin: 0 0 .25rem;
-        color: var(--delni-navy);
-        font-size: .95rem;
-        line-height: 1.45;
-        font-weight: 950;
-    }
-
-    .pp-credentials {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-        gap: .65rem;
-    }
-    .pp-credentials article {
-        padding: .85rem;
-        border-radius: 16px;
-        background: #FCFBFB;
-        border: 1px solid var(--delni-border);
-    }
-    .pp-credentials article > div {
-        margin-top: .55rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .6rem;
-        color: #64748B;
-        font-size: .78rem;
-        font-weight: 900;
-    }
-    .pp-credentials a { color: var(--delni-primary); text-decoration: none; }
 
     .pp-review-summary {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
-        gap: .45rem;
-        margin-bottom: .85rem;
-        padding: .25rem 0 .8rem;
+        gap: .5rem;
+        margin-bottom: .75rem;
+        padding-bottom: .75rem;
         border-bottom: 1px solid var(--delni-border);
-        background: transparent;
     }
-    .pp-rs-score-wrap {
-        min-width: 0;
+
+    .pp-rs-score-wrap, .pp-rs-count {
         display: inline-flex;
         align-items: center;
-        gap: .3rem;
-        min-height: 28px;
-        padding: .28rem .52rem;
+        gap: .25rem;
+        padding: .2rem .5rem;
         border: 1px solid var(--delni-border);
         border-radius: 999px;
         background: #F8FAFC;
         color: #475569;
+        font-size: .74rem;
     }
+
     .pp-rs-star {
-        width: auto;
-        height: auto;
-        background: transparent;
-        color: #B45309;
-        font-size: .76rem;
-        line-height: 1;
+        color: #F59E0B;
     }
-    .pp-rs-score {
+    .pp-rs-score, .pp-rs-count strong {
         color: var(--delni-navy);
-        font-size: .78rem;
-        font-weight: 950;
-        line-height: 1;
-        letter-spacing: 0;
-    }
-    .pp-rs-label {
-        color: #64748B;
-        font-size: .74rem;
         font-weight: 850;
-        line-height: 1.25;
-        white-space: nowrap;
     }
-    .pp-rs-count {
-        min-height: 28px;
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        padding: .28rem .52rem;
-        border: 1px solid var(--delni-border);
-        border-radius: 999px;
-        background: #F8FAFC;
-        color: #475569;
-        line-height: 1.35;
+    .pp-rs-label, .pp-rs-count span {
+        color: var(--delni-muted);
     }
-    .pp-rs-count strong {
-        color: var(--delni-navy);
-        font-size: .78rem;
-        font-weight: 950;
-        line-height: 1;
-    }
-    .pp-rs-count span {
-        font-size: .74rem;
-        font-weight: 850;
-        white-space: nowrap;
-    }
-    .pp-review-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: .18rem;
-        min-height: 24px;
-        padding: .18rem .42rem;
-        border-radius: 999px;
-        background: #F8FAFC;
-        border: 1px solid var(--delni-border);
-        color: #B45309;
-        font-size: .7rem;
-        font-weight: 950;
-        letter-spacing: .01em;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-    [data-theme="dark"] .pp-rs-score { color: #F1F5F9; }
-    [data-theme="dark"] .pp-rs-label { color: #CBD5E1; }
-    [data-theme="dark"] .pp-review-summary {
-        border-color: #334155;
-    }
-    [data-theme="dark"] .pp-rs-score-wrap,
-    [data-theme="dark"] .pp-rs-count {
-        background: #0F172A;
-        border-color: #334155;
-        color: #CBD5E1;
-    }
-    [data-theme="dark"] .pp-rs-star { color: #FCD34D; }
-    [data-theme="dark"] .pp-rs-count strong { color: #F1F5F9; }
-    [data-theme="dark"] .pp-review-badge { background: #0F172A; border-color: #334155; color: #FCD34D; }
 
     .pp-review-flash {
-        margin-bottom: .8rem;
-        padding: .75rem .85rem;
-        border-radius: 14px;
-        border: 1px solid var(--delni-border);
-        font-size: .84rem;
-        font-weight: 850;
-        line-height: 1.65;
+        margin-bottom: .75rem;
+        padding: .5rem .75rem;
+        border-radius: 10px;
+        font-size: .78rem;
+        font-weight: 800;
     }
     .pp-review-flash.is-success {
         background: #F0FDF4;
@@ -1191,286 +1148,319 @@
         border-color: #FED7AA;
         color: #9A3412;
     }
-    [data-theme="dark"] .pp-review-flash.is-success {
-        background: rgba(34,197,94,.12);
-        border-color: rgba(34,197,94,.25);
-        color: #86EFAC;
-    }
-    [data-theme="dark"] .pp-review-flash.is-error {
-        background: rgba(241,98,15,.12);
-        border-color: rgba(241,98,15,.28);
-        color: #FDBA74;
-    }
 
-    .pp-review-notice,
-    .pp-review-form {
-        margin-bottom: .8rem;
-        padding: .85rem;
-        border-radius: 16px;
-        border: 1px solid var(--delni-border);
-        background: #FCFBFB;
-        color: var(--delni-muted);
-        font-size: .86rem;
-        font-weight: 750;
-    }
     .pp-review-notice {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: .75rem;
+        padding: .75rem 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--delni-border);
+        background: #FAF8F8;
+        color: var(--delni-muted);
+        font-size: .78rem;
+        font-weight: 700;
+        line-height: 1.5;
     }
-    .pp-review-notice a,
-    .pp-review-form button,
-    .pp-show-more {
-        min-height: 40px;
+    .pp-review-notice a {
+        background: var(--delni-primary);
+        color: #fff;
+        padding: .4rem .8rem;
+        border-radius: 8px;
+        font-size: .76rem;
+        font-weight: 850;
+        text-decoration: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: opacity .2s;
+    }
+    .pp-review-notice a:hover {
+        opacity: 0.9;
+    }
+
+    .pp-write-review-toggle {
+        width: 100%;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: .55rem .85rem;
-        border-radius: 13px;
-        border: 0;
-        background: var(--delni-primary);
-        color: #fff;
-        font: inherit;
-        font-size: .84rem;
-        font-weight: 950;
-        text-decoration: none;
+        gap: .35rem;
+        padding: .5rem;
+        border-radius: 10px;
+        border: 1px dashed var(--delni-primary);
+        background: rgba(241,98,15,.02);
+        color: var(--delni-primary);
+        font-size: .8rem;
+        font-weight: 850;
         cursor: pointer;
+        transition: all .2s;
     }
+    .pp-write-review-toggle:hover {
+        background: rgba(241,98,15,.06);
+    }
+    .pp-write-review-toggle svg {
+        width: 16px;
+        height: 16px;
+    }
+
     .pp-review-form {
         display: grid;
-        gap: .55rem;
+        gap: .5rem;
+        padding: .75rem;
+        border-radius: 12px;
+        border: 1px solid var(--delni-border);
+        background: #FAF8F8;
     }
-    .pp-review-form label {
+
+    .pp-form-rating-row {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 850;
         color: var(--delni-navy);
-        font-size: .8rem;
-        font-weight: 950;
     }
+
     .pp-star-selector {
         display: inline-flex;
-        gap: 0.35rem;
-        margin-bottom: 0.25rem;
+        gap: .2rem;
     }
     .pp-star-btn {
-        width: 42px;
-        height: 42px;
+        width: 32px;
+        height: 32px;
         border: 0;
         background: transparent;
         color: #E2E8F0;
         cursor: pointer;
         padding: 0;
-        transition: color 0.15s ease, transform 0.1s ease;
+        transition: all .1s ease;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        outline: none;
-    }
-    [data-theme="dark"] .pp-star-btn {
-        color: #334155;
     }
     .pp-star-btn svg {
-        width: 32px;
-        height: 32px;
-        fill: currentColor;
+        width: 24px;
+        height: 24px;
     }
-    .pp-star-btn:hover {
-        transform: scale(1.12);
-    }
-    .pp-star-btn.is-active,
-    .pp-star-btn.is-hovered {
+    .pp-star-btn.is-active, .pp-star-btn.is-hovered {
         color: #F59E0B;
     }
-    .pp-optional-label {
-        font-weight: normal;
-        font-size: 0.75rem;
-        color: var(--delni-muted);
-        margin-inline-start: 0.25rem;
-    }
-    .pp-review-tip {
-        font-size: 0.72rem;
-        color: var(--delni-muted);
-        margin-top: -0.25rem;
-        margin-bottom: 0.25rem;
-        display: block;
-        font-weight: 600;
-    }
 
-    .pp-review-form select,
     .pp-review-form textarea {
         width: 100%;
         border: 1px solid var(--delni-border);
-        border-radius: 14px;
+        border-radius: 10px;
         background: #fff;
-        padding: .72rem;
+        padding: .5rem;
         font: inherit;
+        font-size: .8rem;
         outline: none;
+        resize: vertical;
+    }
+
+    .pp-form-actions {
+        display: flex;
+        gap: .5rem;
+    }
+    .pp-form-actions button {
+        min-height: 34px;
+        padding: .25rem .75rem;
+        border-radius: 8px;
+        border: 0;
+        font: inherit;
+        font-size: .76rem;
+        font-weight: 850;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #submitReviewBtn {
+        background: var(--delni-primary);
+        color: #fff;
+    }
+    .pp-form-cancel {
+        background: #E2E8F0;
+        color: #475569;
     }
 
     .pp-review-list {
         display: grid;
-        gap: .65rem;
+        gap: 0;
+        margin-top: .75rem;
     }
     .pp-review-list article {
-        padding: .85rem;
-        border-radius: 16px;
-        background: #FCFBFB;
-        border: 1px solid var(--delni-border);
+        padding: .75rem 0;
+        border-bottom: 1px solid var(--delni-border);
+        background: transparent;
+        border-radius: 0;
+    }
+    .pp-review-list article:last-of-type {
+        border-bottom: 0;
     }
     .pp-review-list article > div {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: .75rem;
-        margin-bottom: .35rem;
+        margin-bottom: .2rem;
     }
     .pp-review-list strong {
+        font-size: .82rem;
+        font-weight: 850;
         color: var(--delni-navy);
-        font-size: .88rem;
-        font-weight: 950;
+    }
+    .pp-review-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .15rem;
+        padding: .1rem .4rem;
+        border-radius: 999px;
+        background: #FEF3C7;
+        border: 1px solid #FDE68A;
+        color: #B45309;
+        font-size: .68rem;
+        font-weight: 850;
+    }
+    .pp-review-list p {
+        margin: .15rem 0;
+        font-size: .82rem;
+        line-height: 1.5;
+        color: var(--delni-muted);
     }
     .pp-review-list small {
         display: block;
-        margin-top: .45rem;
-        color: #64748B;
-        font-size: .74rem;
-        font-weight: 850;
+        font-size: .68rem;
+        color: var(--delni-gray);
     }
-    .is-hidden-review { display: none; }
-    .pp-show-more { width: 100%; margin-top: .75rem; background: rgba(241,98,15,.08); color: var(--delni-primary); border: 1px solid rgba(241,98,15,.18); }
 
-    .pp-sidebar {
-        position: sticky;
-        top: calc(var(--pwa-header-height) + env(safe-area-inset-top) + .9rem);
-    }
-    .pp-favorite {
+    .pp-show-more {
         width: 100%;
-        background: #F8FAFC;
-        color: #64748B;
-    }
-    .pp-favorite.is-favorited {
-        background: rgba(241,98,15,.08);
-        border-color: rgba(241,98,15,.25);
+        min-height: 36px;
+        margin-top: .5rem;
+        background: rgba(241,98,15,.04);
         color: var(--delni-primary);
+        border: 1px solid rgba(241,98,15,.12);
+        border-radius: 10px;
+        font-size: .78rem;
+        font-weight: 850;
+        cursor: pointer;
     }
-
-    @media (max-width: 980px) {
-        .pp-layout { grid-template-columns: 1fr; }
-        .pp-sidebar {
-            position: static;
-            order: -1;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .pp-identity { border-radius: 18px; }
-        .pp-identity__media { min-height: 118px; }
-        .pp-identity__content {
-            grid-template-columns: auto minmax(0, 1fr);
-            align-items: start;
-            justify-items: stretch;
-            gap: .7rem;
-            text-align: start;
-        }
-        .pp-rating-chip {
-            grid-column: 1 / -1;
-            justify-self: stretch;
-            justify-content: center;
-        }
-        .pp-review-summary {
-            align-items: center;
-        }
-        .pp-gallery {
-            grid-template-columns: 1fr;
-            gap: .75rem;
-        }
-        .pp-proj-slider,
-        .pp-proj-slide img,
-        .pp-gallery__empty {
-            height: 190px;
-        }
-        .pp-proj-nav {
-            width: 34px;
-            height: 34px;
-        }
-        .pp-proj-nav--prev { inset-inline-start: .5rem; }
-        .pp-proj-nav--next { inset-inline-end: .5rem; }
-        .pp-proj-counter {
-            inset-inline-start: .55rem;
-            bottom: .55rem;
-        }
-        .pp-proj-dots {
-            bottom: .62rem;
-        }
-        .pp-rs-score-wrap {
-            justify-content: flex-start;
-        }
-        .pp-eyebrow { text-align: start; }
-        .pp-action-primary { flex: 1 1 calc(50% - .3rem); }
+    .pp-show-more:hover {
+        background: rgba(241,98,15,.08);
     }
 
     [data-theme="dark"] .pp-identity,
-    [data-theme="dark"] .pp-identity__content {
-        background: #1E293B;
-        border-color: #334155;
+    [data-theme="dark"] .pp-identity__content,
+    [data-theme="dark"] .pp-card {
+        background: var(--delni-card);
+        border-color: var(--delni-border);
     }
     [data-theme="dark"] .pp-title h1,
-    [data-theme="dark"] .pp-rating-chip strong { color: #F1F5F9; }
+    [data-theme="dark"] .pp-header-rating {
+        color: var(--delni-navy);
+    }
     [data-theme="dark"] .pp-avatar {
-        border-color: #1E293B;
-        background: #0F172A;
+        border-color: var(--delni-card);
+        background: var(--delni-bg);
+    }
+    [data-theme="dark"] .pp-back,
+    [data-theme="dark"] .pp-favorite-btn {
+        background: rgba(15,23,42,.8);
+        border-color: rgba(255,255,255,.1);
+        color: var(--delni-navy);
+    }
+    [data-theme="dark"] .pp-back:hover,
+    [data-theme="dark"] .pp-favorite-btn:hover {
+        background: rgba(15,23,42,.95);
     }
     [data-theme="dark"] .pp-meta > span {
-        background: #0F172A;
-        border-color: #334155;
-        color: #CBD5E1;
+        background: var(--delni-bg);
+        border-color: var(--delni-border);
+        color: var(--delni-muted);
     }
-    [data-theme="dark"] .pp-rating-chip {
-        background: rgba(241,98,15,.12);
-        border-color: rgba(241,98,15,.28);
+    [data-theme="dark"] .pp-actions {
+        background: var(--delni-bg);
+        border-color: var(--delni-border);
     }
-    [data-theme="dark"] .pp-rating-chip small { color: #CBD5E1; }
-    [data-theme="dark"] .pp-back {
-        background: rgba(15,23,42,.78);
-        border-color: rgba(255,255,255,.12);
-        color: #F1F5F9;
-    }
-
-    [data-theme="dark"] .pp-card,
     [data-theme="dark"] .pp-action-primary,
-    [data-theme="dark"] .pp-action-icon,
-    [data-theme="dark"] .pp-favorite {
-        background: #1E293B;
-        border-color: #334155;
-        color: #F1F5F9;
+    [data-theme="dark"] .pp-action-icon {
+        background: var(--delni-card);
+        border-color: var(--delni-border);
+        color: var(--delni-muted);
     }
-    [data-theme="dark"] .profile-section-title h2,
-    [data-theme="dark"] .pp-facts strong,
+    [data-theme="dark"] .pp-action-primary:hover,
+    [data-theme="dark"] .pp-action-icon:hover {
+        background: var(--delni-bg);
+        border-color: var(--delni-border);
+        color: var(--delni-navy);
+    }
+    [data-theme="dark"] .pp-info-section__title,
     [data-theme="dark"] .pp-proj-info h3,
     [data-theme="dark"] .pp-credentials h3,
-    [data-theme="dark"] .pp-review-list strong,
-    [data-theme="dark"] .pp-review-form label { color: #F1F5F9; }
+    [data-theme="dark"] .pp-review-list strong {
+        color: var(--delni-navy);
+    }
     [data-theme="dark"] .pp-text,
     [data-theme="dark"] .pp-note,
     [data-theme="dark"] .pp-proj-info p,
     [data-theme="dark"] .pp-credentials p,
-    [data-theme="dark"] .pp-review-list p { color: #CBD5E1; }
-    [data-theme="dark"] .pp-facts div,
+    [data-theme="dark"] .pp-review-list p {
+        color: var(--delni-muted);
+    }
+    [data-theme="dark"] .pp-info-section:not(:first-child),
+    [data-theme="dark"] .pp-showcase-section:not(:first-child),
     [data-theme="dark"] .pp-proj,
     [data-theme="dark"] .pp-credentials article,
+    [data-theme="dark"] .pp-review-summary,
     [data-theme="dark"] .pp-review-list article,
-    [data-theme="dark"] .pp-review-notice,
     [data-theme="dark"] .pp-review-form {
-        background: #0F172A;
-        border-color: #334155;
+        border-color: var(--delni-border);
     }
-    [data-theme="dark"] .pp-review-form select,
+    [data-theme="dark"] .pp-proj,
+    [data-theme="dark"] .pp-credentials article,
+    [data-theme="dark"] .pp-review-form {
+        background: var(--delni-bg);
+    }
+    [data-theme="dark"] .pp-rs-score-wrap,
+    [data-theme="dark"] .pp-rs-count,
+    [data-theme="dark"] .pp-review-notice {
+        background: var(--delni-bg);
+        border-color: var(--delni-border);
+        color: var(--delni-muted);
+    }
+    [data-theme="dark"] .pp-rs-score,
+    [data-theme="dark"] .pp-rs-count strong {
+        color: var(--delni-navy);
+    }
+    [data-theme="dark"] .pp-rs-star {
+        color: #FCD34D;
+    }
+    [data-theme="dark"] .pp-star-btn {
+        color: var(--delni-border);
+    }
+    [data-theme="dark"] .pp-star-btn.is-active,
+    [data-theme="dark"] .pp-star-btn.is-hovered {
+        color: #F59E0B;
+    }
     [data-theme="dark"] .pp-review-form textarea {
-        background: #1E293B;
-        border-color: #334155;
-        color: #F1F5F9;
+        background: var(--delni-card);
+        border-color: var(--delni-border);
+        color: var(--delni-navy);
     }
-    [data-theme="dark"] .pp-facts span,
-    [data-theme="dark"] .pp-review-list small { color: #94A3B8; }
+    [data-theme="dark"] .pp-form-cancel {
+        background: var(--delni-border);
+        color: var(--delni-muted);
+    }
+    [data-theme="dark"] .pp-review-badge {
+        background: rgba(245, 158, 11, .15);
+        border-color: rgba(245, 158, 11, .3);
+        color: #FBBF24;
+    }
+    [data-theme="dark"] .pp-show-more {
+        background: rgba(241, 98, 15, .08);
+        border-color: rgba(241, 98, 15, .2);
+    }
 </style>
 @endpush
 
@@ -1481,7 +1471,7 @@
 
     function showLoginToast() {
         if (window.DelniAuthToast) {
-            window.DelniAuthToast.show('سجّل دخولك لإضافة المزود إلى المفضلة', 'دخول', '{{ route('login') }}');
+            window.DelniAuthToast.show('سجّل دخولك لإضافة مقدم الخدمة إلى المفضلة', 'تسجيل الدخول', '{{ route('login') }}');
             return;
         }
 
@@ -1490,7 +1480,7 @@
         toast.className = 'pc-fav-toast';
         toast.setAttribute('role', 'status');
         toast.setAttribute('aria-live', 'polite');
-        toast.innerHTML = '<span>سجل دخولك لإضافة مزودين إلى المفضلة</span><a href="{{ route('login') }}">دخول</a>';
+        toast.innerHTML = '<span>سجل دخولك لإضافة مقدمي خدمات إلى المفضلة</span><a href="{{ route('login') }}">تسجيل الدخول</a>';
         document.body.appendChild(toast);
         requestAnimationFrame(function () { toast.classList.add('is-visible'); });
         setTimeout(function () {
@@ -1649,7 +1639,7 @@
             
             const commentVal = document.getElementById('comment')?.value.trim();
             if (!ratingInput.value && !commentVal) {
-                alert('يجب إدخال تقييم بالنجوم أو كتابة تعليق لإرسال المراجعة.');
+                alert('يجب إدخال تقييم بالنجوم أو كتابة تعليق لإرسال التقييم.');
                 return;
             }
 
@@ -1678,10 +1668,8 @@
                         return data;
                     });
                 } else {
-                    // It returned HTML (likely redirected back due to middleware, session expiry, etc.)
-                    // Reload the page to surface the redirect/flash message naturally
                     window.location.reload();
-                    return new Promise(() => {}); // Stop promise chain
+                    return new Promise(() => {});
                 }
             })
             .then(data => {
@@ -1693,7 +1681,8 @@
                 if (!flash) {
                     flash = document.createElement('div');
                     flash.className = 'pp-review-flash is-success';
-                    starSelector.parentNode.insertBefore(flash, starSelector);
+                    const targetParent = reviewForm.parentNode;
+                    targetParent.insertBefore(flash, reviewForm);
                 }
                 flash.textContent = data.message || 'تم إرسال التقييم بنجاح.';
                 flash.style.display = 'block';
@@ -1701,6 +1690,14 @@
                 
                 const errorFlash = document.querySelector('.pp-review-flash.is-error');
                 if (errorFlash) { errorFlash.style.display = 'none'; }
+
+                // Hide the form and show the toggle button again
+                const toggleBtn = document.getElementById('writeReviewToggleBtn');
+                if (toggleBtn && reviewForm) {
+                    reviewForm.style.display = 'none';
+                    reviewForm.classList.add('is-collapsed');
+                    toggleBtn.style.display = 'inline-flex';
+                }
             })
             .catch(err => {
                 console.error(err);
@@ -1708,9 +1705,10 @@
                 if (!flash) {
                     flash = document.createElement('div');
                     flash.className = 'pp-review-flash is-error';
-                    starSelector.parentNode.insertBefore(flash, starSelector);
+                    const targetParent = reviewForm.parentNode;
+                    targetParent.insertBefore(flash, reviewForm);
                 }
-                flash.textContent = err.message || err.errors?.rating?.[0] || err.errors?.comment?.[0] || 'تعذر إرسال التقييم. يرجى المحاولة لاحقاً.';
+                flash.textContent = err.message || err.errors?.profile?.[0] || err.errors?.rating?.[0] || err.errors?.comment?.[0] || 'تعذر إرسال التقييم. يرجى المحاولة لاحقاً.';
                 flash.style.display = 'block';
                 flash.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             })
@@ -1727,6 +1725,28 @@
         });
         this.remove();
     });
+
+    // Write review toggle flow
+    const toggleBtn = document.getElementById('writeReviewToggleBtn');
+    const cancelBtn = document.getElementById('cancelReviewBtn');
+    const formEl = document.getElementById('reviewForm');
+    
+    if (toggleBtn && formEl) {
+        toggleBtn.addEventListener('click', function() {
+            toggleBtn.style.display = 'none';
+            formEl.style.display = 'grid';
+            formEl.classList.remove('is-collapsed');
+            formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+    
+    if (cancelBtn && toggleBtn && formEl) {
+        cancelBtn.addEventListener('click', function() {
+            formEl.style.display = 'none';
+            formEl.classList.add('is-collapsed');
+            toggleBtn.style.display = 'inline-flex';
+        });
+    }
 }());
 </script>
 @endpush

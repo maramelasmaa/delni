@@ -5,8 +5,7 @@
 <section class="mt-6">
     <div class="flex items-center justify-between gap-4 mb-3 px-1">
         <div>
-            <span class="block text-primary text-[10px] md:text-xs font-black uppercase tracking-wider mb-0.5">تصفح</span>
-            <h2 class="m-0 text-slate-900 dark:text-slate-100 text-sm md:text-base font-black">الفئات</h2>
+            <h2 class="m-0 text-slate-900 dark:text-slate-100 text-sm md:text-base font-black">التخصصات</h2>
         </div>
         <a href="{{ route('public.categories') }}" class="text-primary dark:text-orange-400 text-xs font-black text-decoration-none hover:underline">عرض الكل</a>
     </div>

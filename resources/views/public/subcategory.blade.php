@@ -17,7 +17,7 @@
         <div class="flex items-start justify-between gap-4">
             <div class="min-w-0 grid gap-4">
                 <x-browse-trail :items="[
-                    ['label' => 'الفئات', 'url' => route('public.categories')],
+                    ['label' => 'التخصصات', 'url' => route('public.categories')],
                     $parentCategory ? ['label' => $parentCategory->localized_name ?? $parentCategory->name, 'url' => route('public.category', $parentCategory->slug)] : null,
                     ['label' => $subcategory->localized_name ?? $subcategory->name, 'active' => true],
                 ]" />
@@ -191,7 +191,7 @@
         <div class="flex items-end justify-between gap-4 px-1">
             <div class="text-right">
                 <span class="block text-[11px] font-black uppercase tracking-wider text-primary">نتائج البحث</span>
-                <h2 class="mt-1 text-base font-black leading-tight text-slate-900 dark:text-slate-100">مزودو الخدمة</h2>
+                <h2 class="mt-1 text-base font-black leading-tight text-slate-900 dark:text-slate-100">مقدمو الخدمات</h2>
             </div>
 
             <div class="rounded-full bg-white px-3 py-1.5 text-xs font-black text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
@@ -207,7 +207,7 @@
                 icon="heroicon-o-magnifying-glass"
                 title="لا توجد نتائج"
                 message="جرّب تعديل البحث أو الانتقال إلى خدمة شقيقة."
-                actionLabel="تصفح الفئات"
+                actionLabel="تصفح التخصصات"
                 actionUrl="{{ route('public.categories') }}"
             />
         @endif

@@ -20,8 +20,8 @@ return [
     ],
 
     'page_headings' => [
-        'create_contact_info' => 'Create Contact Information',
-        'edit_contact_info' => 'Edit Contact Information',
+        'create_contact_info' => 'Site Contact Information',
+        'edit_contact_info' => 'Site Contact Information',
     ],
 
     'models' => [
@@ -122,6 +122,8 @@ return [
         'reviewer' => 'Reviewer',
         'profile' => 'Profile',
         'flagged' => 'Flagged',
+        'flagged_by' => 'Flagged By',
+        'flagged_reason' => 'Flag Reason',
         'id' => 'ID',
         'user' => 'User',
         'action' => 'Action',
@@ -136,6 +138,7 @@ return [
         'bio' => 'Biography',
         'email' => 'Email',
         'phone' => 'Phone',
+        'facebook' => 'Facebook Page',
         'password' => 'Password',
         'role' => 'Role',
         'whatsapp' => 'WhatsApp',
@@ -173,6 +176,7 @@ return [
         'phone_local' => '+218910000000',
         'email' => 'contact@example.com',
         'address' => 'Physical office address',
+        'facebook' => 'https://facebook.com/your-page',
         'review_decision' => 'Choose a decision',
         'review_moderation_note' => 'Reason for rejection or approval notes',
         'select_category' => 'Choose the main category',

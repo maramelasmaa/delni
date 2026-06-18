@@ -32,8 +32,12 @@ class PublicFrontendService
     public function homepage(): array
     {
         return $this->inspectQueries(function (): array {
-            $categoryCounts = $this->profileCountsBy('profiles.category_id');
-            $cityCounts = $this->profileCountsBy('profiles.city_id');
+            $activeCitySlug = session('active_city_slug');
+            $activeCity = $activeCitySlug ? City::where('slug', $activeCitySlug)->where('is_active', true)->first() : null;
+            $cityId = $activeCity?->id;
+
+            $categoryCounts = $this->profileCountsBy('profiles.category_id', $cityId);
+            $cityCounts = $this->profileCountsBy('profiles.city_id', $cityId);
 
             $categories = Category::query()
                 ->where('is_active', true)
@@ -50,7 +54,7 @@ class PublicFrontendService
                 ->each(fn (Subcategory $subcategory) => $subcategory->setRelation('category', $categoryMap->get($subcategory->category_id)));
 
             $featuredProviders = $this->rankingService
-                ->applyHomepageFeaturedOnly($this->discoverableProfilesQuery())
+                ->applyHomepageFeaturedOnly($this->discoverableProfilesQuery($cityId))
                 ->limit(8)
                 ->get();
 
@@ -64,10 +68,16 @@ class PublicFrontendService
                 $loadedProviders
             );
 
-            $stats = Cache::flexible('homepage.stats', [180, 600], function () {
+            $statsCacheKey = $cityId ? "homepage.stats.city.{$cityId}" : 'homepage.stats.global';
+            $stats = Cache::flexible($statsCacheKey, [180, 600], function () use ($cityId) {
+                $reviewsQuery = Review::where('status', ReviewStatus::APPROVED);
+                if ($cityId) {
+                    $reviewsQuery->whereHas('profile', fn ($q) => $q->where('city_id', $cityId));
+                }
+
                 return [
-                    'profiles_count' => (int) $this->discoverableProfilesQuery()->count(),
-                    'reviews_count' => (int) Review::where('status', ReviewStatus::APPROVED)->count(),
+                    'profiles_count' => (int) $this->discoverableProfilesQuery($cityId)->count(),
+                    'reviews_count' => (int) $reviewsQuery->count(),
                     'categories_count' => (int) Category::where('is_active', true)->count(),
                     'cities_count' => (int) City::where('is_active', true)->count(),
                 ];
@@ -373,7 +383,7 @@ class PublicFrontendService
     }
 
     /** @return Builder<Profile> */
-    private function discoverableProfilesQuery(): Builder
+    private function discoverableProfilesQuery(?int $cityId = null): Builder
     {
         $query = Profile::query()
             ->without('user')
@@ -381,6 +391,10 @@ class PublicFrontendService
             ->withPublicReviewAggregates()
             ->join('users', 'users.id', '=', 'profiles.user_id')
             ->join('profile_stats', 'profile_stats.profile_id', '=', 'profiles.id');
+
+        if ($cityId) {
+            $query->where('profiles.city_id', $cityId);
+        }
 
         // Apply visibility conditions from ProfileVisibilityService (single source of truth)
         return $this->visibilityService->applyVisibleQuery($query);
@@ -519,11 +533,12 @@ class PublicFrontendService
     }
 
     /** @return array<int, int> */
-    private function profileCountsBy(string $column): array
+    private function profileCountsBy(string $column, ?int $cityId = null): array
     {
-        $key = 'frontend.profile_counts.'.str_replace('.', '_', $column);
+        $suffix = $cityId ? ".city.{$cityId}" : '.global';
+        $key = 'frontend.profile_counts.'.str_replace('.', '_', $column).$suffix;
 
-        return Cache::flexible($key, [60, 300], fn () => $this->discoverableProfilesQuery()
+        return Cache::flexible($key, [60, 300], fn () => $this->discoverableProfilesQuery($cityId)
             ->select($column, DB::raw('COUNT(*) as aggregate'))
             ->groupBy($column)
             ->pluck('aggregate', $column)
@@ -533,9 +548,11 @@ class PublicFrontendService
     }
 
     /** @return array<int, int> */
-    private function profileCountsBySubcategory(): array
+    private function profileCountsBySubcategory(?int $cityId = null): array
     {
-        return Cache::flexible('frontend.profile_counts.subcategory_id', [60, 300], fn () => $this->discoverableProfilesQuery()
+        $suffix = $cityId ? ".city.{$cityId}" : '.global';
+
+        return Cache::flexible('frontend.profile_counts.subcategory_id'.$suffix, [60, 300], fn () => $this->discoverableProfilesQuery($cityId)
             ->join('profile_subcategory', 'profile_subcategory.profile_id', '=', 'profiles.id')
             ->select('profile_subcategory.subcategory_id', DB::raw('COUNT(*) as aggregate'))
             ->groupBy('profile_subcategory.subcategory_id')
@@ -547,10 +564,12 @@ class PublicFrontendService
 
     private function activeCategories(): EloquentCollection
     {
-        return Category::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        return once(function () {
+            return Category::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+        });
     }
 
     private function activeSubcategories(?EloquentCollection $categories = null): EloquentCollection
@@ -567,10 +586,12 @@ class PublicFrontendService
 
     private function activeCities(): EloquentCollection
     {
-        return City::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        return once(function () {
+            return City::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+        });
     }
 
     /** @return array{data: array<string, mixed>, queryStats: array<string, mixed>} */

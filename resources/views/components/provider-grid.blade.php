@@ -1,12 +1,24 @@
 @props([
     'providers',
     'columns' => 2,
+    'mobileColumns' => 1,
     'title' => null,
     'subtitle' => null,
+    'favoriteProfileIds' => [],
+    'cardVariant' => 'row',
 ])
 
 @php
     $count = method_exists($providers, 'count') ? $providers->count() : count($providers);
+    $gridClasses = match (true) {
+        $cardVariant === 'grid' && $columns >= 4 => 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full',
+        $cardVariant === 'grid' && $columns >= 3 => 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full',
+        $cardVariant === 'grid' && $mobileColumns >= 2 => 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full',
+        $cardVariant === 'grid' => 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full',
+        default => 'grid gap-3 grid-cols-1 w-full',
+    };
+
+    $cardComponent = $cardVariant === 'grid' ? 'provider-card' : 'provider-row-card';
 @endphp
 
 <section class="w-full">
@@ -20,13 +32,16 @@
     @endif
 
     @if($count > 0)
-        <div class="grid grid-cols-1 sm:grid-cols-2 {{ $columns === 3 ? 'lg:grid-cols-3' : '' }} gap-4.5 items-stretch justify-start w-full">
+        <div class="{{ $gridClasses }}">
             @foreach($providers as $provider)
-                <x-provider-card :provider="$provider" :showBio="false" />
+                <x-dynamic-component
+                    :component="$cardComponent"
+                    :provider="$provider"
+                    :favorite-profile-ids="$favoriteProfileIds"
+                />
             @endforeach
         </div>
     @else
         <x-empty-state />
     @endif
 </section>
-

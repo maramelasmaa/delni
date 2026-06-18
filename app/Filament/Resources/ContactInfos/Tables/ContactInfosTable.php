@@ -24,6 +24,10 @@ class ContactInfosTable
                     ->label(__('filament.fields.email'))
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('facebook')
+                    ->label(__('filament.fields.facebook'))
+                    ->limit(40)
+                    ->searchable(),
             ])
             ->filters([
                 //

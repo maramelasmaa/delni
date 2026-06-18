@@ -16,7 +16,7 @@
         <div class="flex items-start justify-between gap-4">
             <div class="min-w-0 grid gap-4">
                 <x-browse-trail :items="[
-                    ['label' => 'الفئات', 'url' => route('public.categories')],
+                    ['label' => 'التخصصات', 'url' => route('public.categories')],
                     ['label' => $category->localized_name ?? $category->name, 'active' => true],
                 ]" />
 
@@ -32,13 +32,13 @@
                     @endif
 
                     <div class="min-w-0 text-right">
-                        <span class="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-black text-primary dark:bg-orange-950/30 dark:text-orange-300">فئة رئيسية</span>
+                        <span class="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-black text-primary dark:bg-orange-950/30 dark:text-orange-300">تخصص رئيسي</span>
                         <h1 class="mt-3 text-xl font-black leading-tight text-slate-950 dark:text-white md:text-2xl">{{ $category->localized_name ?? $category->name }}</h1>
                     </div>
                 </div>
             </div>
 
-            <a href="{{ route('public.categories') }}" class="inline-flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-slate-50 text-slate-700 shadow-xs ring-1 ring-slate-200 transition hover:bg-slate-100 hover:text-primary dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-800 dark:hover:text-orange-300" aria-label="الرجوع إلى الفئات">
+            <a href="{{ route('public.categories') }}" class="inline-flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-slate-50 text-slate-700 shadow-xs ring-1 ring-slate-200 transition hover:bg-slate-100 hover:text-primary dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-800 dark:hover:text-orange-300" aria-label="الرجوع إلى التخصصات">
                 <x-render-icon icon="heroicon-o-arrow-left" class="h-5 w-5" />
             </a>
         </div>
@@ -179,7 +179,7 @@
         <div class="flex items-end justify-between gap-4 px-1">
             <div class="text-right">
                 <span class="block text-[11px] font-black uppercase tracking-wider text-primary">نتائج البحث</span>
-                <h2 class="mt-1 text-base font-black leading-tight text-slate-900 dark:text-slate-100">مزودو الخدمة</h2>
+                <h2 class="mt-1 text-base font-black leading-tight text-slate-900 dark:text-slate-100">مقدمو الخدمات</h2>
             </div>
 
             <div class="rounded-full bg-white px-3 py-1.5 text-xs font-black text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">

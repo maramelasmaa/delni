@@ -10,7 +10,7 @@
 <div class="lp-wrapper market-browse">
 
     <x-marketplace-header
-        eyebrow="مزودون في"
+        eyebrow="مقدمو الخدمات في"
         :title="$city->localized_name"
         :back-url="route('home')"
         back-label="الرئيسية"
@@ -40,9 +40,9 @@
         @else
             <x-empty-state
                 icon="heroicon-o-map-pin"
-                title="لا يوجد مزودون"
-                message="لا يوجد مزودون في هذه المدينة حالياً. جرّب مدينة أخرى."
-                actionLabel="تصفح الفئات"
+                title="لا يوجد مقدمو خدمات"
+                message="لا يوجد مقدمو خدمات في هذه المدينة حالياً. جرّب مدينة أخرى."
+                actionLabel="تصفح التخصصات"
                 actionUrl="{{ route('public.categories') }}"
             />
         @endif

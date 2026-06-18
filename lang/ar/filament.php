@@ -3,7 +3,7 @@
 return [
 
     'nav' => [
-        'providers' => 'مزودو الخدمات',
+        'providers' => 'مقدمو الخدمات',
         'billing' => 'الفواتير',
         'marketplace' => 'السوق',
         'community' => 'المجتمع',
@@ -16,12 +16,12 @@ return [
         'provider_reviews' => 'التقييمات',
         'provider_portfolio' => 'الخدمات والأعمال',
         'provider_business' => 'العمل',
-        'provider_credentials' => 'بيانات الاعتماد',
+        'provider_credentials' => 'الشهادات والمؤهلات',
     ],
 
     'page_headings' => [
-        'create_contact_info' => 'إضافة معلومات التواصل',
-        'edit_contact_info' => 'تعديل معلومات التواصل',
+        'create_contact_info' => 'إعداد معلومات التواصل',
+        'edit_contact_info' => 'إعداد معلومات التواصل',
     ],
 
     'models' => [
@@ -43,12 +43,12 @@ return [
         'activity_log_plural' => 'سجلات النشاط',
         'provider_type' => 'نوع مقدم الخدمة',
         'provider_type_plural' => 'أنواع مقدمي الخدمات',
-        'subcategory' => 'فئة فرعية',
-        'subcategory_plural' => 'الفئات الفرعية',
+        'subcategory' => 'تخصص فرعي',
+        'subcategory_plural' => 'التخصصات الفرعية',
         'portfolio_item' => 'عمل',
         'portfolio_item_plural' => 'الأعمال',
-        'provider_credential' => 'بيانات اعتماد',
-        'provider_credential_plural' => 'بيانات الاعتماد',
+        'provider_credential' => 'مؤهل أو شهادة',
+        'provider_credential_plural' => 'الشهادات والمؤهلات',
         'marketplace_placement' => 'عرض السوق',
         'marketplace_placement_plural' => 'عروض السوق',
         'profile' => 'ملف شخصي',
@@ -95,6 +95,7 @@ return [
         'phone_local' => '+218910000000',
         'email' => 'contact@example.com',
         'address' => 'العنوان الفعلي للمكتب',
+        'facebook' => 'https://facebook.com/your-page',
         'review_decision' => 'اختر القرار',
         'review_moderation_note' => 'سبب الرفض أو ملاحظات الاعتماد',
         'select_category' => 'اختر التصنيف الرئيسي',
@@ -145,7 +146,7 @@ return [
         'cover_image' => 'صورة الغلاف (المعرض)',
         'is_active' => 'نشط',
         'rating_avg' => 'متوسط التقييم',
-        'reviews_count' => 'عدد المراجعات',
+        'reviews_count' => 'عدد التقييمات',
         'provider_name' => 'اسم مقدم الخدمة',
         'rating_avg_short' => 'متوسط التقييم',
         'featured' => 'مميز',
@@ -163,6 +164,8 @@ return [
         'reviewer' => 'المقيِّم',
         'profile' => 'الملف الشخصي',
         'flagged' => 'مُبلَّغ عنه',
+        'flagged_by' => 'المُبلِّغ',
+        'flagged_reason' => 'سبب البلاغ',
         'id' => 'المعرّف',
         'user' => 'المستخدم',
         'action' => 'الإجراء',
@@ -177,6 +180,7 @@ return [
         'bio' => 'السيرة الذاتية',
         'email' => 'البريد الإلكتروني',
         'phone' => 'الهاتف',
+        'facebook' => 'صفحة فيسبوك',
         'password' => 'كلمة المرور',
         'role' => 'الدور',
         'whatsapp' => 'واتساب',
@@ -306,7 +310,7 @@ return [
         'phone_validation' => 'يرجى إدخال رقم هاتف صحيح.',
         'whatsapp_format' => 'اكتب الرقم بصيغة واتساب: رمز الدولة ثم الرقم بدون + أو مسافات أو صفر البداية. مثال: 0910000000 يصبح 218910000000.',
         'whatsapp_validation' => 'يرجى إدخال رقم واتساب بصيغة الرابط المختصر: رمز الدولة ثم الرقم بدون + أو مسافات أو صفر البداية.',
-        'invalid_subcategory_for_category' => 'يجب أن تكون الفئة الفرعية تابعة للتصنيف المحدد.',
+        'invalid_subcategory_for_category' => 'يجب أن يكون التخصص الفرعي تابعاً للتصنيف المحدد.',
     ],
 
     'link_types' => [

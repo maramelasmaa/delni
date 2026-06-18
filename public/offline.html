@@ -8,6 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="دلني">
     <meta name="theme-color" content="#0B1A34">
     <title>دلني - غير متصل</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,88 +19,147 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #FCFBFB 0%, #F8F5F0 100%);
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
-            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+            padding: 1.25rem;
+            padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+            transition: background-color 0.3s;
         }
 
         .offline-container {
             text-align: center;
-            max-width: 340px;
+            width: 100%;
+            max-width: 360px;
             background: white;
-            border-radius: 12px;
-            padding: 2rem 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 24px;
+            padding: 2.25rem 1.75rem;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
+            border: 1px solid #E2E8F0;
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
 
-        .offline-icon {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            opacity: 0.8;
+        .offline-icon-container {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: #FFF3EB;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            color: #F1620F;
+        }
+
+        .offline-svg {
+            width: 32px;
+            height: 32px;
         }
 
         h1 {
-            font-size: 1.5rem;
-            color: #1a1a1a;
+            font-size: 1.25rem;
+            color: #0B1A34;
             margin-bottom: 0.5rem;
-            font-weight: 600;
+            font-weight: 950;
         }
 
         .offline-message {
-            color: #666;
-            font-size: 0.95rem;
+            color: #475569;
+            font-size: 0.9rem;
             line-height: 1.6;
-            margin-bottom: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.75rem;
         }
 
         .offline-subtext {
-            color: #999;
-            font-size: 0.85rem;
-            margin-bottom: 2rem;
-            line-height: 1.5;
+            color: #64748B;
+            font-size: 0.78rem;
+            margin-bottom: 1.75rem;
+            line-height: 1.6;
+            font-weight: 700;
         }
 
         .retry-button {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: #F1620F;
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 500;
+            border-radius: 14px;
+            padding: 0.85rem 1.75rem;
+            font-size: 0.88rem;
+            font-weight: 900;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: transform 0.15s, background-color 0.15s, box-shadow 0.15s;
             text-decoration: none;
+            box-shadow: 0 8px 20px rgba(241,98,15,0.2);
+            width: 100%;
+        }
+
+        .retry-button:hover {
+            background: #d94d0a;
         }
 
         .retry-button:active {
-            background: #d94d0a;
-            transform: scale(0.98);
+            transform: scale(0.96);
+            box-shadow: 0 4px 10px rgba(241,98,15,0.15);
         }
 
         .brand-text {
             margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #eee;
-            color: #999;
-            font-size: 0.85rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid #E2E8F0;
+            color: #94A3B8;
+            font-size: 0.75rem;
+            font-weight: 800;
         }
 
-        .logo {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        /* Dark mode support natively */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #0F172A 0%, #020617 100%);
+            }
+            .offline-container {
+                background: #1E293B;
+                border-color: #334155;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            }
+            .offline-icon-container {
+                background: rgba(241,98,15,0.08);
+            }
+            h1 {
+                color: #F8FAFC;
+            }
+            .offline-message {
+                color: #E2E8F0;
+            }
+            .offline-subtext {
+                color: #94A3B8;
+            }
+            .brand-text {
+                border-top-color: #334155;
+                color: #64748B;
+            }
         }
     </style>
 </head>
 <body>
     <div class="offline-container">
-        <div class="logo">📶</div>
+        <div class="offline-icon-container">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="offline-svg">
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+                <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5"></path>
+                <path d="M5 12.5a10.94 10.94 0 0 1 5.83-2.84"></path>
+                <path d="M12 18h.01"></path>
+                <path d="M9.17 14.83a4 4 0 0 1 5.66 0"></path>
+                <path d="M21.3 7.11A15.94 15.94 0 0 1 23 8.5"></path>
+                <path d="M8.53 4.25a15.86 15.86 0 0 1 6.94-.75"></path>
+            </svg>
+        </div>
         <h1>أنت غير متصل</h1>
         <p class="offline-message">
             لا يمكن الاتصال بالإنترنت حالياً.

@@ -1,6 +1,6 @@
 @extends('public.layout')
 
-@section('title', 'جميع الفئات - ' . config('app.name'))
+@section('title', 'جميع التخصصات - ' . config('app.name'))
 
 @section('content')
 <div class="grid gap-4 max-w-2xl mx-auto py-2.5 px-1 w-full">
@@ -8,9 +8,9 @@
     <div class="relative overflow-hidden rounded-3xl bg-[#FFF6F0] dark:bg-slate-900/60 p-5 md:p-6.5 flex items-center justify-between border border-orange-100/40 dark:border-slate-800/60 shadow-2xs">
         <!-- Right Side Text (RTL) -->
         <div class="flex-1 min-w-0 z-1 pr-1 pl-20 sm:pl-32 text-right">
-            <h1 class="text-[#0B1A34] dark:text-slate-100 text-lg md:text-xl font-black mb-1 leading-tight">تصفح الفئات</h1>
+            <h1 class="text-[#0B1A34] dark:text-slate-100 text-lg md:text-xl font-black mb-1 leading-tight">تصفح التخصصات</h1>
             <p class="text-[#5D5959] dark:text-slate-400 text-[11px] md:text-xs font-bold leading-relaxed max-w-[240px] sm:max-w-md">
-                اختر المجال المناسب ثم انتقل للخدمات الفرعية ومزودي الخدمة المتاحين.
+                اختر المجال المناسب ثم انتقل للتخصصات الفرعية ومقدمي الخدمات المتاحين.
             </p>
         </div>
         <!-- Left Side Image: Floating illustration -->
@@ -23,7 +23,7 @@
     <div class="z-4 my-1">
         <label class="flex items-center gap-3 min-h-[46px] px-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 shadow-3xs focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
             <x-render-icon icon="heroicon-o-magnifying-glass" class="w-4.5 h-4.5 text-slate-400 flex-none" />
-            <input type="search" id="categorySearch" placeholder="ابحث عن فئة أو خدمة..." autocomplete="off" class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-900 dark:text-slate-50 font-bold text-xs md:text-sm placeholder-slate-400">
+            <input type="search" id="categorySearch" placeholder="ابحث عن تخصص أو خدمة..." autocomplete="off" class="w-full min-w-0 border-0 outline-none bg-transparent text-slate-900 dark:text-slate-50 font-bold text-xs md:text-sm placeholder-slate-400">
         </label>
     </div>
 
@@ -34,8 +34,8 @@
         @empty
             <x-empty-state
                 icon="heroicon-o-folder-open"
-                title="لا توجد فئات"
-                message="لا توجد فئات متاحة حالياً."
+                title="لا توجد تخصصات"
+                message="لا توجد تخصصات متاحة حالياً."
             />
         @endforelse
     </section>
@@ -47,7 +47,7 @@
             <h2>اجعل ملفك مرئياً للعملاء</h2>
         </div>
         <a href="{{ $ctaWhatsappUrl ?? route('contact') }}"
-           @if($ctaWhatsappUrl ?? false) target="_blank" rel="noopener" @endif>سجل كمزود</a>
+           @if($ctaWhatsappUrl ?? false) target="_blank" rel="noopener" @endif>سجل كمقدم خدمة</a>
     </div>
 </div>
 

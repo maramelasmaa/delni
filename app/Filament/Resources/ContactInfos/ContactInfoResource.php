@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\ContactInfos;
 
-use App\Filament\Resources\ContactInfos\Pages\CreateContactInfo;
 use App\Filament\Resources\ContactInfos\Pages\EditContactInfo;
 use App\Filament\Resources\ContactInfos\Pages\ListContactInfos;
 use App\Filament\Resources\ContactInfos\Schemas\ContactInfoForm;
@@ -11,6 +10,7 @@ use App\Models\ContactInfo;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ContactInfoResource extends Resource
 {
@@ -29,6 +29,21 @@ class ContactInfoResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return __('filament.nav.system');
+    }
+
+    public static function getNavigationUrl(): string
+    {
+        return static::getUrl('edit', ['record' => ContactInfo::instance()]);
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
     }
 
     public static function form(Schema $schema): Schema
@@ -52,7 +67,6 @@ class ContactInfoResource extends Resource
     {
         return [
             'index' => ListContactInfos::route('/'),
-            'create' => CreateContactInfo::route('/create'),
             'edit' => EditContactInfo::route('/{record}/edit'),
         ];
     }

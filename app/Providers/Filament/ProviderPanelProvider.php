@@ -18,6 +18,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class ProviderPanelProvider extends PanelProvider
@@ -27,8 +28,22 @@ class ProviderPanelProvider extends PanelProvider
         return $panel
             ->id('provider')
             ->path('provider')
-            ->brandLogo(asset('images/logo.jpg'))
-            ->brandLogoHeight('36px')
+            ->brandLogo(fn () => new HtmlString('
+                <div style="display: flex; align-items: center; gap: 10px; flex-direction: row;">
+                    <img src="'.asset('images/logo.jpg').'" style="height: 36px; border-radius: 8px; display: inline-block;" alt="دلني" />
+                    <span style="font-size: 20px; font-weight: 950; color: #0b1a34; letter-spacing: -0.5px; display: inline-block; font-family: Cairo, sans-serif;">
+                        دلني
+                    </span>
+                </div>
+            '))
+            ->darkModeBrandLogo(fn () => new HtmlString('
+                <div style="display: flex; align-items: center; gap: 10px; flex-direction: row;">
+                    <img src="'.asset('images/logo.jpg').'" style="height: 36px; border-radius: 8px; display: inline-block;" alt="دلني" />
+                    <span style="font-size: 20px; font-weight: 950; color: #ffffff; letter-spacing: -0.5px; display: inline-block; font-family: Cairo, sans-serif;">
+                        دلني
+                    </span>
+                </div>
+            '))
             ->brandName('دلني')
             ->login(Login::class)
             ->homeUrl('/provider/dashboard')

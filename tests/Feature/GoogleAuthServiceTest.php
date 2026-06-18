@@ -102,7 +102,7 @@ class GoogleAuthServiceTest extends TestCase
 
     private function googleUser(string $id, string $email, ?string $name = 'Google User'): SocialiteUser
     {
-        return (new SocialiteUser())->map([
+        return (new SocialiteUser)->map([
             'id' => $id,
             'email' => $email,
             'name' => $name,

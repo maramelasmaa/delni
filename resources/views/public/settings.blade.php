@@ -24,7 +24,7 @@
             </div>
             @if(auth()->user()->profile)
                 <a href="{{ route('public.provider', auth()->user()->profile->slug) }}" class="st-identity__badge">
-                    مزود
+                    مقدم خدمة
                 </a>
             @endif
         </div>
@@ -526,60 +526,60 @@
 
     /* Complete Dark Mode Variable Re-mapping Styles */
     [data-theme="dark"] .mobile-settings-container {
-        background-color: #0F172A;
+        background-color: var(--delni-bg);
     }
     [data-theme="dark"] .lp-title {
-        color: #F8FAFC;
+        color: var(--delni-navy);
     }
     [data-theme="dark"] .st-list {
-        background: #1E293B;
+        background: var(--delni-card);
     }
     [data-theme="dark"] .st-guest {
-        background: #1E293B;
+        background: var(--delni-card);
         box-shadow: none;
     }
     [data-theme="dark"] .st-guest__icon {
-        background: #0F172A;
-        color: #64748B;
+        background: var(--delni-bg);
+        color: var(--delni-gray);
     }
     [data-theme="dark"] .st-row {
-        border-color: #334155;
+        border-color: var(--delni-border);
     }
     [data-theme="dark"] .st-row:not(.st-row--no-link):active {
-        background-color: #273549;
+        background-color: rgba(255,255,255,0.03);
     }
     [data-theme="dark"] .st-row__text {
-        color: #F8FAFC;
+        color: var(--delni-navy);
     }
     [data-theme="dark"] .st-group__label {
-        color: #94A3B8;
+        color: var(--delni-muted);
     }
     [data-theme="dark"] .st-toggle {
-        background: #334155;
+        background: var(--delni-border);
     }
     [data-theme="dark"] .st-modal__sheet {
-        background: #1E293B;
+        background: var(--delni-card);
     }
     [data-theme="dark"] .st-modal__sheet h2 {
-        color: #F8FAFC;
+        color: var(--delni-navy);
     }
     [data-theme="dark"] .st-modal__drag-handle {
-        background: #334155;
+        background: var(--delni-border);
     }
     [data-theme="dark"] .st-modal__cancel {
-        background: #0F172A;
-        border-color: #334155;
-        color: #94A3B8;
+        background: var(--delni-bg);
+        border-color: var(--delni-border);
+        color: var(--delni-muted);
     }
     [data-theme="dark"] .st-row__icon--blue   { background: rgba(59,130,246,.12); }
     [data-theme="dark"] .st-row__icon--orange { background: rgba(241,98,15,.12); }
     [data-theme="dark"] .st-row__icon--purple { background: rgba(139,92,246,.12); }
     [data-theme="dark"] .st-row__icon--teal   { background: rgba(20,184,166,.12); }
     [data-theme="dark"] .st-row__icon--green  { background: rgba(34,197,94,.12); }
-    [data-theme="dark"] .st-row__icon--slate  { background: #1E293B; }
+    [data-theme="dark"] .st-row__icon--slate  { background: var(--delni-bg); }
     [data-theme="dark"] .st-row__icon--red    { background: rgba(239,68,68,.12); }
     [data-theme="dark"] .st-row__arrow { color: #475569; }
-    [data-theme="dark"] .st-row--btn { border-color: #334155; }
+    [data-theme="dark"] .st-row--btn { border-color: var(--delni-border); }
     [data-theme="dark"] .st-row--danger .st-row__text { color: #F87171; }
 </style>
 @endpush

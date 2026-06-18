@@ -23,9 +23,9 @@ class CredentialsResource extends Resource
 
     protected static ?string $navigationLabel = 'شهاداتي وخبراتي';
 
-    protected static ?string $modelLabel = 'بيانات اعتماد';
+    protected static ?string $modelLabel = 'مؤهل أو شهادة';
 
-    protected static ?string $pluralModelLabel = 'بيانات الاعتماد';
+    protected static ?string $pluralModelLabel = 'الشهادات والمؤهلات';
 
     protected static ?int $navigationSort = 4;  // unchanged
 

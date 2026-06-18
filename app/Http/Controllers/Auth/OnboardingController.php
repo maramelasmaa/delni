@@ -10,6 +10,7 @@ use App\Models\OnboardingToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class OnboardingController extends Controller
@@ -46,11 +47,31 @@ class OnboardingController extends Controller
             return $validationResult;
         }
 
-        $onboardingToken = $validationResult;
-        $user = $onboardingToken->user;
+        $tokenString = $validationResult->token;
 
-        $user->updatePassword((string) $request->string('password'));
-        $onboardingToken->markAsUsed();
+        // Re-acquire the token inside a transaction with a row lock to prevent
+        // two simultaneous requests from both succeeding with the same token.
+        $success = DB::transaction(function () use ($tokenString, $request): bool {
+            $locked = OnboardingToken::where('token', $tokenString)
+                ->whereNull('used_at')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $locked || ! $locked->user || $locked->isExpired()) {
+                return false;
+            }
+
+            $locked->user->updatePassword((string) $request->string('password'));
+            $locked->markAsUsed();
+
+            return true;
+        });
+
+        if (! $success) {
+            return back()
+                ->withErrors(['token' => __('auth.onboarding_link_used')])
+                ->withInput();
+        }
 
         // Redirect to login page (not authenticated yet)
         return redirect()->route('filament.provider.auth.login')

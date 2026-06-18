@@ -27,6 +27,10 @@ class ContactInfoForm
                             ->label(__('filament.fields.email'))
                             ->email()
                             ->placeholder(__('filament.placeholders.email')),
+                        TextInput::make('facebook')
+                            ->label(__('filament.fields.facebook'))
+                            ->url()
+                            ->placeholder(__('filament.placeholders.facebook')),
                         TextInput::make('address')
                             ->label(__('filament.fields.address'))
                             ->placeholder(__('filament.placeholders.address'))

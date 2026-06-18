@@ -3,7 +3,7 @@
 return [
 
     'nav' => [
-        'providers' => 'مزودو الخدمات',
+        'providers' => 'مقدمو الخدمات',
         'billing' => 'الفواتير',
         'marketplace' => 'السوق',
         'community' => 'المجتمع',
@@ -16,7 +16,7 @@ return [
         'provider_reviews' => 'التقييمات',
         'provider_portfolio' => 'الخدمات والأعمال',
         'provider_business' => 'العمل',
-        'provider_credentials' => 'بيانات الاعتماد',
+        'provider_credentials' => 'الشهادات والمؤهلات',
     ],
 
     'page_headings' => [
@@ -145,7 +145,7 @@ return [
         'cover_image' => 'صورة الغلاف (المعرض)',
         'is_active' => 'نشط',
         'rating_avg' => 'متوسط التقييم',
-        'reviews_count' => 'عدد المراجعات',
+        'reviews_count' => 'عدد التقييمات',
         'provider_name' => 'اسم مقدم الخدمة',
         'rating_avg_short' => 'متوسط التقييم',
         'featured' => 'مميز',

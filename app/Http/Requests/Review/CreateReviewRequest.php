@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Review;
 
+use App\Enums\ReviewStatus;
 use App\Models\Profile;
 use App\Models\Review;
 use App\Services\ProfileVisibilityService;
@@ -87,14 +88,15 @@ class CreateReviewRequest extends FormRequest
                 return;
             }
 
-            // Catch duplicate before hitting the DB unique constraint, which would
-            // surface as a 500 QueryException instead of a 422 validation error.
-            $alreadyReviewed = Review::withTrashed()
+            // Block only if the user has an active (approved or pending) review.
+            // A rejected review allows the user to submit a new one.
+            $alreadyActiveReview = Review::query()
                 ->where('profile_id', $profile->id)
                 ->where('user_id', $user->id)
+                ->whereIn('status', [ReviewStatus::APPROVED->value, ReviewStatus::PENDING->value])
                 ->exists();
 
-            if ($alreadyReviewed) {
+            if ($alreadyActiveReview) {
                 $v->errors()->add('profile', __('messages.already_reviewed'));
             }
         });

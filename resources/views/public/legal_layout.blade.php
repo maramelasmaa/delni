@@ -354,7 +354,7 @@
                 </a>
                 <a href="{{ route('disclaimer') }}"
                    class="legal-tab {{ request()->routeIs('disclaimer') ? 'active' : '' }}">
-                    إخلاء
+                    إخلاء المسؤولية
                 </a>
             </nav>
         </div>
@@ -377,7 +377,7 @@
         <span style="opacity: 0.3; margin: 0 0.5rem;">•</span>
         <a href="{{ route('terms') }}">الشروط</a>
         <span style="opacity: 0.3; margin: 0 0.5rem;">•</span>
-        <a href="{{ route('disclaimer') }}">إخلاء</a>
+        <a href="{{ route('disclaimer') }}">إخلاء المسؤولية</a>
     </div>
 </footer>
 

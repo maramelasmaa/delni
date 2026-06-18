@@ -51,20 +51,21 @@
     <style>
         :root {
             --delni-primary: #F1620F;
-            --delni-navy: #0B1A34;
-            --delni-bg: #FCFBFB;
-            --delni-gray: #C7C3C3;
-            --delni-muted: #5D5959;
-            --delni-border: #E7E7E7;
-            --delni-success: #22C55E;
+            --delni-navy: #0F172A;
+            --delni-bg: #F8FAFC;
+            --delni-card: #FFFFFF;
+            --delni-gray: #94A3B8;
+            --delni-muted: #475569;
+            --delni-border: #E2E8F0;
+            --delni-success: #10B981;
             --delni-warning: #F59E0B;
 
             --delni-radius-sm: 12px;
             --delni-radius-md: 18px;
             --delni-radius-lg: 26px;
 
-            --delni-shadow-sm: 0 8px 20px rgba(11, 26, 52, .05);
-            --delni-shadow-md: 0 16px 36px rgba(11, 26, 52, .08);
+            --delni-shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --delni-shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
 
             /* PWA Native UI Specifications */
             --pwa-nav-height: 64px;
@@ -72,13 +73,14 @@
         }
 
         [data-theme="dark"] {
-            --delni-bg: #0D1117;
+            --delni-bg: #090D16;
+            --delni-card: #111A2E;
+            --delni-border: #1E293B;
             --delni-navy: #F8FAFC;
-            --delni-border: #334155;
-            --delni-muted: #CBD5E1;
-            --delni-gray: #94A3B8;
-            --delni-shadow-sm: 0 8px 20px rgba(0,0,0,.3);
-            --delni-shadow-md: 0 18px 42px rgba(0,0,0,.42);
+            --delni-muted: #94A3B8;
+            --delni-gray: #64748B;
+            --delni-shadow-sm: 0 8px 24px rgba(0,0,0,.4);
+            --delni-shadow-md: 0 18px 48px rgba(0,0,0,.55);
         }
 
         * {
@@ -365,16 +367,32 @@
             padding: .65rem 0 2rem;
         }
 
+        .lp-wrapper-compact {
+            max-width: 520px;
+            margin-inline: auto;
+            width: 100%;
+        }
+
         /* App-bar style page header */
         .lp-header {
             display: flex;
             align-items: center;
             gap: .75rem;
-            padding: .8rem .95rem;
-            background: #fff;
-            border: 1px solid var(--delni-border);
-            border-radius: 18px;
-            box-shadow: var(--delni-shadow-sm);
+            padding: .5rem .25rem;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        html[dir="rtl"] .lp-header {
+            direction: rtl;
+            flex-direction: row;
+        }
+
+        html[dir="ltr"] .lp-header {
+            direction: ltr;
+            flex-direction: row;
         }
 
         .lp-back {
@@ -391,6 +409,10 @@
         }
 
         .lp-back svg { width: 20px; height: 20px; }
+
+        html[dir="rtl"] .lp-back svg {
+            transform: scaleX(-1);
+        }
 
         .lp-header-body { flex: 1; min-width: 0; }
 
@@ -668,94 +690,94 @@
 
         /* Shell chrome */
         [data-theme="dark"] .delni-header {
-            background: rgba(13, 17, 23, 0.92);
-            border-color: #334155;
+            background: rgba(9, 13, 22, 0.92);
+            border-color: var(--delni-border);
         }
         [data-theme="dark"] .delni-logo {
-            color: #F8FAFC;
+            color: var(--delni-navy);
         }
         [data-theme="dark"] .delni-logo__mark {
-            background: #131A22;
+            background: var(--delni-bg);
         }
         [data-theme="dark"] .pwa-bottom-nav {
-            background: rgba(13, 17, 23, 0.96);
-            border-color: #334155;
+            background: rgba(9, 13, 22, 0.96);
+            border-color: var(--delni-border);
         }
         [data-theme="dark"] .delni-footer {
-            background: #131A22;
-            border-color: #334155;
+            background: var(--delni-card);
+            border-color: var(--delni-border);
         }
 
         /* lp-* system */
         [data-theme="dark"] .lp-header {
-            background: #131A22;
-            border-color: #334155;
+            background: transparent;
+            border-color: transparent;
         }
         [data-theme="dark"] .lp-back {
-            background: #0D1117;
-            border-color: #334155;
-            color: #F8FAFC;
+            background: var(--delni-card);
+            border-color: var(--delni-border);
+            color: var(--delni-navy);
         }
-        [data-theme="dark"] .lp-count { color: #CBD5E1; }
+        [data-theme="dark"] .lp-count { color: var(--delni-muted); }
         [data-theme="dark"] .lp-chip {
-            background: #131A22;
-            border-color: #334155;
-            color: #F8FAFC;
+            background: var(--delni-card);
+            border-color: var(--delni-border);
+            color: var(--delni-navy);
         }
         [data-theme="dark"] .lp-chip small {
-            background: #0D1117;
-            color: #CBD5E1;
+            background: var(--delni-bg);
+            color: var(--delni-muted);
         }
         [data-theme="dark"] .lp-chip.is-active {
             background: rgba(241,98,15,.15);
             border-color: rgba(241,98,15,.35);
         }
         [data-theme="dark"] .lp-filter-select {
-            background: #131A22;
-            border-color: #334155;
-            color: #F8FAFC;
+            background: var(--delni-card);
+            border-color: var(--delni-border);
+            color: var(--delni-navy);
             color-scheme: dark;
         }
         [data-theme="dark"] .lp-pagination a,
         [data-theme="dark"] .lp-pagination span {
-            background: #131A22;
-            border-color: #334155;
-            color: #F8FAFC;
+            background: var(--delni-card);
+            border-color: var(--delni-border);
+            color: var(--delni-navy);
         }
-        [data-theme="dark"] .lp-pagination strong { color: #CBD5E1; }
+        [data-theme="dark"] .lp-pagination strong { color: var(--delni-navy); }
         [data-theme="dark"] .lp-pagination .is-disabled {
-            background: #0D1117;
-            color: #94A3B8;
+            background: var(--delni-bg);
+            color: var(--delni-gray);
         }
         [data-theme="dark"] .lp-cta {
-            border-color: #334155;
+            border-color: var(--delni-border);
             background:
                 radial-gradient(circle at top left, rgba(241, 98, 15, .16), transparent 42%),
-                linear-gradient(135deg, #131A22 0%, #1B2430 58%, #263241 100%);
-            color: #F8FAFC;
+                linear-gradient(135deg, var(--delni-card) 0%, #17223b 100%);
+            color: var(--delni-navy);
         }
-        [data-theme="dark"] .lp-cta h2 { color: #F8FAFC; }
+        [data-theme="dark"] .lp-cta h2 { color: var(--delni-navy); }
         [data-theme="dark"] .lp-cta span { color: #FDBA74; }
-        [data-theme="dark"] .lp-cta p { color: rgba(248, 250, 252, .76); }
+        [data-theme="dark"] .lp-cta p { color: var(--delni-muted); }
         [data-theme="dark"] .lp-cta a {
             border-color: rgba(251, 146, 60, .3);
             background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
             color: #fff;
         }
-        [data-theme="dark"] .lp-results-head h2 { color: #F8FAFC; }
+        [data-theme="dark"] .lp-results-head h2 { color: var(--delni-navy); }
 
 
         /* Provider card (pc-*) */
         [data-theme="dark"] .pc-card {
-            background: #131A22;
-            border-color: #334155;
+            background: var(--delni-card);
+            border-color: var(--delni-border);
         }
-        [data-theme="dark"] .pc-name { color: #F8FAFC; }
-        [data-theme="dark"] .pc-meta-item { color: #CBD5E1; }
+        [data-theme="dark"] .pc-name { color: var(--delni-navy); }
+        [data-theme="dark"] .pc-meta-item { color: var(--delni-muted); }
         [data-theme="dark"] .pc-tag {
-            background: #0D1117;
-            border-color: #334155;
-            color: #CBD5E1;
+            background: var(--delni-bg);
+            border-color: var(--delni-border);
+            color: var(--delni-muted);
         }
         [data-theme="dark"] .pc-btn--primary { /* keep as-is (orange) */ }
         [data-theme="dark"] .pc-btn--wa {
@@ -766,9 +788,9 @@
 
         /* Desktop ghost button */
         [data-theme="dark"] .delni-btn--ghost {
-            background: #131A22;
-            color: #F8FAFC;
-            border-color: #334155;
+            background: var(--delni-card);
+            color: var(--delni-navy);
+            border-color: var(--delni-border);
         }
         /* ── end dark mode overrides ──────────────────────────────────────── */
 
@@ -931,7 +953,7 @@
                     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'is-active' : '' }}">الرئيسية</a>
                     <a href="{{ route('public.top-rated') }}" class="{{ request()->routeIs('public.top-rated') ? 'is-active' : '' }}">الأعلى تقييما</a>
                     <a href="{{ route('favorites.index') }}" class="{{ request()->routeIs('favorites.*') ? 'is-active' : '' }}">المفضلة</a>
-                    <a href="{{ route('settings') }}" class="{{ request()->routeIs('settings') || request()->routeIs('about') ? 'is-active' : '' }}">الإعدادات</a>
+                    <a href="{{ route('settings') }}" class="{{ request()->routeIs('settings') || request()->routeIs('about') || request()->routeIs('contact') || request()->routeIs('privacy') || request()->routeIs('terms') || request()->routeIs('disclaimer') ? 'is-active' : '' }}">الإعدادات</a>
                 </nav>
 
                 <!-- Global City Picker -->
@@ -967,7 +989,7 @@
                 <span class="pwa-nav-icon-container">
                     <x-render-icon icon="app-categories" />
                 </span>
-                <span>الفئات</span>
+                <span>التخصصات</span>
             </a>
             <a href="{{ route('public.top-rated') }}" class="pwa-nav-item {{ request()->routeIs('public.top-rated') ? 'active' : '' }}">
                 <span class="pwa-nav-icon-container">
@@ -981,7 +1003,7 @@
                 </span>
                 <span>المفضلة</span>
             </a>
-            <a href="{{ route('settings') }}" class="pwa-nav-item {{ request()->routeIs('settings') || request()->routeIs('about') ? 'active' : '' }}">
+            <a href="{{ route('settings') }}" class="pwa-nav-item {{ request()->routeIs('settings') || request()->routeIs('about') || request()->routeIs('contact') || request()->routeIs('privacy') || request()->routeIs('terms') || request()->routeIs('disclaimer') ? 'active' : '' }}">
                 <span class="pwa-nav-icon-container">
                     <x-render-icon icon="app-account" />
                 </span>

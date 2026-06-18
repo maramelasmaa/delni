@@ -3,7 +3,7 @@
 @section('title', 'من نحن - ' . config('app.name'))
 
 @section('content')
-<div class="lp-wrapper">
+<div class="lp-wrapper lp-wrapper-compact">
 
     <header class="lp-header">
         <a href="{{ route('settings') }}" class="lp-back" aria-label="رجوع">
@@ -18,19 +18,19 @@
     <div class="ab-hero">
         <img src="{{ asset('images/icon-192.png') }}" alt="دلني" class="ab-logo">
         <h2 class="ab-name">{{ config('app.name') }}</h2>
-        <p class="ab-tagline">دليلك للعثور على أفضل مزودي الخدمات</p>
+        <p class="ab-tagline">دليلك للعثور على أفضل مقدمي الخدمات</p>
     </div>
 
     <div class="ab-sections">
 
         <div class="ab-section">
             <h3>ما هو دلني؟</h3>
-            <p>دلني منصة تربط العملاء بمزودي الخدمات المحليين من مختلف التخصصات. سواء كنت تبحث عن سبّاك أو كاتب أو معلم خصوصي، دلني يساعدك في إيجاد الشخص المناسب بكل سهولة.</p>
+            <p>دلني منصة تربط العملاء بمقدمي الخدمات المحليين من مختلف التخصصات. سواء كنت تبحث عن سبّاك أو كاتب أو معلم خصوصي، دلني يساعدك في إيجاد الشخص المناسب بكل سهولة.</p>
         </div>
 
         <div class="ab-section">
             <h3>رؤيتنا</h3>
-            <p>نسعى إلى بناء سوق محلي موثوق يُمكّن مزودي الخدمات من الوصول إلى عملاء جدد، ويمنح العملاء خياراتٍ واسعةً ومراجعاتٍ حقيقية.</p>
+            <p>نسعى إلى بناء سوق محلي موثوق يُمكّن مقدمي الخدمات من الوصول إلى عملاء جدد، ويمنح العملاء خياراتٍ واسعةً وتقييماتٍ حقيقية.</p>
         </div>
 
         <div class="ab-section">
@@ -58,26 +58,32 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: .5rem;
-        padding: 1.5rem 1rem 1rem;
+        gap: .6rem;
+        padding: 2.2rem 1.5rem;
         text-align: center;
+        background: linear-gradient(135deg, #0b1a34 0%, #112240 100%);
+        border-radius: 24px;
+        color: #ffffff;
+        box-shadow: 0 10px 30px rgba(11, 26, 52, 0.18);
+        margin-bottom: 1.2rem;
     }
     .ab-logo {
-        width: 80px; height: 80px;
-        border-radius: 22px;
-        box-shadow: var(--delni-shadow-md);
+        width: 76px; height: 76px;
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
     .ab-name {
-        margin: .4rem 0 0;
-        color: var(--delni-navy);
-        font-size: 1.4rem;
+        margin: .3rem 0 0;
+        color: #ffffff;
+        font-size: 1.45rem;
         font-weight: 950;
         letter-spacing: -.02em;
     }
     .ab-tagline {
         margin: 0;
-        color: var(--delni-muted);
-        font-size: .84rem;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: .86rem;
         font-weight: 700;
     }
     .ab-sections {
@@ -130,9 +136,7 @@
         font-weight: 700;
     }
 
-    [data-theme="dark"] .ab-section { background: #1E293B; border-color: #334155; }
-    [data-theme="dark"] .ab-name { color: #F1F5F9; }
-    [data-theme="dark"] .ab-tagline { color: #94A3B8; }
+    [data-theme="dark"] .ab-section { background: var(--delni-card); border-color: var(--delni-border); }
 </style>
 @endpush
 @endsection
