@@ -1210,8 +1210,8 @@
     </script>
 
     <!-- Global City Selection Drawer (Bottom Sheet) -->
-    <div class="hidden fixed inset-0 z-[100] bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 [&.is-open]:block" data-global-city-close id="globalCityOverlay"></div>
-    <div class="fixed inset-x-0 bottom-0 z-[110] max-h-[75vh] overflow-y-auto [overscroll-behavior-y:contain] p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] border border-slate-200 dark:border-slate-800 border-b-0 rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl translate-y-[105%] transition-transform duration-300 [&.is-open]:translate-y-0 w-full max-w-lg mx-auto" id="globalCityDrawer">
+    <div class="hidden fixed inset-0 z-[1000] bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 [&.is-open]:block" data-global-city-close id="globalCityOverlay"></div>
+    <div class="fixed inset-x-0 bottom-0 z-[1010] max-h-[75vh] overflow-y-auto [overscroll-behavior-y:contain] p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] border border-slate-200 dark:border-slate-800 border-b-0 rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl translate-y-[105%] transition-transform duration-300 [&.is-open]:translate-y-0 w-full max-w-lg mx-auto" id="globalCityDrawer">
         <div class="flex items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
             <div class="flex items-center gap-2">
                 <x-render-icon icon="heroicon-o-map-pin" class="w-4.5 h-4.5 text-primary flex-none" />
