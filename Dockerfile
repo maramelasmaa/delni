@@ -60,6 +60,7 @@ COPY docker/entrypoint.sh /usr/local/bin/delni-entrypoint
 RUN composer dump-autoload --no-dev --optimize --no-scripts \
     && php artisan package:discover --ansi \
     && php artisan filament:upgrade --ansi \
+    && php artisan vendor:publish --force --tag=livewire:assets --ansi \
     && mkdir -p \
         storage/app/public \
         storage/app/icons \
