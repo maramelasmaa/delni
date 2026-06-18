@@ -156,7 +156,17 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => value(function () {
+        $domain = env('SESSION_DOMAIN');
+
+        if ($domain === null) {
+            return null;
+        }
+
+        $domain = trim((string) $domain);
+
+        return $domain === '' ? null : $domain;
+    }),
 
     /*
     |--------------------------------------------------------------------------
