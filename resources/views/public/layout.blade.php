@@ -231,7 +231,7 @@
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: calc(var(--pwa-nav-height) + env(safe-area-inset-bottom) + 20px);
+            padding-bottom: calc(var(--pwa-nav-height) + env(safe-area-inset-bottom) + 60px);
         }
 
         .pwa-view-boundary {
