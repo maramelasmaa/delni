@@ -13,6 +13,7 @@ fi
 php artisan migrate --force --no-interaction || true
 php artisan db:seed --class=RoleSeeder --force --no-interaction || true
 php artisan delni:ensure-super-admin --no-interaction || true
+php artisan db:seed --class=DemoSeeder --force --no-interaction || true
 
 # Rebuild Laravel bootstrap caches
 # route:cache is intentionally excluded — web.php uses closure routes which cannot be serialized

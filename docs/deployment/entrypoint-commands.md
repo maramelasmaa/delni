@@ -52,6 +52,9 @@ php artisan db:seed --class=RoleSeeder --force --no-interaction || true
 # Ensure super admin exists (reads SUPER_ADMIN_* env vars)
 php artisan delni:ensure-super-admin --no-interaction || true
 
+# Seed demo data (idempotent — uses updateOrCreate/firstOrCreate)
+php artisan db:seed --class=DemoSeeder --force --no-interaction || true
+
 # Rebuild bootstrap caches
 # NOTE: route:cache is excluded — web.php has closure routes that cannot be serialized
 php artisan optimize:clear

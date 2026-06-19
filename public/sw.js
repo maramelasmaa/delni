@@ -1,5 +1,5 @@
 // Update this version string on every deploy (or use: sed -i "s/delni-public-[^']*/delni-public-$(git rev-parse --short HEAD)/" public/sw.js)
-const CACHE_VERSION = 'delni-public-tguo5q';
+const CACHE_VERSION = 'delni-public-tgvrku';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 const OFFLINE_URL = '/offline.html';
