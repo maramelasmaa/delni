@@ -1,9 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-mkdir -p storage/app/public storage/app/icons storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
-
-php artisan storage:link --force 2>/dev/null || true
+mkdir -p storage/app/public storage/app/icons storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache && php artisan storage:link --force
 php scripts/update-sw-version.php 2>/dev/null || true
 
 if [ "$(readlink public/storage 2>/dev/null || true)" != "/var/www/html/storage/app/public" ]; then

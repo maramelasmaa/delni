@@ -89,16 +89,24 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        html, body {
-            height: 100%;
-            height: 100dvh;
+        html {
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Locks desktop scroll bounces, handles layout natively */
-            overscroll-behavior: none; /* Prevents viewport rubber-banding and pull-to-refresh */
+            overflow-x: hidden;
+            background: var(--delni-bg);
+        }
+
+        body {
+            min-height: 100%;
+            min-height: 100dvh;
+            margin: 0;
+            padding: 0;
+            padding-bottom: calc(var(--pwa-nav-height) + env(safe-area-inset-bottom) + 80px);
+            overflow-x: hidden;
             background: var(--delni-bg);
             color: var(--delni-navy);
             font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            overscroll-behavior-y: none; /* Prevents viewport rubber-banding and pull-to-refresh */
         }
 
         .delni-splash {
@@ -148,8 +156,8 @@
         .pwa-shell {
             display: flex;
             flex-direction: column;
-            height: 100%;
-            height: 100dvh;
+            min-height: 100%;
+            min-height: 100dvh;
         }
 
         /* Custom Header Wrapper */
@@ -232,11 +240,8 @@
 
         /* Dedicated App Viewport Container */
         .delni-main {
-            height: calc(100dvh - var(--pwa-header-height) - env(safe-area-inset-top));
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain; /* Prevents scroll chaining to the locked body */
-            padding-bottom: calc(var(--pwa-nav-height) + env(safe-area-inset-bottom) + 60px);
+            flex: 1 1 auto;
+            min-height: 0;
         }
 
         .pwa-view-boundary {
@@ -683,7 +688,17 @@
             transform: translateY(-1px);
             box-shadow: 0 16px 32px rgba(241, 98, 15, .32);
         }
-        @media (max-width: 400px) { .lp-cta { flex-direction: column; align-items: flex-start; } }
+        @media (max-width: 768px) {
+            .lp-cta {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.85rem;
+            }
+            .lp-cta a {
+                align-self: stretch;
+                text-align: center;
+            }
+        }
         /* ── end shared listing-page ──────────────────────────────────────── */
 
         /* ── Dark mode overrides ──────────────────────────────────────────── */
@@ -801,6 +816,7 @@
         /* Wide Screen Layout Desktop Enhancements */
         @media (min-width: 1025px) {
             html, body { overflow: visible; }
+            body { padding-bottom: 0; }
             .pwa-shell { height: auto; }
             .delni-main { height: auto; overflow-y: visible; padding-bottom: 0; }
             .pwa-bottom-nav { display: none; }

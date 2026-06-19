@@ -38,12 +38,10 @@ php artisan filament:upgrade --ansi
 Runs every time a container starts (web, worker, and scheduler services all run this entrypoint).
 
 ```sh
-# Create required storage directories
+# Create required storage directories and link storage
 mkdir -p storage/app/public storage/app/icons storage/framework/cache \
-         storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
-
-# Storage symlink
-php artisan storage:link --force || true
+         storage/framework/sessions storage/framework/views storage/logs bootstrap/cache && \
+php artisan storage:link --force
 
 # Migrations (idempotent — safe on every restart)
 php artisan migrate --force --no-interaction || true
