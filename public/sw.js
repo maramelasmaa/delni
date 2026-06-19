@@ -2,7 +2,6 @@
 const CACHE_VERSION = 'delni-public-tguo5q';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
-const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
 const IMAGE_CACHE_MAX_ENTRIES = 200;
 
@@ -63,7 +62,7 @@ self.addEventListener('activate', (event) => {
         caches.keys()
             .then((keys) => Promise.all(
                 keys
-                    .filter((key) => ![STATIC_CACHE, IMAGE_CACHE, PAGE_CACHE].includes(key))
+                    .filter((key) => ![STATIC_CACHE, IMAGE_CACHE].includes(key))
                     .map((key) => caches.delete(key))
             ))
             .then(() => self.clients.claim())
@@ -88,13 +87,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (url.pathname === '/api/profiles/search') {
-        event.respondWith(fetch(request));
-        return;
-    }
-
+    // HTML pages: always fetch from network so content is always fresh.
+    // Fall back to offline.html only when the network is unreachable.
     if (request.mode === 'navigate' && isPublicPage(url)) {
-        event.respondWith(networkFirst(request, PAGE_CACHE, 10000));
+        event.respondWith(
+            fetch(request).catch(() => caches.match(OFFLINE_URL))
+        );
     }
 });
 
@@ -125,29 +123,6 @@ async function staleWhileRevalidate(request, cacheName) {
         .catch(() => cached);
 
     return cached || refresh;
-}
-
-async function networkFirst(request, cacheName, timeoutMs = 3000) {
-    const cache = await caches.open(cacheName);
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-        const response = await fetch(request, { signal: controller.signal });
-        clearTimeout(timer);
-        await putCache(request, response, cacheName);
-
-        return response;
-    } catch {
-        clearTimeout(timer);
-
-        const cached = await cache.match(request);
-        if (cached) return cached;
-
-        if (request.mode === 'navigate') return caches.match(OFFLINE_URL);
-
-        throw new Error('Network failed and no cache available');
-    }
 }
 
 async function putCache(request, response, cacheName) {

@@ -94,6 +94,8 @@
             padding: 0;
             overflow-x: hidden;
             background: var(--delni-bg);
+            /* iOS 17 fix: prevents position:fixed elements from shifting after scroll */
+            min-height: calc(100% + env(safe-area-inset-top));
         }
 
         body {
@@ -1068,6 +1070,63 @@
     @stack('scripts')
 
     <script>
+        // Reload when browser restores page from bfcache so fresh content is always shown
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
+        // Poll for new content every 15 s and auto-reload the page when something changes
+        (() => {
+            const POLL_MS = 15_000;
+            let knownStamp = null;
+            let timer = null;
+
+            const check = async () => {
+                try {
+                    const res = await fetch('/api/content-stamp', { cache: 'no-store' });
+                    if (!res.ok) return;
+                    const { stamp } = await res.json();
+                    if (knownStamp === null) {
+                        knownStamp = stamp;
+                    } else if (stamp !== knownStamp) {
+                        window.location.reload();
+                    }
+                } catch (_) {}
+            };
+
+            const start = () => { check(); timer = setInterval(check, POLL_MS); };
+            const stop  = () => clearInterval(timer);
+
+            // Pause polling while tab is hidden to save requests
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    stop();
+                } else {
+                    start();
+                }
+            });
+
+            start();
+        })();
+
+        // In standalone PWA mode, open admin/auth paths in a browser tab instead of the PWA shell
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            const PANEL_PATHS = ['/cp/', '/provider/', '/login', '/register', '/forgot-password', '/reset-password', '/onboarding', '/account'];
+            document.addEventListener('click', (e) => {
+                const link = e.target.closest('a[href]');
+                if (!link) return;
+                try {
+                    const url = new URL(link.href, window.location.origin);
+                    if (url.origin === window.location.origin && PANEL_PATHS.some((p) => url.pathname.startsWith(p))) {
+                        e.preventDefault();
+                        window.open(link.href, '_blank', 'noopener');
+                    }
+                } catch (_) {}
+            });
+        }
+
         (() => {
             const banner = document.getElementById('delniOfflineBanner');
             const syncOnlineState = () => banner?.classList.toggle('is-visible', !navigator.onLine);

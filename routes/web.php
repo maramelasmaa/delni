@@ -9,6 +9,7 @@ use App\Http\Controllers\Public\FrontendController;
 use App\Http\Controllers\Public\ReviewController;
 use App\Http\Controllers\Public\SettingsController;
 use App\Models\Icon;
+use App\Models\Profile;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -133,3 +134,12 @@ Route::middleware([
         ->middleware('throttle:60,1')
         ->name('favorites.toggle');
 });
+
+// Lightweight polling endpoint — combines max(updated_at) + count so that
+// additions, updates, AND deletions all produce a different stamp value.
+Route::get('/api/content-stamp', function () {
+    $stamp = (Profile::max('updated_at') ?? '').':'.Profile::count();
+
+    return response()->json(['stamp' => $stamp])
+        ->header('Cache-Control', 'no-store, no-cache');
+})->middleware('throttle:60,1')->name('api.content-stamp');
