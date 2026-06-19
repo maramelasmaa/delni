@@ -101,12 +101,12 @@
             min-height: 100dvh;
             margin: 0;
             padding: 0;
-            padding-bottom: calc(var(--pwa-nav-height) + env(safe-area-inset-bottom) + 80px);
+            padding-bottom: calc(var(--pwa-nav-height) + env(safe-area-inset-bottom) + 4px);
             overflow-x: hidden;
             background: var(--delni-bg);
             color: var(--delni-navy);
             font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            overscroll-behavior-y: none; /* Prevents viewport rubber-banding and pull-to-refresh */
+            overscroll-behavior-y: contain; /* Prevents chained pull-to-refresh but keeps normal scroll */
         }
 
         .delni-splash {
