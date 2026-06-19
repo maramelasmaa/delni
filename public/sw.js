@@ -94,7 +94,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (request.mode === 'navigate' && isPublicPage(url)) {
-        event.respondWith(networkFirst(request, PAGE_CACHE));
+        event.respondWith(networkFirst(request, PAGE_CACHE, 10000));
     }
 });
 

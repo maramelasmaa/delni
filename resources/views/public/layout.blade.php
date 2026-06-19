@@ -1205,6 +1205,15 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
             });
+
+            // Auto-reload the page when a new service worker takes control (update active)
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (navigator.serviceWorker.controller && !refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
         }
         @endif
     </script>
