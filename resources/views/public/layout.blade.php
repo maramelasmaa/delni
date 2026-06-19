@@ -232,7 +232,7 @@
 
         /* Dedicated App Viewport Container */
         .delni-main {
-            flex: 1;
+            height: calc(100dvh - var(--pwa-header-height) - env(safe-area-inset-top));
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain; /* Prevents scroll chaining to the locked body */
@@ -802,7 +802,7 @@
         @media (min-width: 1025px) {
             html, body { overflow: visible; }
             .pwa-shell { height: auto; }
-            .delni-main { overflow-y: visible; padding-bottom: 0; }
+            .delni-main { height: auto; overflow-y: visible; padding-bottom: 0; }
             .pwa-bottom-nav { display: none; }
             .delni-nav { display: flex; align-items: center; gap: .35rem; }
             .delni-actions { display: flex; align-items: center; gap: .6rem; }
