@@ -272,14 +272,14 @@
             z-index: 999;
         }
 
-        /* Extend nav background below safe-area on Android where env() returns 0 */
+        /* Extend nav background into system gesture area on Android (env() returns 0 there) */
         .pwa-bottom-nav::after {
             content: '';
             position: absolute;
-            bottom: -60px;
+            bottom: -32px;
             left: 0;
             right: 0;
-            height: 60px;
+            height: 32px;
             background: inherit;
             pointer-events: none;
         }
