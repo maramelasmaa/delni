@@ -13,6 +13,30 @@ set -e
 # Safe to re-run: migrations are tracked, the role seeder is guarded, and
 # delni:ensure-super-admin is idempotent.
 
+# Wait for MySQL to accept TCP connections. On a fresh data volume the mysql image
+# briefly reports "healthy" via its local socket before the networked server is up,
+# so depends_on alone can let us race in and hit "Connection refused". Retry the real
+# PDO connection (pdo_mysql is already installed) until it succeeds.
+echo "Waiting for database to accept connections..."
+ATTEMPTS=0
+until php -r '
+    $host = getenv("DB_HOST") ?: "127.0.0.1";
+    $port = getenv("DB_PORT") ?: "3306";
+    $db   = getenv("DB_DATABASE");
+    $user = getenv("DB_USERNAME");
+    $pass = getenv("DB_PASSWORD");
+    new PDO("mysql:host={$host};port={$port};dbname={$db}", $user, $pass, [PDO::ATTR_TIMEOUT => 2]);
+' 2>/dev/null; do
+    ATTEMPTS=$((ATTEMPTS + 1))
+    if [ "$ATTEMPTS" -ge 60 ]; then
+        echo "Database did not become reachable after 60 attempts; aborting." >&2
+        exit 1
+    fi
+    echo "  database not ready (attempt ${ATTEMPTS}), retrying in 3s..."
+    sleep 3
+done
+echo "Database is up."
+
 php artisan migrate --force --no-interaction
 
 ROLE_COUNT=$(php artisan tinker --execute "echo \Spatie\Permission\Models\Role::count();" 2>/dev/null | tail -n1)
