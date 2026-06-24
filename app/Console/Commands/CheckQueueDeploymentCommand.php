@@ -85,14 +85,19 @@ class CheckQueueDeploymentCommand extends Command
         return $ok;
     }
 
+    /**
+     * Advisory only: missing/incomplete docs are warned about but never fail the check.
+     * This command doubles as the worker container healthcheck, so runtime health must
+     * depend solely on the queue connection and tables — not on documentation contents.
+     */
     private function checkDocumentation(): bool
     {
         $path = base_path('docs/deployment/queue.md');
 
         if (! File::exists($path)) {
-            $this->error('Missing queue deployment documentation: docs/deployment/queue.md');
+            $this->warn('Queue deployment documentation not found: docs/deployment/queue.md');
 
-            return false;
+            return true;
         }
 
         $contents = File::get($path);
@@ -106,9 +111,9 @@ class CheckQueueDeploymentCommand extends Command
 
         foreach ($required as $needle) {
             if (! str_contains($contents, $needle)) {
-                $this->error("Queue deployment documentation is missing: {$needle}");
+                $this->warn("Queue deployment documentation is missing: {$needle}");
 
-                return false;
+                return true;
             }
         }
 
