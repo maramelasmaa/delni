@@ -44,4 +44,7 @@ if [ "${ROLE_COUNT:-0}" = "0" ]; then
     php artisan db:seed --class=RoleSeeder --force --no-interaction
 fi
 
+# Sync bundled SVG icons onto the icons volume + upsert their rows (idempotent).
+php artisan db:seed --class=IconSeeder --force --no-interaction
+
 php artisan delni:ensure-super-admin --no-interaction

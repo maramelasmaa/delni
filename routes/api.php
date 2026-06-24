@@ -69,6 +69,12 @@ Route::prefix('v1')->group(function (): void {
 
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('me', [ApiAuthController::class, 'me'])->name('me');
+            Route::patch('profile', [ApiAuthController::class, 'updateProfile'])
+                ->middleware('throttle:30,1')
+                ->name('profile.update');
+            Route::post('change-password', [ApiAuthController::class, 'changePassword'])
+                ->middleware('throttle:api.change-password')
+                ->name('change-password');
             Route::post('logout', [ApiAuthController::class, 'logout'])->name('logout');
             Route::delete('account', [ApiAuthController::class, 'deleteAccount'])->name('delete-account');
         });

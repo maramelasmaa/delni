@@ -11,6 +11,7 @@ class SafeProductionSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             ProviderTypesSeeder::class,
+            IconSeeder::class,
         ]);
     }
 }

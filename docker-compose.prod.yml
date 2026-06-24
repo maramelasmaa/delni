@@ -51,6 +51,9 @@ services:
     environment:
       <<: *laravel-env
       CONTAINER_ROLE: deploy
+    volumes:
+      - delni_public_storage:/var/www/html/storage/app/public
+      - delni_icons_storage:/var/www/html/storage/app/icons
     depends_on:
       mysql:
         condition: service_healthy

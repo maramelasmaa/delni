@@ -66,6 +66,9 @@ return [
 
     'admin_path' => env('FILAMENT_PATH', 'cp/admin'),
 
+    // Custom URL scheme used to deep-link password-reset emails into the mobile app.
+    'mobile_scheme' => env('MOBILE_DEEP_LINK_SCHEME', 'delni'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

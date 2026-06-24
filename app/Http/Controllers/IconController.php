@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Icon;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class IconController
 {
-    public function __invoke(Icon $icon): Response
+    public function __invoke(Icon $icon): BinaryFileResponse
     {
         $disk = Storage::disk('icons');
 
-        if ($disk->missing($icon->file_path)) {
+        // A null/empty file_path would make $disk->missing() throw (TypeError) → 500.
+        // Treat missing-or-blank as a clean 404 so clients fall back gracefully.
+        if (blank($icon->file_path) || $disk->missing($icon->file_path)) {
             abort(404);
         }
 

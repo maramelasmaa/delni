@@ -192,6 +192,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by('api.reset-password|ip:'.$request->ip());
         });
 
+        RateLimiter::for('api.change-password', function (Request $request): Limit {
+            return Limit::perMinute(5)->by('api.change-password|user:'.$request->user()?->id);
+        });
+
         RateLimiter::for('api.home', function (Request $request): Limit {
             return Limit::perMinute(60)->by('api.home|ip:'.$request->ip());
         });

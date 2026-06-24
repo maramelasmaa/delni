@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\UpdateAccountRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AccountSecurityService;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends BaseApiController
 {
@@ -93,6 +96,20 @@ class AuthController extends BaseApiController
         return $this->success(new UserResource($request->user()));
     }
 
+    public function updateProfile(UpdateAccountRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validated();
+
+        if (array_key_exists('email', $data)) {
+            $data['email'] = mb_strtolower($data['email']);
+        }
+
+        $user->fill($data)->save();
+
+        return $this->success(new UserResource($user), 'تم تحديث المعلومات بنجاح.');
+    }
+
     public function deleteAccount(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -110,6 +127,32 @@ class AuthController extends BaseApiController
         });
 
         return $this->success([], 'تم حذف الحساب بنجاح.');
+    }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! Hash::check($request->validated('current_password'), $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['كلمة المرور الحالية غير صحيحة.'],
+            ]);
+        }
+
+        $currentToken = $user->currentAccessToken();
+        $currentTokenId = $currentToken instanceof PersonalAccessToken ? $currentToken->getKey() : null;
+
+        $user->forceFill([
+            'password' => Hash::make($request->validated('password')),
+            'password_changed_at' => now(),
+        ])->save();
+
+        // Revoke every other session; keep the current device signed in.
+        $user->tokens()
+            ->when($currentTokenId, fn ($query) => $query->where('id', '!=', $currentTokenId))
+            ->delete();
+
+        return $this->success([], 'تم تغيير كلمة المرور بنجاح.');
     }
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
