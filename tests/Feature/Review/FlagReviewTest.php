@@ -32,11 +32,12 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
         $response = $this->actingAs($provider)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'This review violates our community guidelines and is inappropriate.',
             ]);
 
-        $response->assertRedirect();
+        $response->assertOk();
         $this->assertTrue($review->refresh()->is_flagged);
         $this->assertEquals($provider->id, $review->flagged_by);
         $this->assertNotNull($review->flagged_at);
@@ -55,7 +56,8 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
         $response = $this->actingAs($provider1)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'This review violates our community guidelines.',
             ]);
 
@@ -71,7 +73,8 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $provider->id])->create();
 
         $response = $this->actingAs($provider)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'This review violates our community guidelines.',
             ]);
 
@@ -91,11 +94,12 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
         $response = $this->actingAs($user1)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'This review contains inappropriate language and offensive content.',
             ]);
 
-        $response->assertRedirect();
+        $response->assertOk();
         $this->assertTrue($review->refresh()->is_flagged);
         $this->assertEquals($user1->id, $review->flagged_by);
     }
@@ -110,11 +114,12 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
         $response = $this->actingAs($provider)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'Too short',
             ]);
 
-        $response->assertSessionHasErrors('reason');
+        $response->assertJsonValidationErrors('reason');
         $this->assertFalse($review->refresh()->is_flagged);
     }
 
@@ -128,11 +133,12 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
         $response = $this->actingAs($provider)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => '',
             ]);
 
-        $response->assertSessionHasErrors('reason');
+        $response->assertJsonValidationErrors('reason');
         $this->assertFalse($review->refresh()->is_flagged);
     }
 
@@ -146,11 +152,12 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
         $response = $this->actingAs($provider)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'This review violates our community guidelines and is inappropriate.',
             ]);
 
-        // Suspended users' profiles are not discoverable, so policy denies with 403
+        // Suspended users are blocked by EnsureUserNotSuspended middleware with 403
         $response->assertForbidden();
         $this->assertFalse($review->refresh()->is_flagged);
     }
@@ -165,7 +172,8 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
         $this->actingAs($provider)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'This review violates our community guidelines.',
             ]);
 
@@ -185,11 +193,12 @@ class FlagReviewTest extends TestCase
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id, 'is_flagged' => true])->create();
 
         $response = $this->actingAs($provider1)
-            ->post(route('reviews.flag', $review), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
                 'reason' => 'Another reason for flagging.',
             ]);
 
-        $response->assertRedirect();
+        $response->assertOk();
         $this->assertTrue($review->refresh()->is_flagged);
     }
 
@@ -202,11 +211,12 @@ class FlagReviewTest extends TestCase
         $reviewer->assignRole('user');
         $review = Review::factory(['profile_id' => $profile->id, 'user_id' => $reviewer->id])->create();
 
-        $response = $this->post(route('reviews.flag', $review), [
-            'reason' => 'This review violates our community guidelines.',
-        ]);
+        $response = $this->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
+                'reason' => 'This review violates our community guidelines.',
+            ]);
 
-        $response->assertRedirect(route('login'));
+        $response->assertUnauthorized();
         $this->assertFalse($review->refresh()->is_flagged);
     }
 }

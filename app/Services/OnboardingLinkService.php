@@ -6,7 +6,6 @@ namespace App\Services;
 
 use App\Models\OnboardingToken;
 use App\Models\User;
-use Illuminate\Support\Str;
 
 class OnboardingLinkService
 {
@@ -16,25 +15,20 @@ class OnboardingLinkService
             throw new \InvalidArgumentException('User is not a provider');
         }
 
-        // Create new token or extend existing unused one
-        $onboardingToken = OnboardingToken::query()
+        OnboardingToken::query()
             ->where('user_id', $user->id)
             ->whereNull('used_at')
-            ->first();
+            ->delete();
 
-        if ($onboardingToken) {
-            // Extend existing unused token
-            $onboardingToken->update(['expires_at' => now()->addHours(72)]);
-        } else {
-            // Create new token
-            $onboardingToken = OnboardingToken::create([
-                'user_id' => $user->id,
-                'token' => Str::random(60),
-                'expires_at' => now()->addHours(72),
-            ]);
-        }
+        $plainTextToken = OnboardingToken::generatePlainTextToken();
 
-        return route('onboarding.show', ['token' => $onboardingToken->token]);
+        OnboardingToken::query()->create([
+            'user_id' => $user->id,
+            'token' => OnboardingToken::hashToken($plainTextToken),
+            'expires_at' => now()->addHours(72),
+        ]);
+
+        return route('onboarding.show', ['token' => $plainTextToken]);
     }
 
     public function canGenerate(User $user): bool

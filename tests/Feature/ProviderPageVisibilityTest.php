@@ -45,7 +45,7 @@ class ProviderPageVisibilityTest extends TestCase
     {
         $profile = $this->makeVisibleProfile();
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile))
             ->assertStatus(200);
     }
 
@@ -65,7 +65,7 @@ class ProviderPageVisibilityTest extends TestCase
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile))
             ->assertStatus(404);
     }
 
@@ -84,7 +84,7 @@ class ProviderPageVisibilityTest extends TestCase
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile))
             ->assertStatus(404);
     }
 
@@ -102,7 +102,7 @@ class ProviderPageVisibilityTest extends TestCase
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile))
             ->assertStatus(404);
     }
 
@@ -121,7 +121,7 @@ class ProviderPageVisibilityTest extends TestCase
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile))
             ->assertStatus(404);
     }
 
@@ -140,7 +140,7 @@ class ProviderPageVisibilityTest extends TestCase
 
         ProfileStats::factory()->create(['profile_id' => $profile->id]);
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile))
             ->assertStatus(404);
     }
 }

@@ -185,7 +185,7 @@ class ReviewResource extends Resource
                     ->label(__('filament.actions.approve'))
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn (Review $record): bool => ! $record->is_flagged && $record->status === ReviewStatus::APPROVED->value && ! $record->trashed())
+                    ->visible(fn (Review $record): bool => static::canShowDirectModerationAction($record))
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->approve($record);
                     }),
@@ -193,7 +193,7 @@ class ReviewResource extends Resource
                     ->label(__('filament.actions.reject_review'))
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
-                    ->visible(fn (Review $record): bool => ! $record->is_flagged && $record->status === ReviewStatus::APPROVED->value && ! $record->trashed())
+                    ->visible(fn (Review $record): bool => static::canShowDirectModerationAction($record))
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->reject($record);
                     }),
@@ -260,5 +260,12 @@ class ReviewResource extends Resource
             'index' => ReviewResource\Pages\ListReviews::route('/'),
             'edit' => ReviewResource\Pages\EditReview::route('/{record}/edit'),
         ];
+    }
+
+    public static function canShowDirectModerationAction(Review $record): bool
+    {
+        return ! $record->is_flagged
+            && $record->status === ReviewStatus::APPROVED
+            && ! $record->trashed();
     }
 }

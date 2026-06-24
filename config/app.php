@@ -64,6 +64,8 @@ return [
 
     'super_admin_password' => env('SUPER_ADMIN_PASSWORD'),
 
+    'admin_path' => env('FILAMENT_PATH', 'cp/admin'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

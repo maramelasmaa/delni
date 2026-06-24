@@ -28,8 +28,12 @@ class ProfilePublicCacheObserver
 
     private function clearPublicCache(): void
     {
-        Cache::forget('frontend.profile_counts.profiles_category_id');
-        Cache::forget('frontend.profile_counts.profiles_city_id');
-        Cache::forget('frontend.profile_counts.subcategory_id');
+        // Keys must match the '.global' suffix written by PublicFrontendService::profileCountByColumn()
+        Cache::forget('frontend.profile_counts.profiles_category_id.global');
+        Cache::forget('frontend.profile_counts.profiles_city_id.global');
+        Cache::forget('frontend.profile_counts.subcategory_id.global');
+        Cache::forget('illuminate:cache:flexible:created:frontend.profile_counts.profiles_category_id.global');
+        Cache::forget('illuminate:cache:flexible:created:frontend.profile_counts.profiles_city_id.global');
+        Cache::forget('illuminate:cache:flexible:created:frontend.profile_counts.subcategory_id.global');
     }
 }

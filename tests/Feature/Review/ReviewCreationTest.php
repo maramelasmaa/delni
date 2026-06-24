@@ -52,12 +52,12 @@ class ReviewCreationTest extends TestCase
         $profile = $this->makeVisibleProfile();
         $user = $this->makeUser(['created_at' => now()]);
 
-        $response = $this->actingAs($user)->post(route('review.store', $profile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 5,
             'comment' => 'Excellent service, highly recommend!',
         ]);
 
-        $response->assertRedirect();
+        $response->assertOk();
         $this->assertDatabaseHas('reviews', [
             'profile_id' => $profile->id,
             'user_id' => $user->id,
@@ -74,12 +74,12 @@ class ReviewCreationTest extends TestCase
 
         $service->create($user, $profile, 5, 'First review');
 
-        $response = $this->actingAs($user)->post(route('review.store', $profile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 4,
             'comment' => 'Trying to review again',
         ]);
 
-        $response->assertSessionHasErrors('profile');
+        $response->assertJsonValidationErrors('profile');
         $this->assertSame(1, Review::where('profile_id', $profile->id)->where('user_id', $user->id)->count());
     }
 
@@ -91,7 +91,7 @@ class ReviewCreationTest extends TestCase
         // Provider also has 'user' role to test the own-profile check specifically
         $provider->assignRole('user');
 
-        $response = $this->actingAs($provider)->post(route('review.store', $profile), [
+        $response = $this->actingAs($provider)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 5,
             'comment' => 'Reviewing my own profile',
         ]);
@@ -105,7 +105,7 @@ class ReviewCreationTest extends TestCase
         $provider = tap(User::factory()->create(), fn ($u) => $u->assignRole('provider'));
         $profile = $this->makeVisibleProfile();
 
-        $response = $this->actingAs($provider)->post(route('review.store', $profile), [
+        $response = $this->actingAs($provider)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 4,
             'comment' => 'A provider trying to leave a review',
         ]);
@@ -118,12 +118,12 @@ class ReviewCreationTest extends TestCase
     {
         $profile = $this->makeVisibleProfile();
 
-        $response = $this->post(route('review.store', $profile), [
+        $response = $this->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 5,
             'comment' => 'Guest review attempt',
         ]);
 
-        $response->assertRedirect(route('login'));
+        $response->assertUnauthorized();
         $this->assertDatabaseMissing('reviews', ['profile_id' => $profile->id]);
     }
 
@@ -138,7 +138,7 @@ class ReviewCreationTest extends TestCase
 
         $user = $this->makeUser();
 
-        $response = $this->actingAs($user)->post(route('review.store', $hiddenProfile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $hiddenProfile), [
             'rating' => 5,
             'comment' => 'Reviewing a hidden profile',
         ]);
@@ -180,13 +180,13 @@ class ReviewCreationTest extends TestCase
 
         $profile = $this->makeVisibleProfile();
 
-        $response = $this->actingAs($user)->post(route('review.store', $profile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 5,
             'comment' => 'Exceeding daily limit',
         ]);
 
-        $response->assertRedirect();
-        $response->assertSessionHas('error');
+        $response->assertUnprocessable();
+        $response->assertJson(['success' => false]);
         $this->assertDatabaseMissing('reviews', ['profile_id' => $profile->id, 'user_id' => $user->id]);
     }
 
@@ -195,12 +195,12 @@ class ReviewCreationTest extends TestCase
         $profile = $this->makeVisibleProfile();
         $user = $this->makeUser();
 
-        $response = $this->actingAs($user)->post(route('review.store', $profile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 6,
             'comment' => 'Out of range rating',
         ]);
 
-        $response->assertSessionHasErrors('rating');
+        $response->assertJsonValidationErrors('rating');
         $this->assertDatabaseMissing('reviews', ['profile_id' => $profile->id, 'user_id' => $user->id]);
     }
 
@@ -209,11 +209,11 @@ class ReviewCreationTest extends TestCase
         $profile = $this->makeVisibleProfile();
         $user = $this->makeUser();
 
-        $response = $this->actingAs($user)->post(route('review.store', $profile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'comment' => 'Only a text comment, no stars',
         ]);
 
-        $response->assertRedirect();
+        $response->assertOk();
         $this->assertDatabaseHas('reviews', [
             'profile_id' => $profile->id,
             'user_id' => $user->id,
@@ -227,11 +227,11 @@ class ReviewCreationTest extends TestCase
         $profile = $this->makeVisibleProfile();
         $user = $this->makeUser();
 
-        $response = $this->actingAs($user)->post(route('review.store', $profile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => 4,
         ]);
 
-        $response->assertRedirect();
+        $response->assertOk();
         $this->assertDatabaseHas('reviews', [
             'profile_id' => $profile->id,
             'user_id' => $user->id,
@@ -245,12 +245,12 @@ class ReviewCreationTest extends TestCase
         $profile = $this->makeVisibleProfile();
         $user = $this->makeUser();
 
-        $response = $this->actingAs($user)->post(route('review.store', $profile), [
+        $response = $this->actingAs($user)->withHeaders(['Accept' => 'application/json'])->post(route('api.providers.reviews.store', $profile), [
             'rating' => null,
             'comment' => '',
         ]);
 
-        $response->assertSessionHasErrors('rating');
+        $response->assertJsonValidationErrors('rating');
         $this->assertDatabaseMissing('reviews', ['profile_id' => $profile->id, 'user_id' => $user->id]);
     }
 }

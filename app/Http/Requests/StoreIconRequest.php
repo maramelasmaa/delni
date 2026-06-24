@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Support\IconSourceUrlValidator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Http;
 
 class StoreIconRequest extends FormRequest
 {
@@ -21,24 +21,14 @@ class StoreIconRequest extends FormRequest
                 'url',
                 'max:2048',
                 function ($attribute, $value, $fail) {
-                    if (! $this->isValidIconUrl($value)) {
-                        $fail('URL must point to a valid SVG or PNG icon.');
+                    try {
+                        app(IconSourceUrlValidator::class)->probe((string) $value);
+                    } catch (\InvalidArgumentException $e) {
+                        $fail($e->getMessage());
                     }
                 },
             ],
             'color' => ['nullable', 'string', 'regex:/^#[0-9A-F]{6}$/i'],
         ];
-    }
-
-    private function isValidIconUrl(string $url): bool
-    {
-        try {
-            $response = Http::timeout(5)->head($url);
-            $contentType = $response->header('content-type');
-
-            return in_array($contentType, ['image/svg+xml', 'image/png']);
-        } catch (\Throwable) {
-            return false;
-        }
     }
 }

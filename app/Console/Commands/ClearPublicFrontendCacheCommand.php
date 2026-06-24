@@ -14,9 +14,10 @@ use Illuminate\Support\Facades\Cache;
 class ClearPublicFrontendCacheCommand extends Command
 {
     private const KEYS = [
-        'frontend.profile_counts.profiles_category_id',
-        'frontend.profile_counts.profiles_city_id',
-        'frontend.profile_counts.subcategory_id',
+        // '.global' suffix matches PublicFrontendService::profileCountByColumn() key format
+        'frontend.profile_counts.profiles_category_id.global',
+        'frontend.profile_counts.profiles_city_id.global',
+        'frontend.profile_counts.subcategory_id.global',
         'frontend.cta_whatsapp_url',
         'frontend.categories',
         'frontend.subcategories',

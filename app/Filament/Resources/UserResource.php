@@ -15,6 +15,7 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -156,7 +157,7 @@ class UserResource extends Resource
             ])
             ->groupedBulkActions([
                 DeleteBulkAction::make()
-                    ->before(fn (DeleteBulkAction $action) => $this->validateBulkDelete($action)),
+                    ->before(fn (DeleteBulkAction $action) => static::validateBulkDelete($action)),
             ]);
     }
 
@@ -418,15 +419,16 @@ class UserResource extends Resource
             : (string) $review->status;
     }
 
-    public function validateBulkDelete(FilamentDeleteBulkAction $action): void
+    public static function validateBulkDelete(FilamentDeleteBulkAction $action): void
     {
         $selectedRecordKeys = $action->getSelectedRecordKeys();
 
         if (! SuperAdminGuardService::canBulkDeleteUsers($selectedRecordKeys)) {
-            $this->notify(
-                'danger',
-                __('filament.help_text.super_admin_delete_blocked'),
-            );
+            Notification::make()
+                ->title(__('filament.notifications.error'))
+                ->body(__('filament.help_text.super_admin_delete_blocked'))
+                ->danger()
+                ->send();
 
             $action->cancel();
         }

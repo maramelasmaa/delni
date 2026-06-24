@@ -31,12 +31,19 @@ class OnboardingSecurityTest extends TestCase
 
     private function makeValidToken(User $user, array $overrides = []): OnboardingToken
     {
-        return OnboardingToken::create(array_merge([
+        $plainTextToken = $overrides['plain_text_token'] ?? OnboardingToken::generatePlainTextToken();
+        unset($overrides['plain_text_token']);
+
+        $token = OnboardingToken::create(array_merge([
             'user_id' => $user->id,
-            'token' => Str::random(60),
+            'token' => OnboardingToken::hashToken($plainTextToken),
             'expires_at' => now()->addDays(72),
             'used_at' => null,
         ], $overrides));
+
+        $token->plain_text_token = $plainTextToken;
+
+        return $token;
     }
 
     private function postSetPassword(array $data, string $ip = '127.0.0.1'): TestResponse
@@ -67,7 +74,7 @@ class OnboardingSecurityTest extends TestCase
         $onboardingToken = $this->makeValidToken($provider);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'SecurePass1!',
             'password_confirmation' => 'SecurePass1!',
         ])->assertRedirect(route('filament.provider.auth.login'));
@@ -83,7 +90,7 @@ class OnboardingSecurityTest extends TestCase
         $onboardingToken = $this->makeValidToken($provider, ['used_at' => now()->subHour()]);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'SecurePass1!',
             'password_confirmation' => 'SecurePass1!',
         ])->assertSessionHasErrors('token');
@@ -99,7 +106,7 @@ class OnboardingSecurityTest extends TestCase
         ]);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'SecurePass1!',
             'password_confirmation' => 'SecurePass1!',
         ])->assertSessionHasErrors('token');
@@ -143,7 +150,7 @@ class OnboardingSecurityTest extends TestCase
 
         // First submit — must succeed
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'SecurePass1!',
             'password_confirmation' => 'SecurePass1!',
         ])->assertRedirect(route('filament.provider.auth.login'));
@@ -152,7 +159,7 @@ class OnboardingSecurityTest extends TestCase
 
         // Second submit with same token — must fail
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'DifferentPass2@',
             'password_confirmation' => 'DifferentPass2@',
         ])->assertSessionHasErrors('token');
@@ -172,7 +179,7 @@ class OnboardingSecurityTest extends TestCase
         $onboardingToken = $this->makeValidToken($provider);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'SecurePass1!',
             'password_confirmation' => 'SecurePass1!',
         ])->assertRedirect();
@@ -189,7 +196,7 @@ class OnboardingSecurityTest extends TestCase
         $onboardingToken = $this->makeValidToken($provider);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'WeakPassword1',
             'password_confirmation' => 'WeakPassword1',
         ])->assertSessionHasErrors('password');
@@ -203,7 +210,7 @@ class OnboardingSecurityTest extends TestCase
         $onboardingToken = $this->makeValidToken($provider);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'weakpass1!',
             'password_confirmation' => 'weakpass1!',
         ])->assertSessionHasErrors('password');
@@ -215,7 +222,7 @@ class OnboardingSecurityTest extends TestCase
         $onboardingToken = $this->makeValidToken($provider);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'Ab1!',
             'password_confirmation' => 'Ab1!',
         ])->assertSessionHasErrors('password');
@@ -227,7 +234,7 @@ class OnboardingSecurityTest extends TestCase
         $onboardingToken = $this->makeValidToken($provider);
 
         $this->postSetPassword([
-            'token' => $onboardingToken->token,
+            'token' => $onboardingToken->plain_text_token,
             'password' => 'SecurePass1!',
             'password_confirmation' => 'DifferentPass2@',
         ])->assertSessionHasErrors('password');
@@ -272,6 +279,19 @@ class OnboardingSecurityTest extends TestCase
     {
         $provider = $this->makeProvider();
 
+        $this->assertTrue($provider->canAccessPanel($this->makePanel('provider')));
+        $this->assertFalse($provider->canAccessPanel($this->makePanel('admin')));
+    }
+
+    public function test_provider_without_profile_can_still_access_provider_panel(): void
+    {
+        $provider = User::factory()->create([
+            'is_active' => true,
+            'is_suspended' => false,
+        ]);
+        $provider->assignRole('provider');
+
+        $this->assertNull($provider->profile);
         $this->assertTrue($provider->canAccessPanel($this->makePanel('provider')));
         $this->assertFalse($provider->canAccessPanel($this->makePanel('admin')));
     }
@@ -328,6 +348,19 @@ class OnboardingSecurityTest extends TestCase
             ->assertStatus(403);
     }
 
+    public function test_locked_provider_is_redirected_to_provider_login_from_web_route(): void
+    {
+        $provider = $this->createProvider([
+            'is_active' => true,
+            'is_suspended' => false,
+            'locked_until' => now()->addMinutes(10),
+        ]);
+
+        $this->actingAs($provider)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('filament.provider.auth.login'));
+    }
+
     // -----------------------------------------------------------------------
     // 8. Session Isolation
     // -----------------------------------------------------------------------
@@ -340,7 +373,7 @@ class OnboardingSecurityTest extends TestCase
 
         // Provider B visits a token URL that belongs to provider A
         $response = $this->actingAs($providerB)
-            ->get(route('onboarding.show', $tokenForA->token));
+            ->get(route('onboarding.show', $tokenForA->plain_text_token));
 
         // Form loads for provider A's token, showing provider A's email
         $response->assertStatus(200);
@@ -348,5 +381,23 @@ class OnboardingSecurityTest extends TestCase
 
         // Provider B's email is not shown (not the token owner)
         $response->assertDontSee($providerB->email);
+    }
+
+    public function test_plaintext_onboarding_token_is_not_stored_in_database(): void
+    {
+        $provider = $this->makeProvider();
+        $onboardingToken = $this->makeValidToken($provider);
+
+        $this->assertNotSame($onboardingToken->plain_text_token, $onboardingToken->fresh()->token);
+        $this->assertSame(
+            OnboardingToken::hashToken($onboardingToken->plain_text_token),
+            $onboardingToken->fresh()->token,
+        );
+    }
+
+    public function test_invalid_onboarding_link_redirects_to_provider_login(): void
+    {
+        $this->get(route('onboarding.show', ['token' => Str::random(60)]))
+            ->assertRedirect(route('filament.provider.auth.login'));
     }
 }

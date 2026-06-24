@@ -33,6 +33,7 @@ class ProfileStats extends Model
 
     protected $casts = [
         'rating_avg' => 'decimal:1',
+        'reviews_count' => 'integer',
         'is_top_rated' => 'boolean',
         'is_homepage_featured' => 'boolean',
         'homepage_featured_until' => 'date',

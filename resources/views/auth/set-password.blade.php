@@ -12,14 +12,27 @@
 @endsection
 
 @section('content')
+    <div class="mb-6 flex items-center gap-3 rounded-2xl border border-[#E8EEF8] bg-[#F8FAFF] px-4 py-3 shadow-sm dark:border-[#243149] dark:bg-[#16203A]">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm dark:bg-[#1B2740]">
+            <img src="{{ asset('images/photo_2026-06-22_23-21-55.jpg') }}" alt="{{ config('app.name') }}" class="h-full w-full rounded-lg object-cover">
+        </div>
+
+        <div class="min-w-0">
+            <p class="text-sm font-black text-[#0F172A] dark:text-[#F1F5F9]">{{ config('app.name') }}</p>
+            <p class="text-xs font-semibold text-[#475569] dark:text-[#A8B4C8]">{{ __('auth.password_secure_note') }}</p>
+        </div>
+    </div>
+
     @if ($errors->any())
-        <div class="flex gap-3 bg-red-500/10 border border-red-500/20 text-red-800 dark:text-red-400 p-4 rounded-2xl text-sm mb-6 font-semibold" role="alert">
-            <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+        <div class="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800 shadow-sm dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300" role="alert">
+            <svg class="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.7 7.3a1 1 0 00-1.4 1.4L8.6 10l-1.3 1.3a1 1 0 101.4 1.4l1.3-1.3 1.3 1.3a1 1 0 001.4-1.4L11.4 10l1.3-1.3a1 1 0 00-1.4-1.4L10 8.6 8.7 7.3z" clip-rule="evenodd"/>
             </svg>
+
             <div>
-                <strong class="block mb-1 font-bold text-red-900 dark:text-red-300">حدث خطأ</strong>
-                <ul class="list-disc list-inside space-y-0.5">
+                <strong class="mb-1 block font-bold text-red-900 dark:text-red-200">حدث خطأ</strong>
+
+                <ul class="list-inside list-disc space-y-0.5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -33,66 +46,68 @@
 
         <input type="hidden" name="token" value="{{ $token }}">
 
-        {{-- Email Field (Readonly) --}}
         <div>
-            <div class="flex justify-between items-center text-xs font-bold mb-1.5">
-                <label for="email" class="text-slate-600 dark:text-slate-300">{{ __('auth.email') }}</label>
-                <span class="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/35 px-2 py-0.5 rounded-full text-[10px]">موثق</span>
+            <div class="mb-1.5 flex items-center justify-between text-xs font-bold">
+                <label for="email" class="text-[#475569] dark:text-[#A8B4C8]">{{ __('auth.email') }}</label>
+                <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/20">
+                    موثق
+                </span>
             </div>
 
             <input
                 type="email"
                 id="email"
-                class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl font-semibold text-slate-500 dark:text-slate-400 cursor-not-allowed select-none focus:outline-none"
+                class="w-full cursor-not-allowed rounded-2xl border border-[#E8EEF8] bg-[#F1F5F9] px-4 py-3 font-semibold text-[#475569] select-none focus:outline-none dark:border-[#243149] dark:bg-[#1B2740] dark:text-[#A8B4C8]"
                 value="{{ $email }}"
                 readonly
                 tabindex="-1"
                 aria-readonly="true"
             >
 
-            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-semibold block">
+            <span class="mt-1.5 block text-[11px] font-semibold text-[#475569] dark:text-[#7C8AA5]">
                 هذا البريد مرتبط بحسابك ولا يمكن تعديله من هذه الصفحة.
             </span>
         </div>
 
-        {{-- Password Field --}}
         <div>
-            <label for="password" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">{{ __('auth.new_password') }}</label>
+            <label for="password" class="mb-1.5 block text-xs font-bold text-[#475569] dark:text-[#A8B4C8]">{{ __('auth.new_password') }}</label>
             <input
                 type="password"
                 id="password"
                 name="password"
                 required
-                class="w-full px-4 py-3 bg-white dark:bg-slate-900 border @error('password') border-red-500 focus:border-red-500 focus:ring-red-500/20 @else border-slate-200 dark:border-slate-800 focus:border-primary focus:ring-primary/15 @enderror rounded-2xl font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-primary/15 transition-all duration-200"
+                class="w-full rounded-2xl border @error('password') border-red-500 focus:border-red-500 focus:ring-red-500/20 @else border-[#E8EEF8] focus:border-[#1E40AF] focus:ring-[#1E40AF]/15 dark:border-[#243149] dark:focus:border-[#60A5FA] dark:focus:ring-[#60A5FA]/20 @enderror bg-white px-4 py-3 font-semibold text-[#0F172A] placeholder-[#94A3B8] shadow-sm transition-all duration-200 focus:ring-4 dark:bg-[#131C2E] dark:text-[#F1F5F9]"
                 placeholder="••••••••"
                 autocomplete="new-password"
                 minlength="8"
             >
-            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-semibold block">{{ __('auth.password_requirements') }}</span>
+            <span class="mt-1.5 block text-[11px] font-semibold text-[#475569] dark:text-[#7C8AA5]">{{ __('auth.password_requirements') }}</span>
             @error('password')
-                <span class="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span>
+                <span class="mt-1 block text-xs font-bold text-red-600 dark:text-red-300">{{ $message }}</span>
             @enderror
         </div>
 
-        {{-- Confirm Password Field --}}
         <div>
-            <label for="password_confirmation" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">{{ __('auth.confirm_password') }}</label>
+            <label for="password_confirmation" class="mb-1.5 block text-xs font-bold text-[#475569] dark:text-[#A8B4C8]">{{ __('auth.confirm_password') }}</label>
             <input
                 type="password"
                 id="password_confirmation"
                 name="password_confirmation"
                 required
-                class="w-full px-4 py-3 bg-white dark:bg-slate-900 border @error('password_confirmation') border-red-500 focus:border-red-500 focus:ring-red-500/20 @else border-slate-200 dark:border-slate-800 focus:border-primary focus:ring-primary/15 @enderror rounded-2xl font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-primary/15 transition-all duration-200"
+                class="w-full rounded-2xl border @error('password_confirmation') border-red-500 focus:border-red-500 focus:ring-red-500/20 @else border-[#E8EEF8] focus:border-[#1E40AF] focus:ring-[#1E40AF]/15 dark:border-[#243149] dark:focus:border-[#60A5FA] dark:focus:ring-[#60A5FA]/20 @enderror bg-white px-4 py-3 font-semibold text-[#0F172A] placeholder-[#94A3B8] shadow-sm transition-all duration-200 focus:ring-4 dark:bg-[#131C2E] dark:text-[#F1F5F9]"
                 placeholder="••••••••"
                 autocomplete="new-password"
                 minlength="8"
             >
             @error('password_confirmation')
-                <span class="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span>
+                <span class="mt-1 block text-xs font-bold text-red-600 dark:text-red-300">{{ $message }}</span>
             @enderror
         </div>
 
-        <button type="submit" class="w-full py-3.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold shadow-md hover:shadow-lg transition-all duration-200 select-none hover:-translate-y-0.5 mt-2">
+        <button
+            type="submit"
+            class="mt-2 w-full rounded-2xl bg-[#1E40AF] px-4 py-3.5 font-bold text-white shadow-[0_16px_30px_rgba(30,64,175,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1D4ED8] hover:shadow-[0_20px_36px_rgba(30,64,175,0.3)] dark:bg-[#60A5FA] dark:text-[#0B1120] dark:hover:bg-[#93C5FD]"
+        >
             {{ __('auth.set_password_button') }}
         </button>
     </form>

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Rules\SafeExternalUrl;
-use Tests\TestCase;
+use PHPUnit\Framework\TestCase;
 
 class SafeExternalUrlTest extends TestCase
 {
@@ -16,11 +16,11 @@ class SafeExternalUrlTest extends TestCase
      *
      * @return string[]
      */
-    private function validate(mixed $value): array
+    private function validate(mixed $value, ?SafeExternalUrl $rule = null): array
     {
         $errors = [];
 
-        $rule = new SafeExternalUrl;
+        $rule ??= new SafeExternalUrl;
         $rule->setData([]);
 
         $rule->validate('url', $value, function (string $message) use (&$errors): void {
@@ -117,6 +117,31 @@ class SafeExternalUrlTest extends TestCase
     public function test_ipv6_loopback_is_rejected(): void
     {
         $this->assertFails('https://[::1]/secret');
+    }
+
+    public function test_url_with_embedded_basic_auth_is_rejected(): void
+    {
+        $this->assertFails('https://user:pass@example.com/secret');
+    }
+
+    public function test_allowed_host_rule_accepts_google_maps_links(): void
+    {
+        $errors = $this->validate(
+            'https://maps.google.com/place/some-location',
+            new SafeExternalUrl(['google.com', 'maps.app.goo.gl'])
+        );
+
+        $this->assertEmpty($errors);
+    }
+
+    public function test_allowed_host_rule_rejects_unapproved_hosts(): void
+    {
+        $errors = $this->validate(
+            'https://example.com/place/some-location',
+            new SafeExternalUrl(['google.com', 'maps.app.goo.gl'])
+        );
+
+        $this->assertNotEmpty($errors);
     }
 
     // -------------------------------------------------------------------

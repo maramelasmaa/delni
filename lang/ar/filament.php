@@ -129,6 +129,7 @@ return [
         'activity_after_create' => 'سيظهر النشاط بعد إنشاء المستخدم.',
         'no_records' => 'لا توجد سجلات.',
         'setup_link_logs' => 'تعذر إنشاء رابط الإعداد. راجع سجلات Laravel.',
+        'setup_link_regenerate_confirmation' => 'أنشئ رابطاً جديداً لإعداد كلمة المرور. سيتم إلغاء الروابط السابقة.',
     ],
 
     'fields' => [

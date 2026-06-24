@@ -2,6 +2,16 @@
 
 return [
     'failed' => 'These credentials do not match our records.',
+    'login' => 'Login',
+    'forgot_password' => 'Forgot Password?',
+    'forgot_password_hint' => 'Enter your email address and we will send you a password reset link.',
+    'send_reset_link' => 'Send Reset Link',
+    'reset_password' => 'Reset Password',
+    'email_placeholder' => 'email@example.com',
+    'terms_and_privacy_agreement' => 'By continuing, you agree to our :terms and :privacy',
+    'login_with_google_subtitle' => 'Continue with your Google account',
+    'continue_with_google' => 'Continue with Google',
+    'login_failed_title' => 'Login failed',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'email' => 'Email Address',
     'password' => 'Password',

@@ -16,7 +16,6 @@ class SchedulerHealthCheckCommand extends Command
 {
     /** @var array<string, string> */
     private const DAILY_TASKS = [
-        'scheduler:subscriptions_expire:last_success_at' => 'subscriptions:expire',
         'scheduler:placements_expire:last_success_at' => 'placements:expire',
         'scheduler:top_rated:last_success_at' => 'profiles:update-top-rated',
     ];
@@ -40,7 +39,13 @@ class SchedulerHealthCheckCommand extends Command
         foreach (self::DAILY_TASKS as $cacheKey => $label) {
             $lastSuccess = $this->cacheDate($cacheKey);
 
-            if ($lastSuccess === null || $lastSuccess->diffInHours($now) > $maxDailyAge) {
+            if ($lastSuccess === null) {
+                $this->warn("{$label} has not recorded a successful run yet.");
+
+                continue;
+            }
+
+            if ($lastSuccess->diffInHours($now) > $maxDailyAge) {
                 $healthy = false;
                 $this->error("{$label} has no recent successful run.");
 

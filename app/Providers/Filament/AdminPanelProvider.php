@@ -28,33 +28,19 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path(env('FILAMENT_PATH', 'cp/admin'))
-            ->favicon(asset('images/icon-192.png'))
-            ->brandLogo(fn () => new HtmlString('
-                <div style="display: flex; align-items: center; gap: 10px; flex-direction: row;">
-                    <img src="'.asset('images/logo.jpg').'" style="height: 36px; border-radius: 8px; display: inline-block;" alt="دلني" />
-                    <span style="font-size: 20px; font-weight: 950; color: #0b1a34; letter-spacing: -0.5px; display: inline-block; font-family: Cairo, sans-serif;">
-                        دلني
-                    </span>
-                </div>
-            '))
-            ->darkModeBrandLogo(fn () => new HtmlString('
-                <div style="display: flex; align-items: center; gap: 10px; flex-direction: row;">
-                    <img src="'.asset('images/logo.jpg').'" style="height: 36px; border-radius: 8px; display: inline-block;" alt="دلني" />
-                    <span style="font-size: 20px; font-weight: 950; color: #ffffff; letter-spacing: -0.5px; display: inline-block; font-family: Cairo, sans-serif;">
-                        دلني
-                    </span>
-                </div>
-            '))
+            ->favicon(asset('images/photo_2026-06-22_23-21-55.jpg'))
+            ->brandLogo(fn () => $this->brandLogoHtml('#0F172A'))
+            ->darkModeBrandLogo(fn () => $this->brandLogoHtml('#F1F5F9'))
             ->brandName('دلني')
             ->login()
             ->profile()
             ->colors([
-                'primary' => Color::hex('#F1620F'),
-                'danger' => Color::Red,
+                'primary' => Color::hex('#1E40AF'),
+                'danger' => Color::hex('#EF4444'),
                 'gray' => Color::Slate,
-                'info' => Color::Blue,
-                'success' => Color::hex('#22C55E'),
-                'warning' => Color::hex('#F59E0B'),
+                'info' => Color::hex('#60A5FA'),
+                'success' => Color::hex('#10B981'),
+                'warning' => Color::hex('#E1AD01'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -95,5 +81,17 @@ class AdminPanelProvider extends PanelProvider
         }
 
         return $panel;
+    }
+
+    private function brandLogoHtml(string $textColor): HtmlString
+    {
+        return new HtmlString('
+            <div style="display:flex;align-items:center;gap:10px;flex-direction:row;">
+                <img src="'.asset('images/photo_2026-06-22_23-21-55.jpg').'" style="height:36px;width:36px;border-radius:10px;display:inline-block;object-fit:cover;" alt="دلني" />
+                <span style="font-size:20px;font-weight:950;color:'.$textColor.';letter-spacing:-0.5px;display:inline-block;font-family:system-ui,sans-serif;">
+                    دلني
+                </span>
+            </div>
+        ');
     }
 }

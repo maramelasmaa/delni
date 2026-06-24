@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ProfileVisibilityService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Profile extends Model
 {
@@ -22,6 +24,7 @@ class Profile extends Model
         'city_id', 'category_id', 'whatsapp', 'phone',
         'experience_years', 'logo', 'cover_image', 'is_complete',
         'website', 'instagram', 'facebook', 'linkedin',
+        'instagram_handle', 'facebook_slug', 'linkedin_slug', 'github_username',
         'provider_access_ends_at',
     ];
 
@@ -158,5 +161,213 @@ class Profile extends Model
     {
         $percentage = $this->calculateCompletionPercentage();
         $this->update(['is_complete' => $percentage === 100]);
+    }
+
+    protected function instagram(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value, array $attributes): ?string => static::canonicalInstagramUrl(
+                $attributes['instagram_handle'] ?? null,
+                $value,
+            ),
+        );
+    }
+
+    protected function facebook(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value, array $attributes): ?string => static::canonicalPathBasedUrl(
+                'https://facebook.com/',
+                $attributes['facebook_slug'] ?? null,
+                $value,
+            ),
+        );
+    }
+
+    protected function linkedin(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value, array $attributes): ?string => static::canonicalPathBasedUrl(
+                'https://linkedin.com/',
+                $attributes['linkedin_slug'] ?? null,
+                $value,
+            ),
+        );
+    }
+
+    protected function github(): Attribute
+    {
+        return Attribute::make(
+            get: fn (mixed $value, array $attributes): ?string => static::canonicalSimpleUrl(
+                'https://github.com/',
+                $attributes['github_username'] ?? null,
+            ),
+        );
+    }
+
+    protected function instagramHandle(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value, array $attributes): ?string => static::canonicalInstagramUrl(
+                $value ?: static::normalizeInstagramHandle($attributes['instagram'] ?? null),
+                $attributes['instagram'] ?? null,
+            ),
+            set: fn (?string $value): ?string => static::normalizeInstagramHandle($value),
+        );
+    }
+
+    protected function facebookSlug(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value, array $attributes): ?string => static::canonicalPathBasedUrl(
+                'https://facebook.com/',
+                $value ?: static::normalizePathSlug($attributes['facebook'] ?? null, 'facebook.com'),
+                $attributes['facebook'] ?? null,
+            ),
+            set: fn (?string $value): ?string => static::normalizePathSlug($value, 'facebook.com'),
+        );
+    }
+
+    protected function linkedinSlug(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value, array $attributes): ?string => static::canonicalPathBasedUrl(
+                'https://linkedin.com/',
+                $value ?: static::normalizePathSlug($attributes['linkedin'] ?? null, 'linkedin.com'),
+                $attributes['linkedin'] ?? null,
+            ),
+            set: fn (?string $value): ?string => static::normalizePathSlug($value, 'linkedin.com'),
+        );
+    }
+
+    protected function githubUsername(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => static::canonicalSimpleUrl(
+                'https://github.com/',
+                $value,
+            ),
+            set: fn (?string $value): ?string => static::normalizeSimpleUsername($value, 'github.com'),
+        );
+    }
+
+    public static function normalizeInstagramHandle(?string $value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if (preg_match('#^https?://#i', $value) === 1) {
+            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
+            $path = trim((string) parse_url($value, PHP_URL_PATH), '/');
+
+            if (! static::hostMatches($host, 'instagram.com')) {
+                return null;
+            }
+
+            $value = (string) (strtok($path, '/') ?: '');
+        }
+
+        $value = ltrim($value, '@');
+        $value = preg_replace('/[^A-Za-z0-9._]/', '', $value);
+
+        return $value !== '' ? $value : null;
+    }
+
+    public static function normalizePathSlug(?string $value, string $expectedHost): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if (preg_match('#^https?://#i', $value) === 1) {
+            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
+            $path = trim((string) parse_url($value, PHP_URL_PATH), '/');
+
+            if (! static::hostMatches($host, $expectedHost)) {
+                return null;
+            }
+
+            $value = $path;
+        }
+
+        $value = trim($value, '/');
+        $value = preg_replace('/[^A-Za-z0-9._\-\/]/', '', $value);
+
+        return $value !== '' ? $value : null;
+    }
+
+    public static function normalizeSimpleUsername(?string $value, string $expectedHost): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if (preg_match('#^https?://#i', $value) === 1) {
+            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
+            $path = trim((string) parse_url($value, PHP_URL_PATH), '/');
+
+            if (! static::hostMatches($host, $expectedHost)) {
+                return null;
+            }
+
+            $value = (string) (strtok($path, '/') ?: '');
+        }
+
+        $value = ltrim($value, '@');
+        $value = preg_replace('/[^A-Za-z0-9\-]/', '', $value);
+
+        return $value !== '' ? $value : null;
+    }
+
+    private static function canonicalInstagramUrl(?string $handle, ?string $legacyUrl): ?string
+    {
+        $normalizedHandle = static::normalizeInstagramHandle($handle);
+
+        if ($normalizedHandle !== null) {
+            return 'https://instagram.com/'.$normalizedHandle;
+        }
+
+        return filled($legacyUrl) ? $legacyUrl : null;
+    }
+
+    private static function canonicalPathBasedUrl(string $baseUrl, ?string $path, ?string $legacyUrl): ?string
+    {
+        $normalizedPath = trim((string) $path, '/');
+
+        if ($normalizedPath !== '') {
+            return rtrim($baseUrl, '/').'/'.$normalizedPath;
+        }
+
+        return filled($legacyUrl) ? $legacyUrl : null;
+    }
+
+    private static function canonicalSimpleUrl(string $baseUrl, ?string $username): ?string
+    {
+        $normalized = trim((string) $username);
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return rtrim($baseUrl, '/').'/'.Str::of($normalized)->trim('/');
+    }
+
+    private static function hostMatches(?string $host, string $expectedHost): bool
+    {
+        if (! is_string($host) || $host === '') {
+            return false;
+        }
+
+        $host = strtolower($host);
+        $expectedHost = strtolower($expectedHost);
+
+        return $host === $expectedHost || str_ends_with($host, '.'.$expectedHost);
     }
 }

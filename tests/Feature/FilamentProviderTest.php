@@ -12,6 +12,7 @@ use App\Models\Profile;
 use App\Models\ProfileStats;
 use App\Models\User;
 use App\Services\MarketplaceRankingService;
+use App\Services\OnboardingLinkService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -73,22 +74,23 @@ class FilamentProviderTest extends TestCase
             ->call('create');
 
         $provider = User::where('email', 'john.provider2@example.com')->first();
-        $token = OnboardingToken::where('user_id', $provider->id)->first();
+        $setupLink = app(OnboardingLinkService::class)->createOrRefreshLink($provider);
+        $token = basename((string) parse_url($setupLink, PHP_URL_PATH));
 
         auth()->logout();
 
-        $response = $this->get(route('onboarding.show', ['token' => $token->token]));
+        $response = $this->get(route('onboarding.show', ['token' => $token]));
         $response->assertStatus(200);
 
         $response2 = $this->post(route('onboarding.set-password'), [
-            'token' => $token->token,
+            'token' => $token,
             'password' => 'NewSecurePassword123!',
             'password_confirmation' => 'NewSecurePassword123!',
         ]);
 
         $response2->assertRedirect(route('filament.provider.auth.login'));
 
-        $this->assertNotNull($token->fresh()->used_at);
+        $this->assertNotNull(OnboardingToken::where('user_id', $provider->id)->first()?->fresh()->used_at);
     }
 
     public function test_provider_profile_navigation_uses_profile_slug_instead_of_numeric_id(): void

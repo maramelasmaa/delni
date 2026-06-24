@@ -63,7 +63,7 @@ class SearchProfilesRequest extends FormRequest
             ],
             'remote' => ['nullable', 'boolean'],
             'keyword' => ['nullable', 'string', 'min:1', 'max:100'],
-            'sort' => ['nullable', Rule::in(['rating', 'reviews', 'featured', 'newest'])],
+            'sort' => ['nullable', Rule::in(['rating', 'reviews', 'newest'])],
             'per_page' => ['nullable', 'integer', 'min:5', 'max:50'],
             'page' => ['nullable', 'integer', 'min:1'],
         ];

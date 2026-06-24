@@ -8,6 +8,7 @@ use App\Models\Profile;
 use App\Models\ProviderType;
 use App\Models\Subcategory;
 use App\Rules\SafeExternalUrl;
+use App\Rules\SocialProfileReference;
 use App\Services\ProfileImageService;
 use Filament\Actions\EditAction;
 use Filament\Forms;
@@ -72,7 +73,7 @@ class ProfileResource extends Resource
                         ->placeholder('مثال: شركة الأمان للصيانة والتكييف')
                         ->helperText('الاسم الذي سيظهر للعملاء في الموقع ونتائج البحث.')
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(500),
                     Forms\Components\Select::make('provider_type')
                         ->label('نوع النشاط')
                         ->placeholder('اختر نوع النشاط')
@@ -181,41 +182,42 @@ class ProfileResource extends Resource
                         ->url()
                         ->rules([new SafeExternalUrl])
                         ->maxLength(255),
-                    Forms\Components\TextInput::make('instagram')
+                    Forms\Components\TextInput::make('instagram_handle')
                         ->label('إنستاجرام')
                         ->placeholder('https://instagram.com/...')
                         ->helperText('رابط صفحتك على إنستاجرام (اختياري)')
-                        ->url()
-                        ->rules([new SafeExternalUrl])
+                        ->rules([new SocialProfileReference('instagram')])
                         ->maxLength(255),
-                    Forms\Components\TextInput::make('facebook')
+                    Forms\Components\TextInput::make('facebook_slug')
                         ->label('فيسبوك')
                         ->placeholder('https://facebook.com/...')
                         ->helperText('رابط صفحتك على فيسبوك (اختياري)')
-                        ->url()
-                        ->rules([new SafeExternalUrl])
+                        ->rules([new SocialProfileReference('facebook')])
                         ->maxLength(255),
-                    Forms\Components\TextInput::make('linkedin')
+                    Forms\Components\TextInput::make('linkedin_slug')
                         ->label('لينكد إن')
                         ->placeholder('https://linkedin.com/...')
                         ->helperText('رابط ملفك على لينكد إن (اختياري)')
-                        ->url()
-                        ->rules([new SafeExternalUrl])
+                        ->rules([new SocialProfileReference('linkedin')])
                         ->maxLength(255),
-                    Forms\Components\TextInput::make('github')
+                    Forms\Components\TextInput::make('github_username')
                         ->label('جيتهاب')
                         ->placeholder('https://github.com/...')
                         ->helperText('رابط حسابك على جيتهاب (اختياري)')
-                        ->url()
-                        ->rules([new SafeExternalUrl])
+                        ->rules([new SocialProfileReference('github')])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('map_url')
                         ->label('رابط موقعك على الخريطة')
                         ->placeholder('https://maps.google.com/...')
                         ->helperText('يساعد العملاء في الوصول إلى موقعك بسهولة.')
                         ->url()
-                        ->rules([new SafeExternalUrl])
-                        ->maxLength(500),
+                        ->rules([new SafeExternalUrl([
+                            'google.com',
+                            'maps.app.goo.gl',
+                            'openstreetmap.org',
+                            'maps.apple.com',
+                        ])])
+                        ->maxLength(255),
                 ])
                 ->columns(2),
 
@@ -227,7 +229,7 @@ class ProfileResource extends Resource
                         ->helperText('صورة واضحة ومربعة لظهور أفضل. (الحد الأقصى 2 MB)')
                         ->image()
                         ->maxSize(2048)
-                        ->imagePreviewHeight(400)
+                        ->imagePreviewHeight('400')
                         ->previewable()
                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->columnSpanFull()
@@ -243,7 +245,7 @@ class ProfileResource extends Resource
                         ->helperText('صورة جميلة تعكس نشاطك وجودة خدماتك. (الحد الأقصى 4 MB)')
                         ->image()
                         ->maxSize(4096)
-                        ->imagePreviewHeight(300)
+                        ->imagePreviewHeight('300')
                         ->previewable()
                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->columnSpanFull()

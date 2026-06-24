@@ -104,15 +104,6 @@ class ReviewModerationService
     }
 
     /**
-     * Keep flagged review public (alias for rejectFlag for UI clarity).
-     * Deprecated: use rejectFlag() directly for new code.
-     */
-    public function keep(Review $review, ?string $note = null): void
-    {
-        $this->rejectFlag($review, $note);
-    }
-
-    /**
      * Soft-delete a review.
      * Used for removing reviews from the database (hide permanently).
      * Stats recalculation triggered via ReviewObserver::deleted()

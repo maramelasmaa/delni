@@ -9,4 +9,5 @@ enum ProfileHiddenReason: string
     case USER_SUSPENDED = 'user_suspended';
     case PROFILE_INCOMPLETE = 'profile_incomplete';
     case ACCESS_EXPIRED = 'access_expired';
+    case NOT_PROVIDER = 'not_provider';
 }

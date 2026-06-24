@@ -6,6 +6,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 #[Signature('integrity:audit')]
 #[Description('Detect duplicate, orphaned, and impossible marketplace data states without modifying data.')]
@@ -14,13 +15,11 @@ class IntegrityAuditCommand extends Command
     /** @return array<string, int> */
     public function findings(): array
     {
-        return [
+        $findings = [
             'duplicate_profiles_per_user' => $this->countGroupedDuplicates('profiles', ['user_id']),
             'duplicate_profile_stats_per_profile' => $this->countGroupedDuplicates('profile_stats', ['profile_id']),
             'duplicate_reviews_per_user_profile' => $this->countGroupedDuplicates('reviews', ['user_id', 'profile_id']),
             'duplicate_profile_slugs' => $this->countGroupedDuplicates('profiles', ['slug']),
-            'subscriptions_for_non_provider_users' => $this->countSubscriptionsForNonProviders(),
-            'overlapping_subscriptions' => $this->countOverlappingSubscriptions(),
             'orphan_profiles' => $this->countOrphans('profiles', 'user_id', 'users', 'id'),
             'orphan_profile_stats' => $this->countOrphans('profile_stats', 'profile_id', 'profiles', 'id'),
             'orphan_reviews_profiles' => $this->countOrphans('reviews', 'profile_id', 'profiles', 'id'),
@@ -30,10 +29,17 @@ class IntegrityAuditCommand extends Command
             'orphan_provider_links' => $this->countOrphans('provider_links', 'profile_id', 'profiles', 'id'),
             'orphan_provider_credentials' => $this->countOrphans('provider_credentials', 'profile_id', 'profiles', 'id'),
             'missing_profile_stats' => $this->countMissingProfileStats(),
-            'invalid_subscription_dates' => $this->countInvalidSubscriptionDates(),
             'invalid_review_ratings' => $this->countInvalidReviewRatings(),
             'invalid_profile_stats_values' => $this->countInvalidProfileStatsValues(),
         ];
+
+        if (Schema::hasTable('subscriptions')) {
+            $findings['subscriptions_for_non_provider_users'] = $this->countSubscriptionsForNonProviders();
+            $findings['overlapping_subscriptions'] = $this->countOverlappingSubscriptions();
+            $findings['invalid_subscription_dates'] = $this->countInvalidSubscriptionDates();
+        }
+
+        return $findings;
     }
 
     public function handle(): int

@@ -1,4 +1,39 @@
 services:
+  # One-shot release container: runs migrations + seeding once before the app starts.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+    restart: "no"
+    environment:
+      APP_NAME: "دلني"
+      APP_ENV: production
+      APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8088
+      APP_LOCALE: ar
+      APP_FALLBACK_LOCALE: ar
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: warning
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: delni
+      DB_USERNAME: delni
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: public
+      CONTAINER_ROLE: deploy
+      SUPER_ADMIN_NAME: "${SUPER_ADMIN_NAME:-Admin}"
+      SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:?Set SUPER_ADMIN_EMAIL in .env}"
+      SUPER_ADMIN_PASSWORD: "${SUPER_ADMIN_PASSWORD:?Set SUPER_ADMIN_PASSWORD in .env}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   app:
     build:
       context: .
@@ -14,13 +49,14 @@ services:
       APP_URL: http://localhost:8088
       APP_LOCALE: ar
       APP_FALLBACK_LOCALE: ar
+      LOG_CHANNEL: stderr
       LOG_LEVEL: warning
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: delni
       DB_USERNAME: delni
-      DB_PASSWORD: delnipass
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
       SESSION_DRIVER: database
       SESSION_SECURE_COOKIE: "false"
       SESSION_HTTP_ONLY: "true"
@@ -29,95 +65,118 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: public
       TRUSTED_PROXIES: "*"
-      GOOGLE_CLIENT_ID: 721734995923-b0o61muq5q3murj3ib7rsc3s1vkf0ibv.apps.googleusercontent.com
-      GOOGLE_CLIENT_SECRET: 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
-      GOOGLE_REDIRECT_URL: http://localhost:8088/auth/google/callback
+      CONTAINER_ROLE: app
+      SUPER_ADMIN_NAME: "${SUPER_ADMIN_NAME:-Admin}"
+      SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:?Set SUPER_ADMIN_EMAIL in .env}"
+      SUPER_ADMIN_PASSWORD: "${SUPER_ADMIN_PASSWORD:?Set SUPER_ADMIN_PASSWORD in .env}"
     volumes:
       - delni_public_storage:/var/www/html/storage/app/public
-      - ./storage/app/icons:/var/www/html/storage/app/icons
+      - delni_icons_storage:/var/www/html/storage/app/icons
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   worker:
     build:
       context: .
       dockerfile: Dockerfile
       network: host
-    command: php artisan queue:work --queue=default --max-jobs=100 --max-time=3600 --tries=3
+    command: php artisan queue:work database --queue=default --sleep=3 --timeout=60 --tries=3 --memory=256 --max-jobs=1000 --max-time=3600
     environment:
       APP_NAME: "دلني"
       APP_ENV: production
       APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
       APP_DEBUG: "false"
       APP_URL: http://localhost:8088
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: warning
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: delni
       DB_USERNAME: delni
-      DB_PASSWORD: delnipass
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
       SESSION_DRIVER: database
       CACHE_STORE: database
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: public
-      GOOGLE_CLIENT_ID: 721734995923-b0o61muq5q3murj3ib7rsc3s1vkf0ibv.apps.googleusercontent.com
-      GOOGLE_CLIENT_SECRET: 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
-      GOOGLE_REDIRECT_URL: http://localhost:8088/auth/google/callback
+      CONTAINER_ROLE: worker
     volumes:
       - delni_public_storage:/var/www/html/storage/app/public
-      - ./storage/app/icons:/var/www/html/storage/app/icons
+      - delni_icons_storage:/var/www/html/storage/app/icons
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php /var/www/html/artisan queue:deployment-check >/dev/null || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   scheduler:
     build:
       context: .
       dockerfile: Dockerfile
       network: host
-    command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    command: php artisan schedule:work --no-interaction
     environment:
       APP_NAME: "دلني"
       APP_ENV: production
       APP_KEY: "${APP_KEY:?Set APP_KEY before running docker compose}"
       APP_DEBUG: "false"
       APP_URL: http://localhost:8088
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: warning
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: delni
       DB_USERNAME: delni
-      DB_PASSWORD: delnipass
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
       SESSION_DRIVER: database
       CACHE_STORE: database
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: public
-      GOOGLE_CLIENT_ID: 721734995923-b0o61muq5q3murj3ib7rsc3s1vkf0ibv.apps.googleusercontent.com
-      GOOGLE_CLIENT_SECRET: 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
-      GOOGLE_REDIRECT_URL: http://localhost:8088/auth/google/callback
+      CONTAINER_ROLE: scheduler
     volumes:
       - delni_public_storage:/var/www/html/storage/app/public
-      - ./storage/app/icons:/var/www/html/storage/app/icons
+      - delni_icons_storage:/var/www/html/storage/app/icons
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php /var/www/html/artisan scheduler:health-check >/dev/null || exit 1"]
+      interval: 120s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
 
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}"
       MYSQL_DATABASE: delni
       MYSQL_USER: delni
-      MYSQL_PASSWORD: delnipass
+      MYSQL_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
     volumes:
       - delni_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
 
 volumes:
   delni_mysql_data:
   delni_public_storage:
+  delni_icons_storage:

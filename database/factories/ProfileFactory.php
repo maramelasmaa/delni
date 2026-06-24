@@ -8,6 +8,7 @@ use App\Models\Profile;
 use App\Models\ProfileStats;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Spatie\Permission\Models\Role;
 
 class ProfileFactory extends Factory
 {
@@ -74,6 +75,14 @@ class ProfileFactory extends Factory
                     'top_subcategory_until' => null,
                 ]);
             }
+        });
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Profile $profile): void {
+            Role::findOrCreate('provider', 'web');
+            $profile->user->assignRole('provider');
         });
     }
 }

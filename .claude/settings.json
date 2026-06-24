@@ -45,10 +45,20 @@
       "Bash(composer require *)",
       "Bash(git -C c:/laragon/www/delni status --short)",
       "PowerShell(Test-NetConnection -ComputerName smtp-relay.brevo.com -Port 587 -WarningAction SilentlyContinue)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Read(//c/laragon/www/delni-app/**)",
+      "Bash(npm view *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(list\\(d.get\\('exports',{}\\).keys\\(\\)\\)[:20]\\)\")",
+      "Bash(grep -o '\"\\\\.\\\\/internal[^\"]*\"' node_modules/expo-router/package.json)",
+      "Bash(ping -n 20 127.0.0.1)",
+      "Bash(ping -n 15 127.0.0.1)",
+      "Bash(ping -n 30 127.0.0.1)",
+      "WebSearch",
+      "WebFetch(domain:expo.dev)"
     ],
     "additionalDirectories": [
-      "c:\\laragon\\www\\delni\\storage"
+      "c:\\laragon\\www\\delni\\storage",
+      "c:\\laragon\\www\\delni-app"
     ]
   },
   "enabledPlugins": {

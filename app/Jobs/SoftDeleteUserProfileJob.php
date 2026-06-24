@@ -8,6 +8,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SoftDeleteUserProfileJob implements ShouldQueue
 {
@@ -25,5 +27,13 @@ class SoftDeleteUserProfileJob implements ShouldQueue
         $user = User::withTrashed()->find($this->userId);
 
         $user?->profile?->delete();
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        Log::error('SoftDeleteUserProfileJob failed after all retries', [
+            'user_id' => $this->userId,
+            'exception' => $exception?->getMessage(),
+        ]);
     }
 }

@@ -10,6 +10,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * ShouldBeUnique prevents duplicate recalculations from burst events
@@ -37,5 +39,13 @@ class RecalculateProfileStatsJob implements ShouldBeUnique, ShouldQueue
         if ($profile) {
             $statsService->recalculate($profile);
         }
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        Log::error('RecalculateProfileStatsJob failed after all retries', [
+            'profile_id' => $this->profileId,
+            'exception' => $exception?->getMessage(),
+        ]);
     }
 }

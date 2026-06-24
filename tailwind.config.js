@@ -1,4 +1,5 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
+import forms from '@tailwindcss/forms';
 
 export default {
     content: [
@@ -131,7 +132,7 @@ export default {
         },
     },
     plugins: [
-        require('@tailwindcss/forms'),
+        forms,
         function ({ addComponents, theme, matchUtilities, e }) {
             addComponents({
                 '.btn': {

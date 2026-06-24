@@ -78,9 +78,9 @@ class PortfolioResource extends Resource
                         ->schema([
                             Forms\Components\FileUpload::make('path')
                                 ->label('الصورة')
-                                ->helperText('صورة واضحة وعالية الجودة. (الحد الأقصى 5 MB)')
+                                ->helperText('صورة واضحة وعالية الجودة. (الحد الأقصى 4 MB)')
                                 ->image()
-                                ->maxSize(5120)
+                                ->maxSize(4096)
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->saveUploadedFileUsing(function (UploadedFile $file, ProfileImageService $imageService) {
                                     return $imageService->storePortfolioImage($file);

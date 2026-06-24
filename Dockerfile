@@ -15,9 +15,11 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
         bash \
         curl \
+        curl-dev \
         freetype-dev \
         icu-dev \
         libjpeg-turbo-dev \
+        libxml2-dev \
         libpng-dev \
         libwebp-dev \
         libzip-dev \
@@ -29,13 +31,20 @@ RUN apk add --no-cache \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
+        curl \
         exif \
         gd \
         intl \
+        mbstring \
         opcache \
+        pcntl \
         pdo_mysql \
+        posix \
+        xml \
         zip \
     && sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf \
+    && ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log \
     && chown -R www-data:www-data /var/lib/nginx /var/log/nginx
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -55,7 +64,9 @@ COPY --from=assets /app/public/build ./public/build
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/entrypoint.sh /usr/local/bin/delni-entrypoint
+COPY docker/deploy.sh /usr/local/bin/delni-deploy
 
 RUN composer dump-autoload --no-dev --optimize --no-scripts \
     && php artisan package:discover --ansi \
@@ -70,7 +81,10 @@ RUN composer dump-autoload --no-dev --optimize --no-scripts \
         storage/logs \
         bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache public \
-    && chmod +x /usr/local/bin/delni-entrypoint
+    && chmod +x /usr/local/bin/delni-entrypoint /usr/local/bin/delni-deploy
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8080/api/health >/dev/null || exit 1
 
 EXPOSE 8080
 

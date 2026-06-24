@@ -1,0 +1,148 @@
+x-laravel-env: &laravel-env
+  APP_NAME: Delni
+  APP_ENV: production
+  APP_KEY: ${APP_KEY:?Set APP_KEY}
+  APP_DEBUG: "false"
+  APP_URL: ${APP_URL:?Set APP_URL}
+  APP_LOCALE: ar
+  APP_FALLBACK_LOCALE: ar
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: warning
+
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: 3306
+  DB_DATABASE: ${DB_DATABASE:?Set DB_DATABASE}
+  DB_USERNAME: ${DB_USERNAME:?Set DB_USERNAME}
+  DB_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
+
+  SESSION_DRIVER: database
+  SESSION_SECURE_COOKIE: "true"
+  SESSION_HTTP_ONLY: "true"
+  SESSION_SAME_SITE: lax
+  CACHE_STORE: database
+  QUEUE_CONNECTION: database
+  FILESYSTEM_DISK: public
+  TRUSTED_PROXIES: "*"
+
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?Set CORS_ALLOWED_ORIGINS}
+  SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-}
+
+  MAIL_MAILER: resend
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?Set MAIL_FROM_ADDRESS}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME:?Set MAIL_FROM_NAME}
+  RESEND_KEY: ${RESEND_KEY:?Set RESEND_KEY}
+
+  SUPER_ADMIN_NAME: ${SUPER_ADMIN_NAME:?Set SUPER_ADMIN_NAME}
+  SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:?Set SUPER_ADMIN_EMAIL}
+  SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD:?Set SUPER_ADMIN_PASSWORD}
+
+services:
+  # One-shot release container: runs schema migrations + idempotent seeding once,
+  # before any app container starts. Prevents concurrent migrations during rolling deploys.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    environment:
+      <<: *laravel-env
+      CONTAINER_ROLE: deploy
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      <<: *laravel-env
+      CONTAINER_ROLE: app
+    volumes:
+      - delni_public_storage:/var/www/html/storage/app/public
+      - delni_icons_storage:/var/www/html/storage/app/icons
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: php artisan queue:work database --queue=default --sleep=3 --timeout=60 --tries=3 --memory=256 --max-jobs=1000 --max-time=3600
+    environment:
+      <<: *laravel-env
+      CONTAINER_ROLE: worker
+    volumes:
+      - delni_public_storage:/var/www/html/storage/app/public
+      - delni_icons_storage:/var/www/html/storage/app/icons
+    depends_on:
+      app:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php /var/www/html/artisan queue:deployment-check >/dev/null || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: php artisan schedule:work --no-interaction
+    environment:
+      <<: *laravel-env
+      CONTAINER_ROLE: scheduler
+    volumes:
+      - delni_public_storage:/var/www/html/storage/app/public
+      - delni_icons_storage:/var/www/html/storage/app/icons
+    depends_on:
+      app:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php /var/www/html/artisan scheduler:health-check >/dev/null || exit 1"]
+      interval: 120s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL_ROOT}
+      MYSQL_DATABASE: ${DB_DATABASE:?Set DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME:?Set DB_USERNAME}
+      MYSQL_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
+    volumes:
+      - delni_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  delni_mysql_data:
+  delni_public_storage:
+  delni_icons_storage:

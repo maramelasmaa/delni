@@ -25,6 +25,10 @@ class EnsureUserIsActive
         }
 
         if (! $user->is_active) {
+            if ($request->expectsJson()) {
+                abort(403, __('messages.account_deactivated'));
+            }
+
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

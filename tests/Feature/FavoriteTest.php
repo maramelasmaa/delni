@@ -18,8 +18,8 @@ class FavoriteTest extends TestCase
 
     public function test_guest_can_visit_favorites_page_without_error(): void
     {
-        $response = $this->get(route('favorites.index'));
-        $response->assertStatus(200);
+        $response = $this->withHeaders(['Accept' => 'application/json'])->get(route('api.favorites.index'));
+        $response->assertUnauthorized();
     }
 
     public function test_authenticated_user_can_visit_favorites_page_with_favorites(): void
@@ -57,7 +57,7 @@ class FavoriteTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->get(route('favorites.index'));
-        $response->assertStatus(200);
+        $response = $this->withHeaders(['Accept' => 'application/json'])->get(route('api.favorites.index'));
+        $response->assertOk();
     }
 }

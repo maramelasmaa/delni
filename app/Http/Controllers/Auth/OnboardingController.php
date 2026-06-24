@@ -47,12 +47,12 @@ class OnboardingController extends Controller
             return $validationResult;
         }
 
-        $tokenString = $validationResult->token;
+        $tokenId = $validationResult->getKey();
 
         // Re-acquire the token inside a transaction with a row lock to prevent
         // two simultaneous requests from both succeeding with the same token.
-        $success = DB::transaction(function () use ($tokenString, $request): bool {
-            $locked = OnboardingToken::where('token', $tokenString)
+        $success = DB::transaction(function () use ($tokenId, $request): bool {
+            $locked = OnboardingToken::whereKey($tokenId)
                 ->whereNull('used_at')
                 ->lockForUpdate()
                 ->first();
@@ -85,10 +85,10 @@ class OnboardingController extends Controller
 
             return $isFormSubmission
                 ? back()->withErrors($errors)->withInput()
-                : redirect('/login')->withErrors($errors);
+                : redirect()->route('filament.provider.auth.login')->withErrors($errors);
         };
 
-        $onboardingToken = OnboardingToken::where('token', $token)->first();
+        $onboardingToken = OnboardingToken::findByPlainTextToken($token);
 
         if (! $onboardingToken || ! $onboardingToken->user) {
             return $errorRedirect('invalid');

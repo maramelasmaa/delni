@@ -2,7 +2,6 @@
 
 use App\Console\Commands\ClearExpiredLocksCommand;
 use App\Console\Commands\ExpirePlacementsCommand;
-use App\Console\Commands\ExpireSubscriptionsCommand;
 use App\Console\Commands\UpdateTopRatedProfilesCommand;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -19,11 +18,6 @@ Schedule::call(fn (): bool => Cache::put('scheduler:last_heartbeat_at', now()->t
     ->withoutOverlapping()
     ->onOneServer();
 
-Schedule::command(ExpireSubscriptionsCommand::class)
-    ->daily()
-    ->withoutOverlapping()
-    ->onOneServer();
-
 Schedule::command(ExpirePlacementsCommand::class)
     ->daily()
     ->withoutOverlapping()
@@ -37,4 +31,9 @@ Schedule::command(UpdateTopRatedProfilesCommand::class)
 Schedule::command(ClearExpiredLocksCommand::class)
     ->everyFiveMinutes()
     ->withoutOverlapping(10)
+    ->onOneServer();
+
+Schedule::command('sanctum:prune-expired --hours=720')
+    ->daily()
+    ->withoutOverlapping()
     ->onOneServer();

@@ -15,10 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RoleSeeder::class,
+            SafeProductionSeeder::class,
         ]);
-
-        // Test data (dev/staging only — uncomment to use)
-        // $this->call([MalamProviderSeeder::class]);
     }
 }

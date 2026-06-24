@@ -6,8 +6,8 @@ namespace App\Filament\Resources\ProviderResource\Pages;
 
 use App\Filament\Resources\ProviderResource;
 use App\Filament\Support\Pages\CreateRecordWithBack;
-use App\Models\OnboardingToken;
 use App\Models\User;
+use App\Services\OnboardingLinkService;
 use App\Services\ProviderCreationService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -22,6 +22,8 @@ use Throwable;
 class CreateProvider extends CreateRecordWithBack
 {
     protected static string $resource = ProviderResource::class;
+
+    private ?string $setupUrl = null;
 
     protected function handleRecordCreation(array $data): Model
     {
@@ -40,11 +42,7 @@ class CreateProvider extends CreateRecordWithBack
 
             ProviderResource::saveProviderData($record, $data);
 
-            OnboardingToken::query()->create([
-                'user_id' => $record->id,
-                'token' => Str::random(60),
-                'expires_at' => now()->addHours(72),
-            ]);
+            $this->setupUrl = app(OnboardingLinkService::class)->createOrRefreshLink($record);
 
             return $record;
         });
@@ -78,7 +76,7 @@ class CreateProvider extends CreateRecordWithBack
     protected function showOnboardingSuccessNotification(): void
     {
         $providerEmail = e((string) $this->record->email);
-        $setupUrl = $this->latestSetupUrl();
+        $setupUrl = $this->setupUrl ?? __('filament.notifications.setup_link_missing');
 
         $content = __('filament.notifications.setup_link_send_manual', [
             'email' => $providerEmail,
@@ -103,20 +101,5 @@ class CreateProvider extends CreateRecordWithBack
             ->success()
             ->persistent()
             ->send();
-    }
-
-    private function latestSetupUrl(): string
-    {
-        $token = $this->record
-            ->onboardingTokens()
-            ->whereNull('used_at')
-            ->latest('id')
-            ->first();
-
-        if (! $token instanceof OnboardingToken) {
-            return __('filament.notifications.setup_link_missing');
-        }
-
-        return route('onboarding.show', ['token' => $token->token]);
     }
 }

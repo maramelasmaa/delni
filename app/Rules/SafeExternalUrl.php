@@ -11,74 +11,98 @@ class SafeExternalUrl implements DataAwareRule, ValidationRule
 {
     private array $data = [];
 
+    /**
+     * @param  array<int, string>|null  $allowedHosts
+     */
+    public function __construct(
+        private readonly ?array $allowedHosts = null,
+    ) {}
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        if ($value === null) {
+            return;
+        }
+
         if (! is_string($value)) {
-            $fail('تعذر التحقق من صحة الرابط.');
+            $fail('ØªØ¹Ø°Ø± Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† ØµØ­Ø© Ø§Ù„Ø±Ø§Ø¨Ø·.');
 
             return;
         }
 
         $url = trim($value);
 
-        if (empty($url)) {
+        if ($url === '') {
             return;
         }
 
-        // Add scheme if missing
         if (! Str::startsWith($url, ['http://', 'https://'])) {
             $url = 'https://'.$url;
         }
 
-        // Parse URL
         $parsed = parse_url($url);
+
         if ($parsed === false) {
-            $fail('صيغة الرابط غير صحيحة.');
+            $fail('ØµÙŠØºØ© Ø§Ù„Ø±Ø§Ø¨Ø· ØºÙŠØ± ØµØ­ÙŠØ­Ø©.');
 
             return;
         }
 
         $scheme = $parsed['scheme'] ?? '';
         $host = $parsed['host'] ?? '';
+        $user = $parsed['user'] ?? null;
+        $pass = $parsed['pass'] ?? null;
 
-        // Check protocol is HTTPS only
         if ($scheme !== 'https') {
-            $fail('يجب أن يبدأ الرابط بـ https://');
+            $fail('ÙŠØ¬Ø¨ Ø£Ù† ÙŠØ¨Ø¯Ø£ Ø§Ù„Ø±Ø§Ø¨Ø· Ø¨Ù€ https://');
 
             return;
         }
 
-        // Block javascript, data, file, ftp, vbscript
-        if (in_array($scheme, ['javascript', 'data', 'file', 'ftp', 'vbscript'])) {
-            $fail('نوع الرابط غير مسموح.');
+        if (in_array($scheme, ['javascript', 'data', 'file', 'ftp', 'vbscript'], true)) {
+            $fail('Ù†ÙˆØ¹ Ø§Ù„Ø±Ø§Ø¨Ø· ØºÙŠØ± Ù…Ø³Ù…ÙˆØ­.');
 
             return;
         }
 
-        // Block localhost and private networks
+        if ($user !== null || $pass !== null) {
+            $fail('Ø§Ù„Ø±Ø§Ø¨Ø· ØºÙŠØ± Ù…Ø³Ù…ÙˆØ­ Ù„Ø£Ø³Ø¨Ø§Ø¨ Ø£Ù…Ù†ÙŠØ©.');
+
+            return;
+        }
+
         if ($this->isPrivateNetwork($host)) {
-            $fail('الرابط غير مسموح لأسباب أمنية.');
+            $fail('Ø§Ù„Ø±Ø§Ø¨Ø· ØºÙŠØ± Ù…Ø³Ù…ÙˆØ­ Ù„Ø£Ø³Ø¨Ø§Ø¨ Ø£Ù…Ù†ÙŠØ©.');
 
             return;
         }
 
-        // Check if it's an IP address
         $isIP = filter_var($host, FILTER_VALIDATE_IP);
 
         if ($isIP) {
-            // Block private IPs only (allow public IPs)
             if ($this->isPrivateNetwork($host)) {
-                $fail('الروابط عبر عناوين IP المحلية غير مسموحة.');
+                $fail('Ø§Ù„Ø±ÙˆØ§Ø¨Ø· Ø¹Ø¨Ø± Ø¹Ù†Ø§ÙˆÙŠÙ† IP Ø§Ù„Ù…Ø­Ù„ÙŠØ© ØºÙŠØ± Ù…Ø³Ù…ÙˆØ­Ø©.');
 
                 return;
             }
-        } else {
-            // Validate domain format (only for non-IP hosts)
-            if (! $this->isValidDomain($host)) {
-                $fail('صيغة المجال غير صحيحة.');
+
+            if ($this->allowedHosts !== null && $this->allowedHosts !== []) {
+                $fail('Ø§Ù„Ø±Ø§Ø¨Ø· ÙŠØ¬Ø¨ Ø£Ù† ÙŠÙƒÙˆÙ† Ù…Ù† Ù…ØµØ¯Ø± Ù…Ø¹ØªÙ…Ø¯.');
 
                 return;
             }
+
+            return;
+        }
+
+        if (! $this->isValidDomain($host)) {
+            $fail('ØµÙŠØºØ© Ø§Ù„Ù…Ø¬Ø§Ù„ ØºÙŠØ± ØµØ­ÙŠØ­Ø©.');
+
+            return;
+        }
+
+        if (! $this->isAllowedHost($host)) {
+            $fail('Ø§Ù„Ø±Ø§Ø¨Ø· ÙŠØ¬Ø¨ Ø£Ù† ÙŠÙƒÙˆÙ† Ù…Ù† Ù…ØµØ¯Ø± Ù…Ø¹ØªÙ…Ø¯.');
         }
     }
 
@@ -86,43 +110,38 @@ class SafeExternalUrl implements DataAwareRule, ValidationRule
     {
         $host = strtolower($host);
 
-        // localhost
         if ($host === 'localhost' || $host === 'localhost.localdomain') {
             return true;
         }
 
-        // 127.x.x.x
         if (Str::startsWith($host, '127.')) {
             return true;
         }
 
-        // 0.0.0.0
         if ($host === '0.0.0.0') {
             return true;
         }
 
-        // ::1 (IPv6 loopback)
         if ($host === '::1') {
             return true;
         }
 
-        // 10.x.x.x
         if (Str::startsWith($host, '10.')) {
             return true;
         }
 
-        // 172.16.x.x - 172.31.x.x
         if (Str::startsWith($host, '172.')) {
             $parts = explode('.', $host);
+
             if (isset($parts[1]) && is_numeric($parts[1])) {
                 $second = (int) $parts[1];
+
                 if ($second >= 16 && $second <= 31) {
                     return true;
                 }
             }
         }
 
-        // 192.168.x.x
         if (Str::startsWith($host, '192.168.')) {
             return true;
         }
@@ -132,13 +151,30 @@ class SafeExternalUrl implements DataAwareRule, ValidationRule
 
     private function isValidDomain(string $host): bool
     {
-        // Remove port if present
         if (strpos($host, ':') !== false) {
             $host = substr($host, 0, strpos($host, ':'));
         }
 
-        // Valid domain pattern: alphanumeric, hyphens, dots
         return (bool) preg_match('/^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i', $host);
+    }
+
+    private function isAllowedHost(string $host): bool
+    {
+        if ($this->allowedHosts === null || $this->allowedHosts === []) {
+            return true;
+        }
+
+        $normalizedHost = strtolower($host);
+
+        foreach ($this->allowedHosts as $allowedHost) {
+            $allowedHost = strtolower($allowedHost);
+
+            if ($normalizedHost === $allowedHost || str_ends_with($normalizedHost, '.'.$allowedHost)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function setData(array $data): static

@@ -20,7 +20,6 @@ return [
     'logout' => 'تسجيل الخروج',
     'welcome' => 'مرحباً',
     'subscription_providers_only' => 'الاشتراكات مخصصة لمقدمي الخدمات فقط.',
-    'subscription_expired_login_blocked' => 'اشتراكك منتهي الصلاحية. يرجى التواصل مع الإدارة لتجديد اشتراكك.',
     'subscription_end_after_start' => 'يجب أن يكون تاريخ انتهاء الاشتراك بعد تاريخ البدء.',
     'subscription_dates_overlap' => 'تاريخ الاشتراك يتداخل مع فترة اشتراك أخرى نشطة.',
     'review_submitted' => 'تم إرسال تقييمك بنجاح وهو قيد المراجعة.',
@@ -187,6 +186,7 @@ return [
         'check_back_soon' => 'يرجى زيارتنا لاحقاً.',
         'contact_support' => 'التواصل مع الدعم الفني',
         'contact_us' => 'اتصل بنا',
+        'back' => 'رجوع',
         'provider' => 'مقدم خدمة',
     ],
 ];

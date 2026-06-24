@@ -45,7 +45,7 @@ class ReviewCreationTest extends TestCase
     {
         return $this->actingAs($user)
             ->withHeaders(['Accept' => 'application/json'])
-            ->post(route('review.store', $profile), array_merge([
+            ->post(route('api.providers.reviews.store', $profile), array_merge([
                 'rating' => 5,
                 'comment' => 'Very good service!',
             ], $data));
@@ -93,11 +93,12 @@ class ReviewCreationTest extends TestCase
         $this->makeReview($user, $profile);
 
         $this->actingAs($user)
-            ->post(route('review.store', $profile), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.providers.reviews.store', $profile), [
                 'rating' => 5,
                 'comment' => 'Trying to review again.',
             ])
-            ->assertSessionHasErrors(['profile']);
+            ->assertJsonValidationErrors('profile');
 
         $this->assertSame(1, Review::where('profile_id', $profile->id)
             ->where('user_id', $user->id)
@@ -235,7 +236,8 @@ class ReviewCreationTest extends TestCase
         $providerUser = $profile->user;
 
         $this->actingAs($providerUser)
-            ->post(route('review.store', $profile), [
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.providers.reviews.store', $profile), [
                 'rating' => 5,
                 'comment' => 'Self-review.',
             ])
@@ -253,7 +255,7 @@ class ReviewCreationTest extends TestCase
 
         $this->actingAs($otherProvider)
             ->withHeaders(['Accept' => 'application/json'])
-            ->post(route('review.store', $targetProfile), [
+            ->post(route('api.providers.reviews.store', $targetProfile), [
                 'rating' => 3,
                 'comment' => 'Review from provider.',
             ])
@@ -268,10 +270,11 @@ class ReviewCreationTest extends TestCase
     {
         $profile = $this->makeVisibleProfile();
 
-        $this->post(route('review.store', $profile), [
-            'rating' => 5,
-            'comment' => 'Guest review attempt.',
-        ])->assertRedirect(route('login'));
+        $this->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.providers.reviews.store', $profile), [
+                'rating' => 5,
+                'comment' => 'Guest review attempt.',
+            ])->assertUnauthorized();
     }
 
     // -----------------------------------------------------------------------

@@ -15,12 +15,9 @@ class UserPolicy
     public function before(User $user, string $ability): ?bool
     {
         if ($user->hasRole('super_admin')) {
-            // Prevent deleting the sole super_admin
-            if ($ability === 'delete' && ! SuperAdminGuardService::canDeleteUser($user)) {
-                return false;
+            if ($ability !== 'delete') {
+                return true;
             }
-
-            return true;
         }
 
         return null;
@@ -82,7 +79,8 @@ class UserPolicy
      */
     public function delete(User $user, User $target): bool
     {
-        return false;
+        return $user->hasRole('super_admin')
+            && SuperAdminGuardService::canDeleteUser($target);
     }
 
     /**

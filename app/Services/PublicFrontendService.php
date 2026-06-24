@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Data\ProfileSearchFilters;
 use App\Enums\ReviewStatus;
+use App\Models\Banner;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Profile;
@@ -29,11 +30,9 @@ class PublicFrontendService
     ) {}
 
     /** @return array{data: array<string, mixed>, queryStats: array<string, mixed>} */
-    public function homepage(): array
+    public function homepage(?City $activeCity = null): array
     {
-        return $this->inspectQueries(function (): array {
-            $activeCitySlug = session('active_city_slug');
-            $activeCity = $activeCitySlug ? City::where('slug', $activeCitySlug)->where('is_active', true)->first() : null;
+        return $this->inspectQueries(function () use ($activeCity): array {
             $cityId = $activeCity?->id;
 
             $categoryCounts = $this->profileCountsBy('profiles.category_id', $cityId);
@@ -58,13 +57,28 @@ class PublicFrontendService
                 ->limit(8)
                 ->get();
 
+            // Suggested providers: top-ranked discoverable providers NOT already in featured,
+            // so cities without featured providers still show real results.
+            $featuredIds = $featuredProviders->pluck('id')->all();
+            $suggestedQuery = $this->rankingService
+                ->applySearchRanking($this->discoverableProfilesQuery($cityId));
+            if ($featuredIds !== []) {
+                $suggestedQuery->whereNotIn('profiles.id', $featuredIds);
+            }
+            $suggestedProviders = $suggestedQuery->limit(6)->get();
+
             $loadedProviders = $this->loadHomepageProviderRelations(
-                $featuredProviders->values(),
+                $featuredProviders->merge($suggestedProviders)->values(),
                 $categoryMap
             );
 
             $loadedFeaturedProviders = $this->reuseLoadedProviders(
                 $featuredProviders->values(),
+                $loadedProviders
+            );
+
+            $loadedSuggestedProviders = $this->reuseLoadedProviders(
+                $suggestedProviders->values(),
                 $loadedProviders
             );
 
@@ -84,6 +98,7 @@ class PublicFrontendService
             });
 
             return [
+                'banners' => Banner::active()->get(),
                 'categories' => $categories,
                 'subcategories' => $subcategories,
                 'cities' => City::query()
@@ -93,7 +108,7 @@ class PublicFrontendService
                     ->each(fn (City $city) => $city->setAttribute('discoverable_profiles_count', (int) ($cityCounts[$city->id] ?? 0))),
                 'providerTypes' => ProviderType::options(),
                 'featuredProviders' => $loadedFeaturedProviders,
-                'suggestedProviders' => $loadedFeaturedProviders->take(6)->values(),
+                'suggestedProviders' => $loadedSuggestedProviders,
                 'stats' => $stats,
             ];
         });
@@ -388,7 +403,6 @@ class PublicFrontendService
         $query = Profile::query()
             ->without('user')
             ->select('profiles.*')
-            ->withPublicReviewAggregates()
             ->join('users', 'users.id', '=', 'profiles.user_id')
             ->join('profile_stats', 'profile_stats.profile_id', '=', 'profiles.id');
 

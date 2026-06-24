@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Data\ProfileVisibilityResult;
 use App\Enums\ProfileHiddenReason;
 use App\Models\Profile;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class ProfileVisibilityService
 {
@@ -28,6 +30,14 @@ class ProfileVisibilityService
                 is_visible: false,
                 primary_reason: ProfileHiddenReason::NO_USER,
                 user_status: 'not_found',
+            );
+        }
+
+        if (! $user->isProvider()) {
+            return new ProfileVisibilityResult(
+                is_visible: false,
+                primary_reason: ProfileHiddenReason::NOT_PROVIDER,
+                user_status: 'active',
             );
         }
 
@@ -124,6 +134,14 @@ class ProfileVisibilityService
             ->where('users.is_suspended', false)
             ->where('profiles.is_complete', true)
             ->whereNotNull('profiles.provider_access_ends_at')
-            ->where('profiles.provider_access_ends_at', '>=', Carbon::now());
+            ->where('profiles.provider_access_ends_at', '>=', Carbon::now())
+            ->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', User::class)
+                    ->where('roles.name', 'provider');
+            });
     }
 }

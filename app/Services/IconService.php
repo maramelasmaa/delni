@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Icon;
-use Illuminate\Support\Facades\Http;
+use App\Support\IconSourceUrlValidator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -11,20 +11,16 @@ use Throwable;
 
 class IconService
 {
-    private const DOWNLOAD_TIMEOUT = 10;
-
-    private const DOWNLOAD_RETRY = 3;
-
     private const MAX_FILE_SIZE = 500 * 1024;
+
+    public function __construct(
+        private readonly IconSourceUrlValidator $urlValidator,
+    ) {}
 
     public function downloadAndStore(string $url, string $name, string $color = '#F1620F'): Icon
     {
         try {
-            $response = Http::timeout(self::DOWNLOAD_TIMEOUT)
-                ->retry(self::DOWNLOAD_RETRY, 100)
-                ->get($url);
-
-            $response->throw();
+            $response = $this->urlValidator->fetch($url);
 
             $content = $response->body();
 

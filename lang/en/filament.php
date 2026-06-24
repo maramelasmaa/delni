@@ -210,6 +210,7 @@ return [
         'activity_after_create' => 'Activity will appear after user creation',
         'no_records' => 'No records',
         'setup_link_logs' => 'Failed to create setup link. Check Laravel logs',
+        'setup_link_regenerate_confirmation' => 'Generate a new password setup link. Any previous links will be invalidated.',
     ],
 
     'filters' => [

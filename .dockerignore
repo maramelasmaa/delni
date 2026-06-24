@@ -4,8 +4,10 @@
 .codex
 .claude
 node_modules
+mobile
+mobile/node_modules
 vendor
-storage/logs/*
+storage/logs/
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/testing/*

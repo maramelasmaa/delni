@@ -108,8 +108,9 @@ class ProfileResource extends Resource
                             ->label(__('filament.fields.avatar'))
                             ->image()
                             ->maxSize(2048)
-                            ->saveUploadedFileUsing(function (UploadedFile $file, ProfileImageService $imageService) {
-                                return $imageService->storeAvatar($file);
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->saveUploadedFileUsing(function (UploadedFile $file, Profile $record, ProfileImageService $imageService) {
+                                return $imageService->replaceImage($record->logo, $file, 'avatar');
                             })
                             ->deleteUploadedFileUsing(function ($file, ProfileImageService $imageService) {
                                 $imageService->deleteImage($file);
@@ -118,8 +119,9 @@ class ProfileResource extends Resource
                             ->label(__('filament.fields.cover_image'))
                             ->image()
                             ->maxSize(4096)
-                            ->saveUploadedFileUsing(function (UploadedFile $file, ProfileImageService $imageService) {
-                                return $imageService->storeGalleryImage($file);
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->saveUploadedFileUsing(function (UploadedFile $file, Profile $record, ProfileImageService $imageService) {
+                                return $imageService->replaceImage($record->cover_image, $file, 'cover');
                             })
                             ->deleteUploadedFileUsing(function ($file, ProfileImageService $imageService) {
                                 $imageService->deleteImage($file);

@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class OnboardingToken extends Model
 {
@@ -42,5 +43,25 @@ class OnboardingToken extends Model
     public function markAsUsed(): void
     {
         $this->update(['used_at' => now()]);
+    }
+
+    public static function generatePlainTextToken(): string
+    {
+        return Str::random(60);
+    }
+
+    public static function hashToken(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
+    public static function findByPlainTextToken(string $token): ?self
+    {
+        return static::query()
+            ->where(function ($query) use ($token): void {
+                $query->where('token', static::hashToken($token))
+                    ->orWhere('token', $token);
+            })
+            ->first();
     }
 }

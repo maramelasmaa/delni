@@ -2,6 +2,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 @import './components.css';
 
+@source '../views/**/*.blade.php';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
@@ -51,7 +52,6 @@
     --delni-shadow-sm: 0 8px 24px rgba(0,0,0,.4);
     --delni-shadow-md: 0 18px 48px rgba(0,0,0,.55);
 }
-
 
 
 

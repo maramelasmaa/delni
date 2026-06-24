@@ -31,6 +31,10 @@ class EnsureUserNotSuspended
                 return $next($request);
             }
 
+            if ($request->expectsJson()) {
+                abort(403, __('messages.account_suspended'));
+            }
+
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

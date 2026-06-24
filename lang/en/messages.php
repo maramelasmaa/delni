@@ -20,7 +20,6 @@ return [
     'logout' => 'Log out',
     'welcome' => 'Welcome',
     'subscription_providers_only' => 'Only providers may own subscriptions.',
-    'subscription_expired_login_blocked' => 'Your subscription has expired. Please contact the admin to renew.',
     'subscription_end_after_start' => 'End date must be later than start date.',
     'subscription_dates_overlap' => 'Subscription dates overlap.',
     'review_submitted' => 'Review submitted.',
@@ -178,6 +177,7 @@ return [
         'check_back_soon' => 'Please check back soon',
         'contact_support' => 'Contact Support',
         'contact_us' => 'Contact Us',
+        'back' => 'Back',
         'provider' => 'Provider',
     ],
 ];

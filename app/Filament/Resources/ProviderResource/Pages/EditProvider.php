@@ -6,13 +6,12 @@ namespace App\Filament\Resources\ProviderResource\Pages;
 
 use App\Filament\Resources\ProviderResource;
 use App\Filament\Support\Pages\EditRecordWithBack;
-use App\Models\OnboardingToken;
+use App\Services\OnboardingLinkService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class EditProvider extends EditRecordWithBack
 {
@@ -35,22 +34,11 @@ class EditProvider extends EditRecordWithBack
             ->color('info')
             ->requiresConfirmation()
             ->modalHeading(__('filament.actions.generate_setup_link'))
-            ->modalDescription('أنشئ رابطاً جديداً لإعداد كلمة المرور. سيتم إلغاء الروابط السابقة.')
-            ->action(function (): void {
-                DB::transaction(function (): void {
+            ->modalDescription(__('filament.help_text.setup_link_regenerate_confirmation'))
+            ->action(function (OnboardingLinkService $service): void {
+                DB::transaction(function () use ($service): void {
                     $user = $this->record;
-
-                    OnboardingToken::query()
-                        ->where('user_id', $user->id)
-                        ->delete();
-
-                    $onboardingToken = OnboardingToken::query()->create([
-                        'user_id' => $user->id,
-                        'token' => Str::random(60),
-                        'expires_at' => now()->addHours(72),
-                    ]);
-
-                    $setPasswordLink = route('onboarding.show', ['token' => $onboardingToken->token]);
+                    $setPasswordLink = $service->createOrRefreshLink($user);
 
                     Notification::make()
                         ->title(__('filament.notifications.setup_link_generated'))

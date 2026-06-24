@@ -103,7 +103,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeVisibleProfile();
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile->slug))
             ->assertStatus(200);
     }
 
@@ -111,7 +111,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeExpiredProfile();
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile->slug))
             ->assertStatus(404);
     }
 
@@ -119,7 +119,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeNullAccessProfile();
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile->slug))
             ->assertStatus(404);
     }
 
@@ -127,7 +127,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeSuspendedProfile();
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile->slug))
             ->assertStatus(404);
     }
 
@@ -135,7 +135,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeIncompleteProfile();
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile->slug))
             ->assertStatus(404);
     }
 
@@ -148,9 +148,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeVisibleProfile();
         $category = $profile->category;
 
-        $this->get(route('public.category', $category->slug))
+        $this->get(route('api.categories.show', $category->slug))
             ->assertStatus(200)
-            ->assertSee($profile->business_name);
+            ->assertSee($profile->business_name, false);
     }
 
     public function test_expired_provider_hidden_on_category_page(): void
@@ -158,9 +158,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeExpiredProfile();
         $category = $profile->category;
 
-        $this->get(route('public.category', $category->slug))
+        $this->get(route('api.categories.show', $category->slug))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_null_access_provider_hidden_on_category_page(): void
@@ -168,9 +168,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeNullAccessProfile();
         $category = $profile->category;
 
-        $this->get(route('public.category', $category->slug))
+        $this->get(route('api.categories.show', $category->slug))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_suspended_provider_hidden_on_category_page(): void
@@ -178,9 +178,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeSuspendedProfile();
         $category = $profile->category;
 
-        $this->get(route('public.category', $category->slug))
+        $this->get(route('api.categories.show', $category->slug))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_incomplete_provider_hidden_on_category_page(): void
@@ -188,9 +188,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeIncompleteProfile();
         $category = $profile->category;
 
-        $this->get(route('public.category', $category->slug))
+        $this->get(route('api.categories.show', $category->slug))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     // -------------------------------------------------------------------
@@ -203,9 +203,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeVisibleProfile(['category_id' => $subcategory->category_id]);
         $profile->subcategories()->sync([$subcategory->id]);
 
-        $this->get(route('public.subcategory', $subcategory->slug))
+        $this->get(route('api.subcategories.show', $subcategory->slug))
             ->assertStatus(200)
-            ->assertSee($profile->business_name);
+            ->assertSee($profile->business_name, false);
     }
 
     public function test_expired_provider_hidden_on_subcategory_page(): void
@@ -214,9 +214,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeExpiredProfile();
         $profile->subcategories()->sync([$subcategory->id]);
 
-        $this->get(route('public.subcategory', $subcategory->slug))
+        $this->get(route('api.subcategories.show', $subcategory->slug))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_null_access_provider_hidden_on_subcategory_page(): void
@@ -225,9 +225,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeNullAccessProfile();
         $profile->subcategories()->sync([$subcategory->id]);
 
-        $this->get(route('public.subcategory', $subcategory->slug))
+        $this->get(route('api.subcategories.show', $subcategory->slug))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     // -------------------------------------------------------------------
@@ -243,9 +243,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
             'rating_avg' => 4.8,
         ]);
 
-        $this->get(route('public.top-rated'))
+        $this->get(route('api.top-rated'))
             ->assertStatus(200)
-            ->assertSee($profile->business_name);
+            ->assertSee($profile->business_name, false);
     }
 
     public function test_expired_high_rated_provider_hidden_on_top_rated_page(): void
@@ -256,9 +256,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
             'rating_avg' => 4.9,
         ]);
 
-        $this->get(route('public.top-rated'))
+        $this->get(route('api.top-rated'))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_null_access_high_rated_provider_hidden_on_top_rated_page(): void
@@ -269,9 +269,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
             'rating_avg' => 4.9,
         ]);
 
-        $this->get(route('public.top-rated'))
+        $this->get(route('api.top-rated'))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     // -------------------------------------------------------------------
@@ -282,36 +282,36 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeVisibleProfile();
 
-        $this->get(route('public.search', ['category_id' => $profile->category_id]))
+        $this->get(route('api.search', ['category_id' => $profile->category_id]))
             ->assertStatus(200)
-            ->assertSee($profile->business_name);
+            ->assertSee($profile->business_name, false);
     }
 
     public function test_expired_provider_absent_from_search_by_category(): void
     {
         $profile = $this->makeExpiredProfile();
 
-        $this->get(route('public.search', ['category_id' => $profile->category_id]))
+        $this->get(route('api.search', ['category_id' => $profile->category_id]))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_null_access_provider_absent_from_search(): void
     {
         $profile = $this->makeNullAccessProfile();
 
-        $this->get(route('public.search', ['category_id' => $profile->category_id]))
+        $this->get(route('api.search', ['category_id' => $profile->category_id]))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_suspended_provider_absent_from_search(): void
     {
         $profile = $this->makeSuspendedProfile();
 
-        $this->get(route('public.search', ['category_id' => $profile->category_id]))
+        $this->get(route('api.search', ['category_id' => $profile->category_id]))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     // -------------------------------------------------------------------
@@ -323,9 +323,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $city = City::factory()->create(['is_active' => true]);
         $profile = $this->makeVisibleProfile(['city_id' => $city->id]);
 
-        $this->get(route('public.city', $city->slug))
+        $this->get(route('api.search', ['city' => $city->slug]))
             ->assertStatus(200)
-            ->assertSee($profile->business_name);
+            ->assertSee($profile->business_name, false);
     }
 
     public function test_expired_provider_hidden_on_city_page(): void
@@ -334,9 +334,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $profile = $this->makeExpiredProfile();
         $profile->update(['city_id' => $city->id]);
 
-        $this->get(route('public.city', $city->slug))
+        $this->get(route('api.search', ['city' => $city->slug]))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     // -------------------------------------------------------------------
@@ -353,9 +353,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
             'homepage_featured_until' => now()->addDays(7)->toDateString(),
         ]);
 
-        $this->get(route('home'))
+        $this->get(route('api.home'))
             ->assertStatus(200)
-            ->assertSee($profile->business_name);
+            ->assertSee($profile->business_name, false);
     }
 
     public function test_expired_provider_with_active_featured_placement_does_not_appear_on_homepage(): void
@@ -366,9 +366,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
             'homepage_featured_until' => now()->addDays(7)->toDateString(),
         ]);
 
-        $this->get(route('home'))
+        $this->get(route('api.home'))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     public function test_valid_provider_with_expired_featured_placement_does_not_appear_in_featured(): void
@@ -383,7 +383,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         // but must NOT appear in the featured section specifically.
         // We test the homepage loads without error; the featured providers list
         // is filtered by MarketplaceRankingService::applyHomepageFeaturedOnly().
-        $this->get(route('home'))
+        $this->get(route('api.home'))
             ->assertStatus(200);
     }
 
@@ -395,9 +395,9 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
             'homepage_featured_until' => now()->addDays(7)->toDateString(),
         ]);
 
-        $this->get(route('home'))
+        $this->get(route('api.home'))
             ->assertStatus(200)
-            ->assertDontSee($profile->business_name);
+            ->assertDontSee($profile->business_name, false);
     }
 
     // -------------------------------------------------------------------
@@ -411,7 +411,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeVisibleProfile(['provider_access_ends_at' => now()->addMinutes(5)]);
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile->slug))
             ->assertStatus(200);
     }
 
@@ -419,7 +419,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
     {
         $profile = $this->makeVisibleProfile(['provider_access_ends_at' => now()->subSecond()]);
 
-        $this->get(route('public.provider', $profile->slug))
+        $this->get(route('api.providers.show', $profile->slug))
             ->assertStatus(404);
     }
 
@@ -435,7 +435,7 @@ class ProviderAccessEndDateVisibilityTest extends TestCase
         $expired = $this->makeExpiredProfile();
         $expired->update(['category_id' => $category->id]);
 
-        $response = $this->get(route('public.category', $category->slug))
+        $response = $this->get(route('api.categories.show', $category->slug))
             ->assertStatus(200);
 
         $response->assertSee($valid->business_name);

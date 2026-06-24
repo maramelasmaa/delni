@@ -1,30 +1,40 @@
 #!/usr/bin/env sh
 set -e
 
-mkdir -p storage/app/public storage/app/icons storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache && php artisan storage:link --force
-php scripts/update-sw-version.php 2>/dev/null || true
+mkdir -p storage/app/public storage/app/icons storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
-if [ "$(readlink public/storage 2>/dev/null || true)" != "/var/www/html/storage/app/public" ]; then
-    rm -f public/storage
-    ln -s /var/www/html/storage/app/public public/storage
+# CONTAINER_ROLE controls which setup steps run.
+# app       → per-container runtime setup: storage link + cache warm-up (idempotent, safe under multiple replicas)
+# deploy    → one-shot release tasks: schema migration + idempotent seeding (run by ONE container before app swap)
+# worker    → skip setup; just exec queue:work via CMD
+# scheduler → skip setup; just exec schedule loop via CMD
+#
+# NOTE: migrations DO NOT run in the "app" role. Running `migrate` on every app boot is
+# unsafe during rolling deploys (two app containers migrating concurrently can deadlock).
+# Migrations run once via the "deploy" role — wired as a one-shot compose `migrate` service
+# and as the Coolify "Pre-deployment Command" (`delni-deploy`).
+CONTAINER_ROLE="${CONTAINER_ROLE:-app}"
+
+if [ "$CONTAINER_ROLE" = "deploy" ]; then
+    exec delni-deploy
 fi
 
-# Migrations and production seeding (idempotent — safe on every container start)
-php artisan migrate --force --no-interaction || true
-php artisan db:seed --class=RoleSeeder --force --no-interaction || true
-php artisan delni:ensure-super-admin --no-interaction || true
-php artisan db:seed --class=DemoSeeder --force --no-interaction || true
+if [ "$CONTAINER_ROLE" = "app" ]; then
+    php artisan storage:link --force
 
-# Rebuild Laravel bootstrap caches
-# route:cache is intentionally excluded — web.php uses closure routes which cannot be serialized
-php artisan optimize:clear
-php artisan config:cache
-php artisan view:cache || true
-php artisan event:cache || true
+    if [ "$(readlink public/storage 2>/dev/null || true)" != "/var/www/html/storage/app/public" ]; then
+        rm -f public/storage
+        ln -s /var/www/html/storage/app/public public/storage
+    fi
 
-# Signal any running queue workers to reload their config
-php artisan queue:restart || true
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan event:cache
 
-chown -R www-data:www-data storage bootstrap/cache public/storage 2>/dev/null || true
+    php artisan queue:restart || true
+fi
 
 exec "$@"

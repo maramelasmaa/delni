@@ -27,17 +27,31 @@ class EnsureAccountNotLocked
 
         if ($user->locked_until !== null && Carbon::parse($user->locked_until)->isFuture()) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => __('messages.account_locked')], 401);
+                return response()->json([
+                    'success' => false,
+                    'message' => __('messages.account_locked'),
+                ], 401);
             }
 
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('filament.provider.auth.login')
+            return redirect()->route($this->loginRouteForRequest($request))
                 ->with('error', __('messages.account_locked'));
         }
 
         return $next($request);
+    }
+
+    private function loginRouteForRequest(Request $request): string
+    {
+        $adminPath = trim((string) config('app.admin_path', 'cp/admin'), '/');
+
+        if ($request->is($adminPath, $adminPath.'/*')) {
+            return 'filament.admin.auth.login';
+        }
+
+        return 'filament.provider.auth.login';
     }
 }
