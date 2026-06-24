@@ -31,27 +31,27 @@ export default function () {
   let r;
 
   // 1. Home — most frequented endpoint
-  r = http.get(`${BASE_URL}/api/home`, { headers: JSON_HEADERS, tags: { name: 'home' } });
+  r = http.get(`${BASE_URL}/api/v1/home`, { headers: JSON_HEADERS, tags: { name: 'home' } });
   check(r, { 'home: status 200': (res) => res.status === 200 });
   sleep(1);
 
   // 2. Categories — lightweight, cached
-  r = http.get(`${BASE_URL}/api/categories`, { headers: JSON_HEADERS, tags: { name: 'categories' } });
+  r = http.get(`${BASE_URL}/api/v1/categories`, { headers: JSON_HEADERS, tags: { name: 'categories' } });
   check(r, { 'categories: status 200': (res) => res.status === 200 });
   sleep(1);
 
   // 3. Search — blank query (worst-case no FULLTEXT optimisation)
-  r = http.get(`${BASE_URL}/api/search?per_page=15`, { headers: JSON_HEADERS, tags: { name: 'search_blank' } });
+  r = http.get(`${BASE_URL}/api/v1/search?per_page=15`, { headers: JSON_HEADERS, tags: { name: 'search_blank' } });
   check(r, { 'search_blank: status 200': (res) => res.status === 200 });
   sleep(1);
 
   // 4. Provider detail — heaviest single-page query
-  r = http.get(`${BASE_URL}/api/providers/${PROVIDER_SLUG}`, { headers: JSON_HEADERS, tags: { name: 'provider_detail' } });
+  r = http.get(`${BASE_URL}/api/v1/providers/${PROVIDER_SLUG}`, { headers: JSON_HEADERS, tags: { name: 'provider_detail' } });
   check(r, { 'provider_detail: not 5xx': (res) => res.status < 500 });
   sleep(1);
 
   // 5. Top-rated — live ranking, no cache
-  r = http.get(`${BASE_URL}/api/top-rated`, { headers: JSON_HEADERS, tags: { name: 'top_rated' } });
+  r = http.get(`${BASE_URL}/api/v1/top-rated`, { headers: JSON_HEADERS, tags: { name: 'top_rated' } });
   check(r, { 'top_rated: status 200': (res) => res.status === 200 });
   sleep(1);
 }

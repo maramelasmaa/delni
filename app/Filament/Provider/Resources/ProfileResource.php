@@ -14,6 +14,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -104,25 +105,24 @@ class ProfileResource extends Resource
                         ->label('التصنيفات الفرعية')
                         ->placeholder('اختر التصنيفات التي تصف خدماتك بدقة')
                         ->helperText('يمكنك اختيار عدة تصنيفات فرعية لتوضيح تخصصاتك.')
-                        ->relationship('subcategories', 'name')
-                        ->multiple()
-                        ->required()
-                        ->options(function ($get) {
-                            $categoryId = $get('category_id');
-                            if (! $categoryId) {
-                                return [];
-                            }
-
-                            return Subcategory::where('category_id', $categoryId)
+                        ->relationship(
+                            'subcategories',
+                            'name',
+                            fn (Builder $query, Get $get): Builder => $query
+                                ->when(
+                                    $get('category_id'),
+                                    fn (Builder $query, int|string $categoryId): Builder => $query->where('category_id', $categoryId),
+                                    fn (Builder $query): Builder => $query->whereRaw('1 = 0'),
+                                )
                                 ->where('is_active', true)
                                 ->orderBy('sort_order')
                                 ->orderBy('name_ar')
-                                ->get()
-                                ->mapWithKeys(fn (Subcategory $subcategory): array => [
-                                    $subcategory->id => $subcategory->localized_name,
-                                ])
-                                ->all();
-                        })
+                        )
+                        ->getOptionLabelFromRecordUsing(fn (Subcategory $record): string => $record->localized_name)
+                        ->multiple()
+                        ->required()
+                        ->searchable(['name', 'name_ar'])
+                        ->preload()
                         ->live(),
                     Forms\Components\Select::make('city_id')
                         ->label('المدينة')

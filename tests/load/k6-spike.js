@@ -35,11 +35,11 @@ export default function () {
   const roll = Math.random();
 
   if (roll < 0.6) {
-    const r = http.get(`${BASE_URL}/api/home`, { headers: HEADERS, tags: { name: 'home' } });
+    const r = http.get(`${BASE_URL}/api/v1/home`, { headers: HEADERS, tags: { name: 'home' } });
     check(r, { 'home not 5xx': (res) => res.status < 500 });
     errorRate.add(r.status >= 500);
   } else {
-    const r = http.get(`${BASE_URL}/api/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
+    const r = http.get(`${BASE_URL}/api/v1/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
     check(r, { 'top-rated not 5xx': (res) => res.status < 500 });
     errorRate.add(r.status >= 500);
   }

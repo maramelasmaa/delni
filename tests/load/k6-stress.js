@@ -49,7 +49,7 @@ const KEYWORDS = [
 export default function () {
   let r;
 
-  r = http.get(`${BASE_URL}/api/home`, { headers: HEADERS, tags: { name: 'home' } });
+  r = http.get(`${BASE_URL}/api/v1/home`, { headers: HEADERS, tags: { name: 'home' } });
   homeLatency.add(r.timings.duration);
   check(r, { 'home not 5xx': (res) => res.status < 500 });
   errorRate.add(r.status >= 500);
@@ -57,7 +57,7 @@ export default function () {
 
   const kw = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
   r = http.get(
-    `${BASE_URL}/api/search?keyword=${kw}&per_page=15&page=${Math.ceil(Math.random() * 3)}`,
+    `${BASE_URL}/api/v1/search?keyword=${kw}&per_page=15&page=${Math.ceil(Math.random() * 3)}`,
     { headers: HEADERS, tags: { name: 'search_keyword' } },
   );
   searchLatency.add(r.timings.duration);
@@ -65,12 +65,12 @@ export default function () {
   errorRate.add(r.status >= 500);
   sleep(Math.random() * 0.5 + 0.2);
 
-  r = http.get(`${BASE_URL}/api/providers/${PROVIDER_SLUG}`, { headers: HEADERS, tags: { name: 'provider_detail' } });
+  r = http.get(`${BASE_URL}/api/v1/providers/${PROVIDER_SLUG}`, { headers: HEADERS, tags: { name: 'provider_detail' } });
   check(r, { 'provider not 5xx': (res) => res.status < 500 });
   errorRate.add(r.status >= 500);
   sleep(0.2);
 
-  r = http.get(`${BASE_URL}/api/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
+  r = http.get(`${BASE_URL}/api/v1/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
   check(r, { 'top-rated not 5xx': (res) => res.status < 500 });
   errorRate.add(r.status >= 500);
   sleep(0.2);

@@ -12,12 +12,19 @@ class IconController
 {
     public function __invoke(Icon $icon): Response
     {
-        $path = Storage::disk('icons')->path($icon->file_path);
+        $disk = Storage::disk('icons');
+
+        if ($disk->missing($icon->file_path)) {
+            abort(404);
+        }
+
+        $path = $disk->path($icon->file_path);
         $mimeType = $icon->format === 'svg' ? 'image/svg+xml' : "image/{$icon->format}";
 
         return response()->file($path, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'inline',
+            'Cache-Control' => 'public, max-age=300',
         ]);
     }
 }

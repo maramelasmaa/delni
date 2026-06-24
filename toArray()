@@ -1,0 +1,1 @@
+App\Models\City::all(['id', 'name', 'slug'])-; 

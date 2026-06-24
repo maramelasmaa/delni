@@ -58,7 +58,7 @@ class SocialProfileReference implements ValidationRule
         $path = trim((string) ($parsed['path'] ?? ''), '/');
 
         if ($scheme !== 'https' || ! $this->hostMatches($host, $this->expectedHost()) || $path === '') {
-            $fail('The social profile reference must point to the expected platform.');
+            $fail('يجب أن يشير رابط الملف الاجتماعي إلى المنصة المتوقعة.');
 
             return;
         }

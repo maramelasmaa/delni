@@ -60,7 +60,7 @@ export default function () {
 
   if (roll < 0.30) {
     // 30% — homepage
-    r = http.get(`${BASE_URL}/api/home`, { headers: HEADERS, tags: { name: 'home' } });
+    r = http.get(`${BASE_URL}/api/v1/home`, { headers: HEADERS, tags: { name: 'home' } });
     check(r, { 'home not 5xx': (res) => res.status < 500 });
     errorRate.add(r.status >= 500);
     p95Trend.add(r.timings.duration);
@@ -69,7 +69,7 @@ export default function () {
     // 25% — keyword search (Arabic)
     const kw = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
     r = http.get(
-      `${BASE_URL}/api/search?keyword=${kw}&per_page=15&page=${Math.ceil(Math.random() * 3)}`,
+      `${BASE_URL}/api/v1/search?keyword=${kw}&per_page=15&page=${Math.ceil(Math.random() * 3)}`,
       { headers: HEADERS, tags: { name: 'search_keyword' } },
     );
     check(r, { 'search not 5xx': (res) => res.status < 500 });
@@ -79,7 +79,7 @@ export default function () {
   } else if (roll < 0.75) {
     // 20% — provider detail (heaviest single query)
     r = http.get(
-      `${BASE_URL}/api/providers/${PROVIDER_SLUG}`,
+      `${BASE_URL}/api/v1/providers/${PROVIDER_SLUG}`,
       { headers: HEADERS, tags: { name: 'provider_detail' } },
     );
     check(r, { 'provider not 5xx': (res) => res.status < 500 });
@@ -88,7 +88,7 @@ export default function () {
 
   } else if (roll < 0.85) {
     // 10% — top-rated
-    r = http.get(`${BASE_URL}/api/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
+    r = http.get(`${BASE_URL}/api/v1/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
     check(r, { 'top-rated not 5xx': (res) => res.status < 500 });
     errorRate.add(r.status >= 500);
     p95Trend.add(r.timings.duration);
@@ -96,7 +96,7 @@ export default function () {
   } else {
     // 15% — browse category
     r = http.get(
-      `${BASE_URL}/api/categories/${CATEGORY_SLUG}`,
+      `${BASE_URL}/api/v1/categories/${CATEGORY_SLUG}`,
       { headers: HEADERS, tags: { name: 'categories' } },
     );
     check(r, { 'category not 5xx': (res) => res.status < 500 });

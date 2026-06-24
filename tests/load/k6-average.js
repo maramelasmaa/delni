@@ -59,14 +59,14 @@ const KEYWORDS = [
 
 export default function () {
   group('guest: homepage flow', () => {
-    const r = http.get(`${BASE_URL}/api/home`, { headers: HEADERS, tags: { name: 'home' } });
+    const r = http.get(`${BASE_URL}/api/v1/home`, { headers: HEADERS, tags: { name: 'home' } });
     check(r, { 'home 200': (res) => res.status === 200 });
     errorRate.add(r.status !== 200);
     sleep(Math.random() * 2 + 1);
   });
 
   group('guest: browse categories', () => {
-    const r = http.get(`${BASE_URL}/api/categories`, { headers: HEADERS, tags: { name: 'categories' } });
+    const r = http.get(`${BASE_URL}/api/v1/categories`, { headers: HEADERS, tags: { name: 'categories' } });
     check(r, { 'categories 200': (res) => res.status === 200 });
     errorRate.add(r.status !== 200);
     sleep(1);
@@ -75,7 +75,7 @@ export default function () {
   group('guest: keyword search', () => {
     const kw = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
     const r  = http.get(
-      `${BASE_URL}/api/search?keyword=${kw}&per_page=15`,
+      `${BASE_URL}/api/v1/search?keyword=${kw}&per_page=15`,
       { headers: HEADERS, tags: { name: 'search_keyword' } },
     );
     check(r, { 'search 200': (res) => res.status === 200 });
@@ -85,7 +85,7 @@ export default function () {
 
   group('guest: search with city filter', () => {
     const r = http.get(
-      `${BASE_URL}/api/search?city=${CITY_SLUG}&sort=rating&per_page=15`,
+      `${BASE_URL}/api/v1/search?city=${CITY_SLUG}&sort=rating&per_page=15`,
       { headers: HEADERS, tags: { name: 'search_city_filter' } },
     );
     check(r, { 'search+city 200': (res) => res.status === 200 });
@@ -95,7 +95,7 @@ export default function () {
 
   group('guest: browse category', () => {
     const r = http.get(
-      `${BASE_URL}/api/categories/${CATEGORY_SLUG}`,
+      `${BASE_URL}/api/v1/categories/${CATEGORY_SLUG}`,
       { headers: HEADERS, tags: { name: 'category_browse' } },
     );
     check(r, { 'category 2xx': (res) => res.status < 300 });
@@ -104,7 +104,7 @@ export default function () {
 
   group('guest: view provider', () => {
     const r = http.get(
-      `${BASE_URL}/api/providers/${PROVIDER_SLUG}`,
+      `${BASE_URL}/api/v1/providers/${PROVIDER_SLUG}`,
       { headers: HEADERS, tags: { name: 'provider_detail' } },
     );
     check(r, { 'provider not 5xx': (res) => res.status < 500 });
@@ -113,7 +113,7 @@ export default function () {
   });
 
   group('guest: top rated', () => {
-    const r = http.get(`${BASE_URL}/api/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
+    const r = http.get(`${BASE_URL}/api/v1/top-rated`, { headers: HEADERS, tags: { name: 'top_rated' } });
     check(r, { 'top-rated 200': (res) => res.status === 200 });
     errorRate.add(r.status !== 200);
     sleep(1);
@@ -121,7 +121,7 @@ export default function () {
 
   if (AUTH_TOKEN) {
     group('auth: check favorites', () => {
-      const r = http.get(`${BASE_URL}/api/favorites`, { headers: AUTH_HEADERS, tags: { name: 'favorites' } });
+      const r = http.get(`${BASE_URL}/api/v1/favorites`, { headers: AUTH_HEADERS, tags: { name: 'favorites' } });
       check(r, { 'favorites 200': (res) => res.status === 200 });
       errorRate.add(r.status >= 500);
       sleep(1);
