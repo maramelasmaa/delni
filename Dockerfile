@@ -47,6 +47,13 @@ RUN apk add --no-cache \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
     && chown -R www-data:www-data /var/lib/nginx /var/log/nginx
 
+# Redis (phpredis) — required for CACHE_STORE / QUEUE_CONNECTION = redis.
+# Build deps are installed virtually and removed afterwards to keep the image small.
+RUN apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .phpize-deps
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_PROCESS_TIMEOUT=1200
 

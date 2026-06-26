@@ -16,12 +16,17 @@ x-laravel-env: &laravel-env
   DB_USERNAME: ${DB_USERNAME:?Set DB_USERNAME}
   DB_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
 
+  # Sessions stay on the database so admin logins survive a Redis restart.
   SESSION_DRIVER: database
   SESSION_SECURE_COOKIE: "true"
   SESSION_HTTP_ONLY: "true"
   SESSION_SAME_SITE: lax
-  CACHE_STORE: database
-  QUEUE_CONNECTION: database
+  # Cache + queue run on Redis (cache -> db 1, queue -> db 0; see config/database.php).
+  CACHE_STORE: redis
+  QUEUE_CONNECTION: redis
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
   FILESYSTEM_DISK: public
   # "*" is acceptable only because port 8080 is `expose`d (internal), never `published`.
   # The sole ingress is Coolify's reverse proxy. If you ever publish the port directly,
@@ -81,6 +86,8 @@ services:
         condition: service_completed_successfully
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
       interval: 30s
@@ -93,7 +100,7 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    command: php artisan queue:work database --queue=default --sleep=3 --timeout=60 --tries=3 --memory=256 --max-jobs=1000 --max-time=3600
+    command: php artisan queue:work redis --queue=default --sleep=3 --timeout=60 --tries=3 --memory=256 --max-jobs=1000 --max-time=3600
     environment:
       <<: *laravel-env
       CONTAINER_ROLE: worker
@@ -104,6 +111,8 @@ services:
       app:
         condition: service_healthy
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "php /var/www/html/artisan queue:deployment-check >/dev/null"]
@@ -129,12 +138,30 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "php /var/www/html/artisan scheduler:health-check >/dev/null"]
       interval: 120s
       timeout: 10s
       retries: 3
       start_period: 120s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # appendonly persists queued jobs across restarts. noeviction protects those jobs:
+    # cache (db 1) and queue (db 0) share the instance, so LRU eviction could drop jobs.
+    # 256mb is ample for this app's cache+queue volume; raise if you scale up.
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
+    volumes:
+      - delni_redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   mysql:
     image: mysql:8.0
@@ -157,3 +184,4 @@ volumes:
   delni_mysql_data:
   delni_public_storage:
   delni_icons_storage:
+  delni_redis_data:
