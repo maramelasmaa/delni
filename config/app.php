@@ -69,6 +69,12 @@ return [
     // Custom URL scheme used to deep-link password-reset emails into the mobile app.
     'mobile_scheme' => env('MOBILE_DEEP_LINK_SCHEME', 'delni'),
 
+    // Scales the PUBLIC READ rate limiters (home, search, top-rated, provider-detail).
+    // Defaults to 1 (no change). Temporarily raise in the environment (e.g. 20) to run a
+    // load test from a single IP without hitting the per-IP throttle, then reset to 1.
+    // Never affects auth/login/register/password limiters.
+    'public_rate_limit_multiplier' => max(1, (int) env('PUBLIC_RATE_LIMIT_MULTIPLIER', 1)),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

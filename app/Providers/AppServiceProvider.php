@@ -151,12 +151,17 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
-        RateLimiter::for('search', function (Request $request): Limit {
+        // Public read endpoints scale by config('app.public_rate_limit_multiplier') so a
+        // single-IP load test can be run without tripping the per-IP throttle (set the env
+        // var for the test window, then reset to 1). Auth limiters below are NOT scaled.
+        $publicMultiplier = (int) config('app.public_rate_limit_multiplier', 1);
+
+        RateLimiter::for('search', function (Request $request) use ($publicMultiplier): Limit {
             if ($request->user() !== null) {
-                return Limit::perMinute(60)->by('search|user:'.$request->user()->id);
+                return Limit::perMinute(60 * $publicMultiplier)->by('search|user:'.$request->user()->id);
             }
 
-            return Limit::perMinute(20)->by('search|ip:'.$request->ip());
+            return Limit::perMinute(20 * $publicMultiplier)->by('search|ip:'.$request->ip());
         });
 
         RateLimiter::for('reviews.create', function (Request $request): Limit {
@@ -196,16 +201,20 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by('api.change-password|user:'.$request->user()?->id);
         });
 
-        RateLimiter::for('api.home', function (Request $request): Limit {
-            return Limit::perMinute(60)->by('api.home|ip:'.$request->ip());
+        RateLimiter::for('api.home', function (Request $request) use ($publicMultiplier): Limit {
+            return Limit::perMinute(60 * $publicMultiplier)->by('api.home|ip:'.$request->ip());
         });
 
-        RateLimiter::for('api.top-rated', function (Request $request): Limit {
-            return Limit::perMinute(30)->by('api.top-rated|ip:'.$request->ip());
+        RateLimiter::for('api.top-rated', function (Request $request) use ($publicMultiplier): Limit {
+            return Limit::perMinute(30 * $publicMultiplier)->by('api.top-rated|ip:'.$request->ip());
         });
 
-        RateLimiter::for('api.provider-detail', function (Request $request): Limit {
-            return Limit::perMinute(60)->by('api.provider-detail|ip:'.$request->ip());
+        RateLimiter::for('api.provider-detail', function (Request $request) use ($publicMultiplier): Limit {
+            return Limit::perMinute(60 * $publicMultiplier)->by('api.provider-detail|ip:'.$request->ip());
+        });
+
+        RateLimiter::for('api.suggestions', function (Request $request) use ($publicMultiplier): Limit {
+            return Limit::perMinute(60 * $publicMultiplier)->by('api.suggestions|ip:'.$request->ip());
         });
     }
 }

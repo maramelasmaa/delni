@@ -38,7 +38,7 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/subcategories/{subcategory:slug}', [CategoryController::class, 'subcategory'])->name('api.subcategories.show');
 
     Route::get('/search/suggestions', [ProfileSearchController::class, 'suggestions'])
-        ->middleware('throttle:60,1')
+        ->middleware('throttle:api.suggestions')
         ->name('api.search.suggestions');
 
     Route::get('/search', [ProfileSearchController::class, 'search'])
