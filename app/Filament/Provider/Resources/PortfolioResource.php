@@ -78,7 +78,7 @@ class PortfolioResource extends Resource
                         ->schema([
                             Forms\Components\FileUpload::make('path')
                                 ->label('الصورة')
-                                ->helperText('صورة واضحة وعالية الجودة. (الحد الأقصى 4 MB)')
+                                ->helperText('صورة مربعة أو أفقية (1080×1080 بكسل على الأقل). سيتم تحويلها تلقائياً إلى حجم مثالي. (الحد الأقصى 4 MB)')
                                 ->image()
                                 ->maxSize(4096)
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])

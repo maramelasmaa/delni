@@ -226,7 +226,7 @@ class ProfileResource extends Resource
                 ->schema([
                     Forms\Components\FileUpload::make('logo')
                         ->label('شعار النشاط')
-                        ->helperText('صورة واضحة ومربعة لظهور أفضل. (الحد الأقصى 2 MB)')
+                        ->helperText('صورة مربعة (240×240 بكسل على الأقل). سيتم تحويلها تلقائياً إلى حجم مثالي. (الحد الأقصى 2 MB)')
                         ->image()
                         ->maxSize(2048)
                         ->imagePreviewHeight('400')
@@ -242,7 +242,7 @@ class ProfileResource extends Resource
                         }),
                     Forms\Components\FileUpload::make('cover_image')
                         ->label('صورة الغلاف')
-                        ->helperText('صورة جميلة تعكس نشاطك وجودة خدماتك. (الحد الأقصى 4 MB)')
+                        ->helperText('صورة أفقية بنسبة 2:1 (1080×540 بكسل على الأقل). سيتم تحويلها تلقائياً إلى حجم مثالي. (الحد الأقصى 4 MB)')
                         ->image()
                         ->maxSize(4096)
                         ->imagePreviewHeight('300')

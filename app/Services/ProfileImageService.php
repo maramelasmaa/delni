@@ -23,11 +23,18 @@ class ProfileImageService
 
     private const PORTFOLIO_MAX_UPLOAD_SIZE = 4_194_304; // 4MB
 
-    private const AVATAR_WIDTH = 600;
+    // Mobile-optimized dimensions (enforced on upload)
+    private const AVATAR_WIDTH = 240;
 
-    private const AVATAR_HEIGHT = 600;
+    private const AVATAR_HEIGHT = 240;
 
-    private const COVER_MAX_DIMENSION = 1600;
+    private const COVER_WIDTH = 1080;
+
+    private const COVER_HEIGHT = 540; // 2:1 aspect ratio
+
+    private const PORTFOLIO_WIDTH = 1080;
+
+    private const PORTFOLIO_HEIGHT = 1080;
 
     private readonly ImageManager $manager;
 
@@ -42,6 +49,7 @@ class ProfileImageService
         $this->validateSize($file, self::AVATAR_MAX_UPLOAD_SIZE, '2 ميجابايت');
 
         $image = $this->manager->decodePath($file->getRealPath());
+        // Cover to exact 240x240 (2x retina for 120x120 display)
         $image->cover(self::AVATAR_WIDTH, self::AVATAR_HEIGHT);
 
         $encoded = $image->encodeUsingFormat(Format::WEBP, quality: $this->calculateQuality($image));
@@ -58,7 +66,8 @@ class ProfileImageService
         $this->validateSize($file, self::COVER_MAX_UPLOAD_SIZE, '4 ميجابايت');
 
         $image = $this->manager->decodePath($file->getRealPath());
-        $this->scaleToMax($image, self::COVER_MAX_DIMENSION);
+        // Cover to exact 1080x540 (2:1 aspect ratio, mobile-optimized)
+        $image->cover(self::COVER_WIDTH, self::COVER_HEIGHT);
 
         $encoded = $image->encodeUsingFormat(Format::WEBP, quality: $this->calculateQuality($image));
 
@@ -74,7 +83,8 @@ class ProfileImageService
         $this->validateSize($file, self::PORTFOLIO_MAX_UPLOAD_SIZE, '4 ميجابايت');
 
         $image = $this->manager->decodePath($file->getRealPath());
-        $this->scaleToMax($image, self::COVER_MAX_DIMENSION);
+        // Cover to exact 1080x1080 (square format for gallery)
+        $image->cover(self::PORTFOLIO_WIDTH, self::PORTFOLIO_HEIGHT);
 
         $encoded = $image->encodeUsingFormat(Format::WEBP, quality: $this->calculateQuality($image));
 
