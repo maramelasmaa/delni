@@ -36,7 +36,7 @@
                     {{-- ── Header ── --}}
                     <tr>
                         <td class="email-header" style="background-color:#112240;border-radius:18px 18px 0 0;padding:32px 40px;text-align:center;">
-                            <h1 style="margin:0;color:#F1620F;font-size:36px;font-weight:900;letter-spacing:1px;line-height:1;">دلني</h1>
+                            <h1 style="margin:0;color:#E1AD01;font-size:36px;font-weight:900;letter-spacing:1px;line-height:1;">دلني</h1>
                             <p style="margin:6px 0 0;color:#8DA8CA;font-size:13px;font-weight:400;letter-spacing:0.3px;">منصة الخدمات المتخصصة</p>
                         </td>
                     </tr>
@@ -49,7 +49,7 @@
                             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                                 <tr>
                                     <td align="center" style="padding-bottom:28px;">
-                                        <div style="display:inline-block;background-color:#FEF2E8;border-radius:50%;width:68px;height:68px;line-height:68px;text-align:center;font-size:30px;">🔐</div>
+                                        <div style="display:inline-block;background-color:#EFF6FF;border-radius:50%;width:68px;height:68px;line-height:68px;text-align:center;font-size:30px;">🔐</div>
                                     </td>
                                 </tr>
                             </table>
@@ -65,7 +65,7 @@
                             </p>
                             <p style="margin:0 0 32px;color:#374151;font-size:15px;line-height:28px;text-align:right;direction:rtl;">
                                 اضغط على الزر أدناه لإعادة تعيين كلمة المرور. صلاحية هذا الرابط
-                                <strong style="color:#B64608;">60 دقيقة</strong> فقط.
+                                <strong style="color:#1E40AF;">60 دقيقة</strong> فقط.
                             </p>
 
                             {{-- CTA Button — table-based for Outlook --}}
@@ -76,7 +76,7 @@
                                         <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
                                             href="{{ $url }}"
                                             style="height:52px;v-text-anchor:middle;width:260px;"
-                                            arcsize="35%" stroke="f" fillcolor="#F1620F">
+                                            arcsize="35%" stroke="f" fillcolor="#1E40AF">
                                         <w:anchorlock/>
                                         <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:700;">
                                             إعادة تعيين كلمة المرور
@@ -85,7 +85,7 @@
                                         <!--[if !mso]><!-->
                                         <a href="{{ $url }}"
                                            class="btn-cta"
-                                           style="background-color:#F1620F;border-radius:18px;color:#ffffff;display:inline-block;font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:16px;font-weight:700;line-height:1;padding:16px 48px;text-decoration:none;direction:rtl;mso-hide:all;">
+                                           style="background-color:#1E40AF;border-radius:18px;color:#ffffff;display:inline-block;font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:16px;font-weight:700;line-height:1;padding:16px 48px;text-decoration:none;direction:rtl;mso-hide:all;">
                                             إعادة تعيين كلمة المرور
                                         </a>
                                         <!--<![endif]-->

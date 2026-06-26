@@ -61,4 +61,9 @@ return [
     'set_password_title' => 'تعيين كلمة المرور',
     'set_password_subtitle' => 'قم بتعيين كلمة مرور حسابك لإكمال عملية إعداد الحساب.',
     'password_set_success' => 'تم تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.',
+    'reset_password_subtitle' => 'أدخل كلمة المرور الجديدة لحسابك.',
+    'reset_password_button' => 'تعيين كلمة المرور الجديدة',
+    'reset_password_success_title' => 'تم تغيير كلمة المرور',
+    'reset_password_success_body' => 'تم تعيين كلمة المرور الجديدة بنجاح. افتح تطبيق دلني وسجّل الدخول بكلمة مرورك الجديدة.',
+    'open_in_app' => 'فتح التطبيق',
 ];

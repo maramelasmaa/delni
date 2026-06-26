@@ -26,12 +26,14 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $email = urlencode($notifiable->getEmailForPasswordReset());
-
-        // Deep-link into the mobile app's reset screen (custom scheme, e.g. delni://).
-        // The app route /reset-password reads `token` and `email` from query params.
-        $scheme = (string) config('app.mobile_scheme', 'delni');
-        $url = $scheme.'://reset-password?token='.$this->token.'&email='.$email;
+        // Link to the browser-based reset page so the email works everywhere — desktop
+        // webmail included — not just inside the mobile app. The page handles the reset
+        // directly; on a phone the user then opens the app to sign in. (A Universal/App
+        // Link could later upgrade this to open the app directly on mobile.)
+        $url = route('password.reset', [
+            'token' => $this->token,
+            'email' => $notifiable->getEmailForPasswordReset(),
+        ]);
 
         return (new MailMessage)
             ->subject('إعادة تعيين كلمة المرور — '.config('app.name'))

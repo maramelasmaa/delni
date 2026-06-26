@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\OnboardingController;
+use App\Http\Controllers\Auth\ResetPasswordWebController;
 use App\Http\Controllers\FaviconController;
 use App\Http\Controllers\IconController;
 use App\Http\Controllers\ProviderRootController;
@@ -19,6 +20,14 @@ Route::middleware(['auth', EnsureAccountNotLocked::class, EnsureUserIsActive::cl
     ->group(function (): void {
         Route::redirect('/dashboard', '/provider/dashboard')->name('dashboard');
     });
+
+// Browser-based password reset (linked from the reset email so it works on desktop too).
+Route::get('/reset-password', [ResetPasswordWebController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('password.reset');
+Route::post('/reset-password', [ResetPasswordWebController::class, 'store'])
+    ->middleware('throttle:api.reset-password')
+    ->name('password.reset.update');
 
 Route::get('/onboarding/{token}', [OnboardingController::class, 'showSetPasswordForm'])
     ->middleware('throttle:onboarding.show')

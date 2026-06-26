@@ -56,4 +56,9 @@ return [
     'set_password_title' => 'Set Password',
     'set_password_subtitle' => 'Set your account password to complete onboarding.',
     'password_set_success' => 'Password has been set successfully. You can now log in.',
+    'reset_password_subtitle' => 'Enter the new password for your account.',
+    'reset_password_button' => 'Set New Password',
+    'reset_password_success_title' => 'Password Changed',
+    'reset_password_success_body' => 'Your new password has been set successfully. Open the Delni app and sign in with your new password.',
+    'open_in_app' => 'Open the app',
 ];

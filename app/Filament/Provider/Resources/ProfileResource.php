@@ -144,17 +144,17 @@ class ProfileResource extends Resource
                         ->rows(3)
                         ->columnSpanFull()
                         ->maxLength(500),
+                    Forms\Components\TextInput::make('experience_years')
+                        ->label('سنوات الخبرة')
+                        ->placeholder('مثال: 5')
+                        ->helperText('عدد سنوات خبرتك في هذا المجال.')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100),
                     Forms\Components\Toggle::make('offers_remote_work')
                         ->label('تقديم خدمات عن بعد')
                         ->helperText('فعّل هذا الخيار إذا كنت تقدم خدمات أونلاين أو عن بعد.')
                         ->inline(false),
-                    Forms\Components\Textarea::make('service_area_note')
-                        ->label('مناطق تقديم الخدمة')
-                        ->placeholder('مثال: نقدم خدماتنا داخل بنغازي وضواحيها')
-                        ->helperText('وضح المناطق التي تخدمها حتى لا يطلب منك العملاء في مناطق لا تخدمها.')
-                        ->rows(2)
-                        ->columnSpanFull()
-                        ->maxLength(500),
                 ])
                 ->columns(2),
 

@@ -125,9 +125,9 @@ class ReviewResource extends Resource
                     ->label(__('filament.fields.flagged')),
                 Tables\Columns\TextColumn::make('flagged_reason')
                     ->label(__('filament.fields.flagged_reason'))
-                    ->limit(50)
+                    ->limit(100)
                     ->wrap()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\IconColumn::make('flag_handled_at')
                     ->boolean()
                     ->label(__('filament.fields.flag_handled_at'))
