@@ -48,6 +48,11 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: "no"
+    # Coolify-specific: this is a one-shot release container that runs migrations/seeders
+    # and exits 0 by design. Without this flag Coolify treats the exited container as an
+    # unhealthy/stopped service and restart-loops it until it hits the restart limit
+    # ("Stopped after reaching restart limit"). exclude_from_hc removes it from monitoring.
+    exclude_from_hc: true
     environment:
       <<: *laravel-env
       CONTAINER_ROLE: deploy
