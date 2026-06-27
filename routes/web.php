@@ -5,12 +5,14 @@ use App\Http\Controllers\Auth\ResetPasswordWebController;
 use App\Http\Controllers\FaviconController;
 use App\Http\Controllers\IconController;
 use App\Http\Controllers\ProviderRootController;
+use App\Http\Controllers\WelcomePageController;
 use App\Http\Middleware\EnsureAccountNotLocked;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserNotSuspended;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/icon/{icon}', IconController::class)->name('icon.show');
+Route::get('/', WelcomePageController::class)->name('welcome');
 
 Route::get('/provider', ProviderRootController::class)->name('provider.root');
 

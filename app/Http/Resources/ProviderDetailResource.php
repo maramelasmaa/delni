@@ -16,6 +16,9 @@ class ProviderDetailResource extends JsonResource
 
     public ?string $reviewStatusMessage = null;
 
+    /** @var array<string, mixed>|null */
+    public ?array $latestUserReview = null;
+
     /**
      * Transform the resource into an array.
      *
@@ -38,6 +41,7 @@ class ProviderDetailResource extends JsonResource
         $isFavorited = $this->isFavorited;
         $canReview = $this->canReview;
         $reviewStatusMessage = $this->reviewStatusMessage;
+        $latestUserReview = $this->latestUserReview;
 
         // 4. Flat portfolio image list
         $portfolioImages = [];
@@ -83,6 +87,7 @@ class ProviderDetailResource extends JsonResource
             'is_favorited' => $isFavorited,
             'can_review' => $canReview,
             'review_status_message' => $reviewStatusMessage,
+            'latest_user_review' => $latestUserReview,
             'credentials' => ProviderCredentialResource::collection($this->whenLoaded('credentials')),
             'reviews' => ReviewResource::collection($this->whenLoaded('approvedReviews')),
         ];

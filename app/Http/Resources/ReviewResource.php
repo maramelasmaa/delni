@@ -25,6 +25,11 @@ class ReviewResource extends JsonResource
             'comment' => $this->comment,
             'user_name' => $this->user->name ?? 'عميل',
             'status' => $this->when($isOwnerOrAdmin, $this->status instanceof \UnitEnum ? $this->status->value : $this->status),
+            'moderation_note' => $this->when($isOwnerOrAdmin, $this->moderation_note),
+            'flag_response' => $this->when(
+                $isOwnerOrAdmin && $this->flag_handled_at !== null,
+                $this->is_flagged ? 'accepted' : 'rejected'
+            ),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

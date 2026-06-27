@@ -84,14 +84,17 @@ class ReviewsResource extends Resource
 
                     Forms\Components\Placeholder::make('status')
                         ->label('حالة الموافقة')
-                        ->content(function ($record) {
-                            return match ($record->status) {
-                                'approved' => '✅ موافق عليه',
-                                'pending' => '⏳ قيد الانتظار',
-                                'rejected' => '❌ مرفوض',
-                                default => $record->status,
-                            };
-                        }),
+                        ->content(fn (Review $record): string => static::formatReviewStatusForProvider($record, withIcon: true)),
+                    Forms\Components\Placeholder::make('flagged_reason')
+                        ->label('سبب البلاغ')
+                        ->content(fn ($record) => $record?->flagged_by === auth()->id() ? ($record->flagged_reason ?? '-') : '-'),
+                    Forms\Components\Placeholder::make('flag_review_response')
+                        ->label('رد الإدارة على البلاغ')
+                        ->content(fn (Review $record): string => static::formatFlagResponseForProvider($record)),
+                    Forms\Components\Placeholder::make('moderation_note')
+                        ->label('سبب القرار')
+                        ->content(fn (Review $record): string => static::formatModerationNoteForProvider($record))
+                        ->columnSpanFull(),
                 ])
                 ->columns(1),
         ]);
@@ -119,18 +122,28 @@ class ReviewsResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
+                    ->color(fn (Review $record) => match (static::resolveReviewStatusValue($record)) {
                         'approved' => 'success',
                         'pending' => 'warning',
                         'rejected' => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'approved' => 'موافق',
-                        'pending' => 'قيد الانتظار',
-                        'rejected' => 'مرفوض',
-                        default => $state,
+                    ->formatStateUsing(fn (Review $record): string => static::formatReviewStatusForProvider($record)),
+                Tables\Columns\TextColumn::make('flag_response')
+                    ->label('رد الإدارة')
+                    ->getStateUsing(fn (Review $record): string => static::formatFlagResponseForProvider($record))
+                    ->badge()
+                    ->color(fn (Review $record): string => match (static::resolveFlagResponseState($record)) {
+                        'accepted' => 'success',
+                        'rejected' => 'danger',
+                        'pending' => 'warning',
+                        default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('moderation_note')
+                    ->label('سبب القرار')
+                    ->getStateUsing(fn (Review $record): string => static::formatModerationNoteForProvider($record))
+                    ->wrap()
+                    ->limit(100),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('التاريخ')
@@ -188,7 +201,57 @@ class ReviewsResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with(['user', 'profile'])
             ->whereHas('profile', fn (Builder $query) => $query->where('user_id', auth()->id()));
+    }
+
+    private static function resolveFlagResponseState(Review $record): ?string
+    {
+        if ((int) $record->flagged_by !== (int) auth()->id()) {
+            return null;
+        }
+
+        if ($record->flag_handled_at === null) {
+            return 'pending';
+        }
+
+        return $record->is_flagged ? 'accepted' : 'rejected';
+    }
+
+    private static function formatFlagResponseForProvider(Review $record): string
+    {
+        return match (static::resolveFlagResponseState($record)) {
+            'pending' => 'بانتظار رد الإدارة',
+            'accepted' => 'تم قبول البلاغ',
+            'rejected' => 'تم رفض البلاغ',
+            default => '-',
+        };
+    }
+
+    private static function formatModerationNoteForProvider(Review $record): string
+    {
+        if ((int) $record->flagged_by !== (int) auth()->id()) {
+            return '-';
+        }
+
+        return $record->moderation_note ?: ($record->flag_handled_at ? 'لا توجد ملاحظات إضافية.' : '-');
+    }
+
+    private static function resolveReviewStatusValue(Review $record): string
+    {
+        return $record->status instanceof \BackedEnum
+            ? $record->status->value
+            : (string) $record->status;
+    }
+
+    private static function formatReviewStatusForProvider(Review $record, bool $withIcon = false): string
+    {
+        return match (static::resolveReviewStatusValue($record)) {
+            'approved' => $withIcon ? '✅ موافق عليه' : 'موافق',
+            'pending' => $withIcon ? '⏳ قيد الانتظار' : 'قيد الانتظار',
+            'rejected' => $withIcon ? '❌ مرفوض' : 'مرفوض',
+            default => static::resolveReviewStatusValue($record),
+        };
     }
 
     public static function getPages(): array

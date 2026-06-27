@@ -50,6 +50,7 @@ class ProviderController extends BaseApiController
             : false;
 
         [$resource->canReview, $resource->reviewStatusMessage] = $this->resolveReviewEligibility($profile, $currentUser);
+        $resource->latestUserReview = $this->resolveLatestUserReview($profile, $currentUser);
 
         return $this->success($resource);
     }
@@ -80,6 +81,38 @@ class ProviderController extends BaseApiController
         return $alreadyActive
             ? [false, 'لقد قمت بتقييم هذا الملف الشخصي مسبقاً.']
             : [true, null];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveLatestUserReview(Profile $profile, mixed $currentUser): ?array
+    {
+        if (! $currentUser) {
+            return null;
+        }
+
+        $review = Review::query()
+            ->where('profile_id', $profile->id)
+            ->where('user_id', $currentUser->id)
+            ->latest('created_at')
+            ->first();
+
+        if (! $review) {
+            return null;
+        }
+
+        $status = $review->status instanceof \UnitEnum ? $review->status->value : (string) $review->status;
+
+        return [
+            'id' => $review->id,
+            'status' => $status,
+            'comment' => $review->comment,
+            'rating' => $review->rating,
+            'moderation_note' => $review->moderation_note,
+            'submitted_at' => $review->created_at?->toIso8601String(),
+            'moderated_at' => $review->moderated_at?->toIso8601String(),
+        ];
     }
 
     public function topRated(Request $request): JsonResponse
