@@ -17,6 +17,7 @@ RUN apk add --no-cache \
         curl \
         curl-dev \
         freetype-dev \
+        git \
         icu-dev \
         libjpeg-turbo-dev \
         libxml2-dev \
