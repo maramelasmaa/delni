@@ -28,7 +28,6 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path(env('FILAMENT_PATH', 'cp/admin'))
-            ->favicon(asset('images/photo_2026-06-22_23-21-55.jpg'))
             ->brandLogo(fn () => $this->brandLogoHtml('#0F172A'))
             ->darkModeBrandLogo(fn () => $this->brandLogoHtml('#F1F5F9'))
             ->brandName('دلني')
