@@ -58,6 +58,7 @@ class ProviderCardResource extends JsonResource
             'cover_url' => $this->cover_image ? asset('storage/'.$this->cover_image) : null,
             'is_featured' => $isFeatured,
             'is_favorited' => $isFavorited,
+            'offers_remote_work' => (bool) $this->offers_remote_work,
             'whatsapp_url' => $this->whatsapp ? 'https://wa.me/'.preg_replace('/[^0-9]/', '', $this->whatsapp) : null,
             'phone' => $this->phone,
         ];
