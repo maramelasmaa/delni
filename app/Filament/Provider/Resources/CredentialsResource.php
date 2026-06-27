@@ -46,31 +46,29 @@ class CredentialsResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('title')
                         ->label('اسم الشهادة أو الخبرة')
-                        ->placeholder('مثال: شهادة معتمدة في التمديدات الكهربائية')
-                        ->helperText('اسم واضح للشهادة أو المؤهل.')
+                        ->placeholder('مثال: شهادة سلامة مهنية')
+                        ->helperText('اكتب الاسم كما هو.')
                         ->required()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('issuer')
                         ->label('جهة الإصدار')
                         ->placeholder('مثال: شركة الكهرباء الليبية')
-                        ->helperText('اسم المؤسسة أو الشركة التي أصدرت الشهادة.')
                         ->required()
                         ->maxLength(255),
                     Forms\Components\DatePicker::make('issue_date')
                         ->label('تاريخ الإصدار')
-                        ->helperText('تاريخ حصولك على الشهادة.')
                         ->required(),
                     Forms\Components\TextInput::make('verification_url')
                         ->label('رابط التحقق')
                         ->placeholder('https://...')
-                        ->helperText('رابط اختياري يمكن للعملاء من خلاله التحقق من صحة شهادتك.')
+                        ->helperText('اختياري.')
                         ->url()
                         ->rules([new SafeExternalUrl])
                         ->maxLength(500),
                     Forms\Components\Textarea::make('notes')
                         ->label('ملاحظات إضافية')
-                        ->placeholder('أي تفاصيل إضافية ترغب بإظهارها للعملاء...')
-                        ->helperText('معلومات إضافية مثل التخصص أو المستوى (اختياري)')
+                        ->placeholder('تفاصيل مختصرة إضافية')
+                        ->helperText('اختياري.')
                         ->rows(3)
                         ->maxLength(500)
                         ->columnSpanFull(),

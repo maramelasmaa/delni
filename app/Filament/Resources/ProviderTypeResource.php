@@ -63,7 +63,7 @@ class ProviderTypeResource extends Resource
                             ->maxLength(255),
                         Forms\Components\TextInput::make('code')
                             ->label('الكود')
-                            ->helperText('يستخدم داخلياً في البحث والفلاتر. استخدم أحرفاً صغيرة وأرقاماً وواصلات فقط.')
+                            ->helperText('للاستخدام الداخلي فقط. استخدم أحرفاً صغيرة وواصلات.')
                             ->required()
                             ->maxLength(80)
                             ->regex('/^[a-z0-9-]+$/')

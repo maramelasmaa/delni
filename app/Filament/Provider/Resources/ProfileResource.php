@@ -71,21 +71,19 @@ class ProfileResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('business_name')
                         ->label('اسم النشاط التجاري')
-                        ->placeholder('مثال: شركة الأمان للصيانة والتكييف')
-                        ->helperText('الاسم الذي سيظهر للعملاء في الموقع ونتائج البحث.')
+                        ->placeholder('مثال: الأمان للصيانة')
+                        ->helperText('يظهر للعملاء في ملفك.')
                         ->required()
                         ->maxLength(500),
                     Forms\Components\Select::make('provider_type')
                         ->label('نوع النشاط')
                         ->placeholder('اختر نوع النشاط')
-                        ->helperText('ساعد العملاء في إيجادك بسهولة بتحديد نوع نشاطك.')
                         ->options(fn () => ProviderType::options(activeOnly: true))
                         ->searchable()
                         ->required(),
                     Forms\Components\Select::make('category_id')
                         ->label('التصنيف الرئيسي')
-                        ->placeholder('اختر التصنيف الأنسب لنشاطك')
-                        ->helperText('اختر التصنيف الأساسي الذي يعكس طبيعة عملك.')
+                        ->placeholder('اختر التصنيف')
                         ->options(fn () => Category::query()
                             ->where('is_active', true)
                             ->orderBy('sort_order')
@@ -103,8 +101,8 @@ class ProfileResource extends Resource
                         }),
                     Forms\Components\Select::make('subcategories')
                         ->label('التصنيفات الفرعية')
-                        ->placeholder('اختر التصنيفات التي تصف خدماتك بدقة')
-                        ->helperText('يمكنك اختيار عدة تصنيفات فرعية لتوضيح تخصصاتك.')
+                        ->placeholder('اختر التخصصات')
+                        ->helperText('يمكنك اختيار أكثر من خيار.')
                         ->relationship(
                             'subcategories',
                             'name',
@@ -127,7 +125,6 @@ class ProfileResource extends Resource
                     Forms\Components\Select::make('city_id')
                         ->label('المدينة')
                         ->placeholder('اختر المدينة')
-                        ->helperText('حدد المدينة الرئيسية لعملك ليسهل على العملاء البحث عنك.')
                         ->options(fn () => City::where('is_active', true)->pluck('name_ar', 'id'))
                         ->searchable()
                         ->required(),
@@ -139,21 +136,21 @@ class ProfileResource extends Resource
                 ->schema([
                     Forms\Components\Textarea::make('bio')
                         ->label('نبذة عن النشاط')
-                        ->placeholder('اكتب نبذة مختصرة توضح خدماتك وخبرتك وما يميز نشاطك...')
-                        ->helperText('كلما كانت النبذة واضحة زادت ثقة العملاء بك. (الحد الأقصى 500 حرف)')
+                        ->placeholder('اكتب نبذة قصيرة عن خدماتك')
+                        ->helperText('حتى 500 حرف.')
                         ->rows(3)
                         ->columnSpanFull()
                         ->maxLength(500),
                     Forms\Components\TextInput::make('experience_years')
                         ->label('سنوات الخبرة')
-                        ->placeholder('مثال: 5')
-                        ->helperText('عدد سنوات خبرتك في هذا المجال.')
+                        ->placeholder('5')
+                        ->helperText('بالسنوات.')
                         ->numeric()
                         ->minValue(0)
                         ->maxValue(100),
                     Forms\Components\Toggle::make('offers_remote_work')
                         ->label('تقديم خدمات عن بعد')
-                        ->helperText('فعّل هذا الخيار إذا كنت تقدم خدمات أونلاين أو عن بعد.')
+                        ->helperText('فعّلها إذا كنت تعمل أونلاين.')
                         ->inline(false),
                 ])
                 ->columns(2),
@@ -163,53 +160,53 @@ class ProfileResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('phone')
                         ->label('رقم الهاتف')
-                        ->placeholder('2180912345678')
-                        ->helperText('يفضل استخدام رقم متاح للعملاء بشكل دائم.')
+                        ->placeholder('218912345678')
+                        ->helperText('رقم متاح للعملاء.')
                         ->tel()
                         ->required()
                         ->maxLength(20),
                     Forms\Components\TextInput::make('whatsapp')
                         ->label('واتساب')
-                        ->placeholder('2180912345678')
-                        ->helperText('أدخل الرقم مع مفتاح ليبيا حتى يتمكن العملاء من التواصل معك مباشرة عبر واتساب.')
+                        ->placeholder('218912345678')
+                        ->helperText('مع مفتاح الدولة.')
                         ->tel()
                         ->required()
                         ->maxLength(20),
                     Forms\Components\TextInput::make('website')
                         ->label('الموقع الإلكتروني')
                         ->placeholder('https://example.com')
-                        ->helperText('اتركه فارغاً إذا لم يكن لديك موقع إلكتروني.')
+                        ->helperText('اختياري.')
                         ->url()
                         ->rules([new SafeExternalUrl])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('instagram_handle')
                         ->label('إنستاجرام')
                         ->placeholder('https://instagram.com/...')
-                        ->helperText('رابط صفحتك على إنستاجرام (اختياري)')
+                        ->helperText('اختياري.')
                         ->rules([new SocialProfileReference('instagram')])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('facebook_slug')
                         ->label('فيسبوك')
                         ->placeholder('https://facebook.com/...')
-                        ->helperText('رابط صفحتك على فيسبوك (اختياري)')
+                        ->helperText('اختياري.')
                         ->rules([new SocialProfileReference('facebook')])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('linkedin_slug')
                         ->label('لينكد إن')
                         ->placeholder('https://linkedin.com/...')
-                        ->helperText('رابط ملفك على لينكد إن (اختياري)')
+                        ->helperText('اختياري.')
                         ->rules([new SocialProfileReference('linkedin')])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('github_username')
                         ->label('جيتهاب')
                         ->placeholder('https://github.com/...')
-                        ->helperText('رابط حسابك على جيتهاب (اختياري)')
+                        ->helperText('اختياري.')
                         ->rules([new SocialProfileReference('github')])
                         ->maxLength(255),
                     Forms\Components\TextInput::make('map_url')
                         ->label('رابط موقعك على الخريطة')
                         ->placeholder('https://maps.google.com/...')
-                        ->helperText('يساعد العملاء في الوصول إلى موقعك بسهولة.')
+                        ->helperText('يسهّل الوصول إليك.')
                         ->url()
                         ->rules([new SafeExternalUrl([
                             'google.com',
@@ -226,7 +223,7 @@ class ProfileResource extends Resource
                 ->schema([
                     Forms\Components\FileUpload::make('logo')
                         ->label('شعار النشاط')
-                        ->helperText('صورة مربعة (240×240 بكسل على الأقل). سيتم تحويلها تلقائياً إلى حجم مثالي. (الحد الأقصى 2 MB)')
+                        ->helperText('يفضل صورة مربعة. الحد الأقصى 2 MB.')
                         ->image()
                         ->maxSize(2048)
                         ->imagePreviewHeight('400')
@@ -242,7 +239,7 @@ class ProfileResource extends Resource
                         }),
                     Forms\Components\FileUpload::make('cover_image')
                         ->label('صورة الغلاف')
-                        ->helperText('صورة أفقية بنسبة 2:1 (1080×540 بكسل على الأقل). سيتم تحويلها تلقائياً إلى حجم مثالي. (الحد الأقصى 4 MB)')
+                        ->helperText('يفضل مقاس أفقي. الحد الأقصى 4 MB.')
                         ->image()
                         ->maxSize(4096)
                         ->imagePreviewHeight('300')

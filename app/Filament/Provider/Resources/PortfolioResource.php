@@ -42,14 +42,14 @@ class PortfolioResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('title')
                         ->label('اسم المشروع')
-                        ->placeholder('مثال: تصميم وتنفيذ فيلا سكنية')
-                        ->helperText('اختر عنواناً واضحاً يعكس طبيعة المشروع.')
+                        ->placeholder('مثال: تشطيب فيلا سكنية')
+                        ->helperText('اختر عنواناً واضحاً.')
                         ->required()
                         ->maxLength(255)
                         ->columnSpanFull(),
                     Forms\Components\Toggle::make('is_active')
                         ->label('نشط (مرئي للعملاء)')
-                        ->helperText('إذا أوقفت المشروع، لن يراه العملاء في ملفك.')
+                        ->helperText('أوقفه لإخفائه من ملفك.')
                         ->default(true)
                         ->inline(false)
                         ->columnSpanFull(),
@@ -64,7 +64,7 @@ class PortfolioResource extends Resource
                         ->schema([
                             Forms\Components\FileUpload::make('path')
                                 ->label('الصورة')
-                                ->helperText('صورة مربعة أو أفقية (1080×1080 بكسل على الأقل). سيتم تحويلها تلقائياً إلى حجم مثالي. (الحد الأقصى 4 MB)')
+                                ->helperText('صورة واضحة. الحد الأقصى 4 MB.')
                                 ->image()
                                 ->maxSize(4096)
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
@@ -78,7 +78,7 @@ class PortfolioResource extends Resource
                             Forms\Components\TextInput::make('alt')
                                 ->label('النص البديل')
                                 ->placeholder('وصف مختصر للصورة')
-                                ->helperText('نص يظهر إذا لم تحمل الصورة (اختياري)')
+                                ->helperText('اختياري.')
                                 ->maxLength(255)
                                 ->columnSpanFull(),
                         ])
@@ -89,7 +89,7 @@ class PortfolioResource extends Resource
                         ->deleteAction(
                             fn (Action $action) => $action->label('حذف'),
                         )
-                        ->helperText('يمكنك إضافة حتى 4 صور لهذا المشروع. (8 صور كحد أقصى في جميع مشاريعك)')
+                        ->helperText('حتى 4 صور لهذا المشروع.')
                         ->columnSpanFull(),
                 ]),
         ]);
