@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Http\Requests\Admin\BroadcastNotificationRequest;
 use App\Jobs\BroadcastAppNotificationJob;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Illuminate\Support\Facades\Validator;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class BroadcastNotifications extends Page
 {
@@ -100,10 +98,12 @@ class BroadcastNotifications extends Page
 
     public function send(): void
     {
-        $payload = Validator::make(
-            $this->form->getState(),
-            app(BroadcastNotificationRequest::class)->rules(),
-        )->validate();
+        /** @var array<string, mixed> $payload */
+        $payload = $this->form->getState();
+
+        $payload['data'] = collect($payload['data'] ?? [])
+            ->filter(fn (mixed $value): bool => filled($value))
+            ->all();
 
         BroadcastAppNotificationJob::dispatch($payload, auth()->id());
 
