@@ -43,12 +43,6 @@ RUN apk add --no-cache \
         pdo_mysql \
         posix \
         zip \
-    && docker-php-ext-install \
-        dom \
-        simplexml \
-        xml \
-        xmlreader \
-        xmlwriter \
     && sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf \
     && ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
