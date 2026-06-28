@@ -35,7 +35,13 @@
       "Bash(curl -s \"http://localhost:8080/onboarding/IOamNDNDevyZyMWl0cyDluGZT5Zq6TZRHa9YrdBWsCKbmy14qyXzJTeer0N8\")",
       "Bash(curl -s \"http://localhost:8080/onboarding/cgiehD99SnQxzZfMUqMCKJZJlPPNCs3XyyxOB9sSmtW5GHbz5nyLaIGIxKZv1Cmu630i1cTagATPcs0O\")",
       "PowerShell(cd \"C:\\\\laragon\\\\www\\\\delni\"; php artisan test --compact --filter=test_active_provider_can_access_provider_panel 2>&1 | ConvertFrom-Json | Select-Object -Property @{Name='Test'; Expression={$_.failures[0].test}}, @{Name='Error'; Expression={$_.failures[0].message}} | ConvertTo-Json)",
-      "PowerShell(cd \"C:\\\\laragon\\\\www\\\\delni\"; php artisan test tests/Feature/ProviderPanelSecurityTest.php --compact 2>&1 | ConvertFrom-Json | Select-Object -ExpandProperty failures | Select-Object @{Name='Test';Expression={$_.test.Split\\('::'\\)[2]}}, @{Name='Error';Expression={$_.message.Split\\([Environment]::NewLine\\)[0]}} | Sort-Object Test | ConvertTo-Json)"
+      "PowerShell(cd \"C:\\\\laragon\\\\www\\\\delni\"; php artisan test tests/Feature/ProviderPanelSecurityTest.php --compact 2>&1 | ConvertFrom-Json | Select-Object -ExpandProperty failures | Select-Object @{Name='Test';Expression={$_.test.Split\\('::'\\)[2]}}, @{Name='Error';Expression={$_.message.Split\\([Environment]::NewLine\\)[0]}} | Sort-Object Test | ConvertTo-Json)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ],
+    "additionalDirectories": [
+      "c:\\laragon\\www\\delni-app\\components\\ui"
     ]
   },
   "enabledMcpjsonServers": [
