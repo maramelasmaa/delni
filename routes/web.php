@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\OnboardingController;
 use App\Http\Controllers\Auth\ResetPasswordWebController;
-use App\Http\Controllers\FaviconController;
 use App\Http\Controllers\IconController;
 use App\Http\Controllers\ProviderRootController;
 use App\Http\Controllers\WelcomePageController;
@@ -15,8 +14,6 @@ Route::get('/icon/{icon}', IconController::class)->name('icon.show');
 Route::get('/', WelcomePageController::class)->name('welcome');
 
 Route::get('/provider', ProviderRootController::class)->name('provider.root');
-
-Route::get('/favicon.ico', FaviconController::class);
 
 Route::middleware(['auth', EnsureAccountNotLocked::class, EnsureUserIsActive::class, EnsureUserNotSuspended::class])
     ->group(function (): void {
