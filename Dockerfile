@@ -33,7 +33,6 @@ RUN apk add --no-cache \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
         curl \
-        dom \
         exif \
         gd \
         intl \
@@ -42,11 +41,13 @@ RUN apk add --no-cache \
         pcntl \
         pdo_mysql \
         posix \
+        zip \
+    && docker-php-ext-install \
+        dom \
         simplexml \
         xml \
         xmlreader \
         xmlwriter \
-        zip \
     && sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf \
     && ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
