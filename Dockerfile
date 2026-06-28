@@ -44,6 +44,7 @@ RUN apk add --no-cache \
         posix \
         simplexml \
         xml \
+        xmlreader \
         xmlwriter \
         zip \
     && sed -i 's/user nginx;/user www-data;/g' /etc/nginx/nginx.conf \
