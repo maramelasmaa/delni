@@ -30,6 +30,7 @@ class ProviderPanelProvider extends PanelProvider
             ->brandLogo(fn () => $this->brandLogoHtml('#0F172A'))
             ->darkModeBrandLogo(fn () => $this->brandLogoHtml('#F1F5F9'))
             ->brandName('دلني')
+            ->favicon('data:,')
             ->login()
             ->homeUrl('/provider/dashboard')
             ->profile()

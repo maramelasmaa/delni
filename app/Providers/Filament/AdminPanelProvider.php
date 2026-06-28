@@ -6,7 +6,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Notifications\Notification;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -31,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn () => $this->brandLogoHtml('#0F172A'))
             ->darkModeBrandLogo(fn () => $this->brandLogoHtml('#F1F5F9'))
             ->brandName('دلني')
+            ->favicon('data:,')
             ->login()
             ->profile()
             ->colors([
@@ -74,10 +74,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->darkMode()
             ->breadcrumbs(true);
-
-        if (class_exists(Notification::class)) {
-            $panel->databaseNotifications();
-        }
 
         return $panel;
     }

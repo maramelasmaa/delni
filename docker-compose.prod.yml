@@ -100,7 +100,10 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    command: php artisan queue:work redis --queue=default --sleep=3 --timeout=60 --tries=3 --memory=256 --max-jobs=1000 --max-time=3600
+    # No explicit connection: queue:work defaults to config('queue.default') = QUEUE_CONNECTION.
+    # This guarantees the worker drains the SAME backend the app/Filament enqueue on. Hardcoding
+    # "redis" here risks a producer/consumer split-brain if QUEUE_CONNECTION ever changes.
+    command: php artisan queue:work --queue=default --sleep=3 --timeout=60 --tries=3 --memory=256 --max-jobs=1000 --max-time=3600
     environment:
       <<: *laravel-env
       CONTAINER_ROLE: worker

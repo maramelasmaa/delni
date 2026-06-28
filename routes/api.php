@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\V1\AuthController as ApiAuthController;
-use App\Http\Controllers\Api\V1\AdminNotificationBroadcastController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\HomeController;
-use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileSearchController;
-use App\Http\Controllers\Api\V1\PushTokenController;
 use App\Http\Controllers\Api\V1\ProviderController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,7 +75,6 @@ Route::prefix('v1')->group(function (): void {
             Route::post('change-password', [ApiAuthController::class, 'changePassword'])
                 ->middleware('throttle:api.change-password')
                 ->name('change-password');
-            Route::post('push-tokens', [PushTokenController::class, 'store'])->name('push-tokens.store');
             Route::post('logout', [ApiAuthController::class, 'logout'])->name('logout');
             Route::delete('account', [ApiAuthController::class, 'deleteAccount'])->name('delete-account');
         });
@@ -94,10 +90,6 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/favorites', [FavoriteController::class, 'index'])->name('api.favorites.index');
         Route::post('/favorites/{providerSlug}', [FavoriteController::class, 'store'])->name('api.favorites.store');
         Route::delete('/favorites/{providerSlug}', [FavoriteController::class, 'destroy'])->name('api.favorites.destroy');
-        Route::get('/notifications', [NotificationController::class, 'index'])->name('api.notifications.index');
-        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('api.notifications.unread-count');
-        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.read-all');
-        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('api.notifications.read');
 
         Route::post('/providers/{profile:slug}/reviews', [ProviderController::class, 'storeReview'])
             ->middleware(['review.eligible', 'throttle:reviews.create'])
@@ -106,16 +98,5 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/reviews/{review}/flag', [ProviderController::class, 'flagReview'])
             ->middleware('throttle:reviews.flag')
             ->name('api.reviews.flag');
-    });
-
-    Route::middleware([
-        'auth:sanctum',
-        'account.locked',
-        'user.active',
-        'user.not_suspended',
-        'admin',
-    ])->group(function (): void {
-        Route::post('/admin/notifications/broadcast', [AdminNotificationBroadcastController::class, 'store'])
-            ->name('api.admin.notifications.broadcast');
     });
 });
