@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\ReviewStatus;
+use App\Jobs\SendExpoPushChunkJob;
+use App\Models\PushToken;
 use App\Models\Review;
 use App\Models\User;
 use App\Notifications\ReviewFlagDecisionNotification;
@@ -182,6 +184,34 @@ class ReviewModerationService
                             $decision,
                             $attributes['moderation_note'] ?? null,
                         ));
+
+                        $messages = PushToken::query()
+                            ->where('user_id', $flaggedBy->id)
+                            ->where('provider', 'expo')
+                            ->where('is_active', true)
+                            ->pluck('token')
+                            ->map(fn (string $token): array => [
+                                'to' => $token,
+                                'title' => $decision === 'accepted' ? 'تم قبول بلاغك' : 'تم رفض بلاغك',
+                                'body' => $attributes['moderation_note'] ?? 'يوجد تحديث جديد على البلاغ الذي أرسلته.',
+                                'data' => [
+                                    'type' => 'review_flag_decision',
+                                    'decision' => $decision,
+                                    'reason' => $attributes['moderation_note'] ?? null,
+                                    'review_id' => $lockedReview->id,
+                                    'profile_id' => $lockedReview->profile_id,
+                                    'profile_slug' => $lockedReview->profile?->slug,
+                                    'flagged_reason' => $lockedReview->flagged_reason,
+                                    'pathname' => '/notifications',
+                                ],
+                                'sound' => 'default',
+                            ])
+                            ->values()
+                            ->all();
+
+                        if ($messages !== []) {
+                            SendExpoPushChunkJob::dispatch($messages, $this->getAdminId());
+                        }
                     });
                 }
             }
