@@ -139,6 +139,7 @@ class ReviewResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading(__('filament.headings.accept_flag_confirmation'))
                     ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
+                    ->successNotificationTitle('تم قبول البلاغ - تم إخفاء التقييم وإرسال إشعار للمستخدم.')
                     ->action(function (Review $record, array $data, ReviewModerationService $service): void {
                         $service->acceptFlag($record, $data['note']);
                     }),
@@ -157,6 +158,7 @@ class ReviewResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading(__('filament.headings.reject_flag_confirmation'))
                     ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
+                    ->successNotificationTitle('تم رفض البلاغ - تم إبقاء التقييم وإرسال إشعار للمستخدم.')
                     ->action(function (Review $record, array $data, ReviewModerationService $service): void {
                         $service->rejectFlag($record, $data['note']);
                     }),
@@ -164,6 +166,7 @@ class ReviewResource extends Resource
                     ->label(__('filament.actions.approve'))
                     ->icon('heroicon-o-check')
                     ->color('success')
+                    ->successNotificationTitle('تم قبول التقييم.')
                     ->visible(fn (Review $record): bool => static::canShowDirectModerationAction($record))
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->approve($record);
@@ -172,6 +175,7 @@ class ReviewResource extends Resource
                     ->label(__('filament.actions.reject_review'))
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
+                    ->successNotificationTitle('تم رفض التقييم.')
                     ->visible(fn (Review $record): bool => static::canShowDirectModerationAction($record))
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->reject($record);

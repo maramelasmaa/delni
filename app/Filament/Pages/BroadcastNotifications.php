@@ -11,6 +11,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BroadcastNotifications extends Page
 {
@@ -105,7 +107,16 @@ class BroadcastNotifications extends Page
             ->filter(fn (mixed $value): bool => filled($value))
             ->all();
 
-        BroadcastAppNotificationJob::dispatch($payload, auth()->id());
+        // Wrap in transaction to ensure afterCommit() executes
+        DB::transaction(function () use ($payload): void {
+            BroadcastAppNotificationJob::dispatch($payload, auth()->id())->afterCommit();
+        });
+
+        Log::info('BroadcastAppNotificationJob dispatched from Filament', [
+            'triggered_by_user_id' => auth()->id(),
+            'title' => $payload['title'] ?? null,
+            'payload_keys' => array_keys($payload),
+        ]);
 
         $this->form->fill([
             'data' => [],
