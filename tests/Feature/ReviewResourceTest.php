@@ -44,4 +44,12 @@ class ReviewResourceTest extends TestCase
 
         $this->assertFalse(ReviewResource::canShowDirectModerationAction($review->fresh()));
     }
+
+    public function test_review_resource_cannot_be_edited_or_created(): void
+    {
+        $review = Review::factory()->create();
+
+        $this->assertFalse(ReviewResource::canCreate());
+        $this->assertFalse(ReviewResource::canEdit($review));
+    }
 }

@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Enums\ReviewStatus;
 use App\Models\Review;
+use App\Models\User;
+use App\Notifications\ReviewFlagDecisionNotification;
 use Illuminate\Support\Facades\DB;
 
 class ReviewModerationService
@@ -103,6 +105,21 @@ class ReviewModerationService
         ]);
     }
 
+    public function flag(Review $review, int $flaggedBy, string $reason): void
+    {
+        $this->updateLockedReview($review, [
+            'is_flagged' => true,
+            'flagged_by' => $flaggedBy,
+            'flagged_at' => now(),
+            'flagged_reason' => $reason,
+            'flag_handled_at' => null,
+            'flag_handled_by' => null,
+            'moderated_by' => null,
+            'moderated_at' => null,
+            'moderation_note' => null,
+        ]);
+    }
+
     /**
      * Soft-delete a review.
      * Used for removing reviews from the database (hide permanently).
@@ -143,6 +160,7 @@ class ReviewModerationService
     {
         DB::transaction(function () use ($review, $attributes): void {
             $lockedReview = Review::withTrashed()
+                ->with(['profile.user'])
                 ->whereKey($review->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -152,6 +170,21 @@ class ReviewModerationService
             }
 
             $lockedReview->update($attributes);
+
+            if ($lockedReview->flagged_by !== null) {
+                $decision = ($attributes['is_flagged'] ?? false) ? 'accepted' : 'rejected';
+                $flaggedBy = $lockedReview->flaggedBy()->first();
+
+                if ($flaggedBy instanceof User) {
+                    DB::afterCommit(function () use ($flaggedBy, $lockedReview, $decision, $attributes): void {
+                        $flaggedBy->notify(new ReviewFlagDecisionNotification(
+                            $lockedReview->fresh(['profile.user']),
+                            $decision,
+                            $attributes['moderation_note'] ?? null,
+                        ));
+                    });
+                }
+            }
         }, attempts: 5);
     }
 

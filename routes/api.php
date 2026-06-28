@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\AuthController as ApiAuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileSearchController;
 use App\Http\Controllers\Api\V1\ProviderController;
 use Illuminate\Support\Facades\Route;
@@ -90,6 +91,10 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/favorites', [FavoriteController::class, 'index'])->name('api.favorites.index');
         Route::post('/favorites/{providerSlug}', [FavoriteController::class, 'store'])->name('api.favorites.store');
         Route::delete('/favorites/{providerSlug}', [FavoriteController::class, 'destroy'])->name('api.favorites.destroy');
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('api.notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('api.notifications.unread-count');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.read-all');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('api.notifications.read');
 
         Route::post('/providers/{profile:slug}/reviews', [ProviderController::class, 'storeReview'])
             ->middleware(['review.eligible', 'throttle:reviews.create'])

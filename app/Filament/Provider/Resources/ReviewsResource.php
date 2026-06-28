@@ -3,6 +3,7 @@
 namespace App\Filament\Provider\Resources;
 
 use App\Models\Review;
+use App\Services\ReviewModerationService;
 use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -169,17 +170,10 @@ class ReviewsResource extends Resource
                             ->rows(5)
                             ->placeholder('اشرح سبب الإبلاغ عن هذا التقييم'),
                     ])
-                    ->action(function (Review $record, array $data): void {
+                    ->action(function (Review $record, array $data, ReviewModerationService $moderation): void {
                         Gate::authorize('flag', $record);
 
-                        $record->update([
-                            'is_flagged' => true,
-                            'flagged_by' => auth()->id(),
-                            'flagged_at' => now(),
-                            'flagged_reason' => $data['reason'],
-                            'flag_handled_at' => null,
-                            'flag_handled_by' => null,
-                        ]);
+                        $moderation->flag($record, auth()->id(), $data['reason']);
 
                         Notification::make()
                             ->title('تم إرسال البلاغ')

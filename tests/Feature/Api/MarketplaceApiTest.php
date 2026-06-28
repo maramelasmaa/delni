@@ -340,6 +340,30 @@ class MarketplaceApiTest extends TestCase
         $this->assertStringContainsString('/storage/profiles/covers/cover.webp', $coverUrl);
     }
 
+    public function test_provider_detail_returns_latest_user_review_flag_response(): void
+    {
+        $reviewer = User::factory()->create(['created_at' => now()->subDays(2)]);
+        $reviewer->assignRole('user');
+
+        Review::factory()->create([
+            'profile_id' => $this->profile->id,
+            'user_id' => $reviewer->id,
+            'status' => ReviewStatus::REJECTED,
+            'is_flagged' => true,
+            'flagged_by' => $this->providerUser->id,
+            'flagged_at' => now()->subHour(),
+            'flag_handled_at' => now(),
+            'moderation_note' => 'تم رفض التقييم بعد مراجعة البلاغ.',
+        ]);
+
+        $this->actingAs($reviewer, 'sanctum')
+            ->getJson("/api/v1/providers/{$this->profile->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.latest_user_review.status', ReviewStatus::REJECTED->value)
+            ->assertJsonPath('data.latest_user_review.flag_response', 'accepted')
+            ->assertJsonPath('data.latest_user_review.moderation_note', 'تم رفض التقييم بعد مراجعة البلاغ.');
+    }
+
     public function test_home_endpoint_serializes_provider_name_without_lazy_loading_user_relation(): void
     {
         $this->profile->update(['business_name' => null]);

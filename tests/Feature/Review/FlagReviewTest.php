@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Review;
 
+use App\Enums\ReviewStatus;
 use App\Models\Profile;
 use App\Models\Review;
 use App\Models\User;
@@ -200,6 +201,86 @@ class FlagReviewTest extends TestCase
 
         $response->assertOk();
         $this->assertTrue($review->refresh()->is_flagged);
+    }
+
+    public function test_reflagging_clears_previous_admin_decision_fields(): void
+    {
+        $provider = User::factory()->create();
+        $provider->assignRole('provider');
+        $profile = $this->makeVisibleProfile($provider);
+
+        $reviewer = User::factory()->create();
+        $reviewer->assignRole('user');
+
+        $firstFlagger = User::factory()->create();
+        $firstFlagger->assignRole('user');
+
+        $review = Review::factory([
+            'profile_id' => $profile->id,
+            'user_id' => $reviewer->id,
+            'status' => ReviewStatus::REJECTED,
+            'is_flagged' => true,
+            'flagged_by' => $firstFlagger->id,
+            'flagged_at' => now()->subDay(),
+            'flagged_reason' => 'Old flag reason.',
+            'flag_handled_at' => now()->subHours(2),
+            'flag_handled_by' => $provider->id,
+            'moderated_at' => now()->subHours(2),
+            'moderated_by' => $provider->id,
+            'moderation_note' => 'Old admin decision.',
+        ])->create();
+
+        $response = $this->actingAs($provider)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post(route('api.reviews.flag', $review), [
+                'reason' => 'A fresh reason that should reopen review moderation.',
+            ]);
+
+        $response->assertOk();
+
+        $review->refresh();
+
+        $this->assertTrue($review->is_flagged);
+        $this->assertSame($provider->id, $review->flagged_by);
+        $this->assertSame('A fresh reason that should reopen review moderation.', $review->flagged_reason);
+        $this->assertNull($review->flag_handled_at);
+        $this->assertNull($review->flag_handled_by);
+        $this->assertNull($review->moderated_at);
+        $this->assertNull($review->moderated_by);
+        $this->assertNull($review->moderation_note);
+    }
+
+    public function test_flagger_can_see_admin_response_in_reviews_api(): void
+    {
+        $provider = User::factory()->create();
+        $provider->assignRole('provider');
+        $profile = $this->makeVisibleProfile($provider);
+
+        $reviewer = User::factory()->create();
+        $reviewer->assignRole('user');
+
+        $flagger = User::factory()->create();
+        $flagger->assignRole('user');
+
+        $review = Review::factory([
+            'profile_id' => $profile->id,
+            'user_id' => $reviewer->id,
+            'status' => ReviewStatus::APPROVED,
+            'is_flagged' => false,
+            'flagged_by' => $flagger->id,
+            'flagged_at' => now()->subHours(3),
+            'flagged_reason' => 'This sounds misleading to customers.',
+            'flag_handled_at' => now()->subHour(),
+            'moderation_note' => 'We reviewed it and decided the review can remain visible.',
+        ])->create();
+
+        $this->actingAs($flagger, 'sanctum')
+            ->getJson("/api/v1/providers/{$profile->slug}/reviews")
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $review->id)
+            ->assertJsonPath('data.0.flagged_reason', 'This sounds misleading to customers.')
+            ->assertJsonPath('data.0.flag_response', 'rejected')
+            ->assertJsonPath('data.0.moderation_note', 'We reviewed it and decided the review can remain visible.');
     }
 
     public function test_unauthenticated_user_cannot_flag(): void

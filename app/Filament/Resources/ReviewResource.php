@@ -8,16 +8,15 @@ use App\Services\ReviewModerationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 class ReviewResource extends Resource
 {
@@ -47,55 +46,19 @@ class ReviewResource extends Resource
         return __('filament.models.review_plural');
     }
 
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
-        return $schema
-            ->schema([
-                Section::make(__('filament.sections.review_info'))
-                    ->collapsible()
-                    ->collapsed()
-                    ->schema([
-                        Forms\Components\Placeholder::make('user_id')
-                            ->label(__('filament.fields.reviewer'))
-                            ->content(fn ($record) => $record?->user?->name ?? '—'),
-                        Forms\Components\Placeholder::make('profile_id')
-                            ->label(__('filament.fields.profile'))
-                            ->content(fn ($record) => $record?->profile?->business_name ?? '—'),
-                        Forms\Components\Placeholder::make('rating')
-                            ->label(__('filament.fields.rating'))
-                            ->content(fn ($record) => $record?->rating.'/5' ?? '—'),
-                        Forms\Components\Placeholder::make('comment')
-                            ->label(__('filament.fields.comment'))
-                            ->content(fn ($record) => $record?->comment ?? '—')
-                            ->columnSpanFull(),
-                        Forms\Components\Placeholder::make('flagged_by')
-                            ->label(__('filament.fields.flagged_by'))
-                            ->content(fn ($record) => $record?->flaggedBy?->name ?? '—'),
-                        Forms\Components\Placeholder::make('flagged_reason')
-                            ->label(__('filament.fields.flagged_reason'))
-                            ->content(fn ($record) => $record?->flagged_reason ?? '—')
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2),
-
-                Section::make(__('filament.sections.review_moderation'))
-                    ->schema([
-                        Forms\Components\Select::make('status')
-                            ->label(__('filament.fields.status'))
-                            ->placeholder(__('filament.placeholders.review_decision'))
-                            ->options([
-                                ReviewStatus::PENDING->value => __('filament.status.pending'),
-                                ReviewStatus::APPROVED->value => __('filament.status.approved'),
-                                ReviewStatus::REJECTED->value => __('filament.status.rejected'),
-                            ])
-                            ->required(),
-                        Forms\Components\Textarea::make('moderation_note')
-                            ->label(__('filament.fields.moderation_notes'))
-                            ->placeholder(__('filament.placeholders.review_moderation_note'))
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2),
-            ]);
+        return $schema->schema([]);
     }
 
     public static function table(Table $table): Table
@@ -165,21 +128,37 @@ class ReviewResource extends Resource
                     ->label(__('filament.actions.accept_flag_hide_review'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->schema([
+                        Forms\Components\Textarea::make('note')
+                            ->label(__('filament.fields.moderation_notes'))
+                            ->placeholder(__('filament.placeholders.review_moderation_note'))
+                            ->required()
+                            ->maxLength(2000)
+                            ->rows(4),
+                    ])
                     ->requiresConfirmation()
                     ->modalHeading(__('filament.headings.accept_flag_confirmation'))
                     ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
-                    ->action(function (Review $record, ReviewModerationService $service): void {
-                        $service->acceptFlag($record);
+                    ->action(function (Review $record, array $data, ReviewModerationService $service): void {
+                        $service->acceptFlag($record, $data['note']);
                     }),
                 Action::make('rejectFlag')
                     ->label(__('filament.actions.reject_flag_keep_review'))
                     ->icon('heroicon-o-x-circle')
                     ->color('warning')
+                    ->schema([
+                        Forms\Components\Textarea::make('note')
+                            ->label(__('filament.fields.moderation_notes'))
+                            ->placeholder(__('filament.placeholders.review_moderation_note'))
+                            ->required()
+                            ->maxLength(2000)
+                            ->rows(4),
+                    ])
                     ->requiresConfirmation()
                     ->modalHeading(__('filament.headings.reject_flag_confirmation'))
                     ->visible(fn (Review $record): bool => $record->is_flagged && $record->flag_handled_at === null && ! $record->trashed())
-                    ->action(function (Review $record, ReviewModerationService $service): void {
-                        $service->rejectFlag($record);
+                    ->action(function (Review $record, array $data, ReviewModerationService $service): void {
+                        $service->rejectFlag($record, $data['note']);
                     }),
                 Action::make('approve')
                     ->label(__('filament.actions.approve'))
@@ -197,8 +176,6 @@ class ReviewResource extends Resource
                     ->action(function (Review $record, ReviewModerationService $service): void {
                         $service->reject($record);
                     }),
-                EditAction::make()
-                    ->modal(),
                 DeleteAction::make()
                     ->visible(fn (Review $record): bool => ! $record->trashed()),
                 RestoreAction::make()
@@ -225,21 +202,37 @@ class ReviewResource extends Resource
                     ->label(__('filament.actions.accept_selected_flags'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->schema([
+                        Forms\Components\Textarea::make('note')
+                            ->label(__('filament.fields.moderation_notes'))
+                            ->placeholder(__('filament.placeholders.review_moderation_note'))
+                            ->required()
+                            ->maxLength(2000)
+                            ->rows(4),
+                    ])
                     ->requiresConfirmation()
-                    ->action(function (Collection $records, ReviewModerationService $service): void {
+                    ->action(function (Collection $records, array $data, ReviewModerationService $service): void {
                         $records
                             ->filter(fn (Review $review): bool => $review->is_flagged && $review->flag_handled_at === null)
-                            ->each(fn (Review $review) => $service->acceptFlag($review));
+                            ->each(fn (Review $review) => $service->acceptFlag($review, $data['note']));
                     }),
                 BulkAction::make('rejectFlags')
                     ->label(__('filament.actions.reject_selected_flags'))
                     ->icon('heroicon-o-x-circle')
                     ->color('warning')
+                    ->schema([
+                        Forms\Components\Textarea::make('note')
+                            ->label(__('filament.fields.moderation_notes'))
+                            ->placeholder(__('filament.placeholders.review_moderation_note'))
+                            ->required()
+                            ->maxLength(2000)
+                            ->rows(4),
+                    ])
                     ->requiresConfirmation()
-                    ->action(function (Collection $records, ReviewModerationService $service): void {
+                    ->action(function (Collection $records, array $data, ReviewModerationService $service): void {
                         $records
                             ->filter(fn (Review $review): bool => $review->is_flagged && $review->flag_handled_at === null)
-                            ->each(fn (Review $review) => $service->rejectFlag($review));
+                            ->each(fn (Review $review) => $service->rejectFlag($review, $data['note']));
                     }),
             ]);
     }
@@ -258,7 +251,6 @@ class ReviewResource extends Resource
     {
         return [
             'index' => ReviewResource\Pages\ListReviews::route('/'),
-            'edit' => ReviewResource\Pages\EditReview::route('/{record}/edit'),
         ];
     }
 

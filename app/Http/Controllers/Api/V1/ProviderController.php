@@ -16,6 +16,7 @@ use App\Models\Review;
 use App\Services\ProfileVisibilityService;
 use App\Services\PublicFrontendService;
 use App\Services\ReviewCreationService;
+use App\Services\ReviewModerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -110,6 +111,9 @@ class ProviderController extends BaseApiController
             'comment' => $review->comment,
             'rating' => $review->rating,
             'moderation_note' => $review->moderation_note,
+            'flag_response' => $review->flag_handled_at
+                ? ($review->is_flagged ? 'accepted' : 'rejected')
+                : null,
             'submitted_at' => $review->created_at?->toIso8601String(),
             'moderated_at' => $review->moderated_at?->toIso8601String(),
         ];
@@ -165,16 +169,17 @@ class ProviderController extends BaseApiController
         return $this->success(new ReviewResource($review), 'تم إرسال تقييمك بنجاح.');
     }
 
-    public function flagReview(FlagReviewRequest $request, Review $review): JsonResponse
+    public function flagReview(
+        FlagReviewRequest $request,
+        Review $review,
+        ReviewModerationService $moderation,
+    ): JsonResponse
     {
-        $review->update([
-            'is_flagged' => true,
-            'flagged_by' => $request->user()->id,
-            'flagged_at' => now(),
-            'flagged_reason' => $request->string('reason')->value(),
-            'flag_handled_at' => null,
-            'flag_handled_by' => null,
-        ]);
+        $moderation->flag(
+            $review,
+            $request->user()->id,
+            $request->string('reason')->value(),
+        );
 
         return $this->success([], 'تم إرسال البلاغ بنجاح.');
     }
