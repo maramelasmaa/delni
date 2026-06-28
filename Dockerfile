@@ -31,7 +31,7 @@ RUN apk add --no-cache \
         unzip \
         zlib-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" \
+    && docker-php-ext-install -j2 \
         bcmath \
         curl \
         exif \
