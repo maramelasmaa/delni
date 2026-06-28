@@ -27,30 +27,16 @@
 
         .welcome-container {
             text-align: center;
-            max-width: 500px;
+            max-width: 420px;
             width: 100%;
         }
 
-        .brand-img {
-            width: 70px;
-            height: 70px;
-            border-radius: 18px;
-            object-fit: cover;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
-        }
-
         h1 {
-            margin: 0 0 12px;
-            font-size: 2.5rem;
+            margin: 0 0 28px;
+            font-size: clamp(2.5rem, 8vw, 4rem);
             font-weight: 800;
-        }
-
-        p {
-            margin: 0 0 32px;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            line-height: 1.6;
+            letter-spacing: 0.08em;
+            text-transform: lowercase;
         }
 
         .actions {
@@ -109,10 +95,7 @@
 @endphp
 
 <div class="welcome-container">
-    <img class="brand-img" src="{{ asset('images/photo_2026-06-22_23-21-55.jpg') }}" alt="دلني">
-
-    <h1>مرحباً بك في دلني</h1>
-    <p>تطبيقك للوصول إلى مقدمي الخدمات المحليين بسهولة.</p>
+    <h1>delni</h1>
 
     <div class="actions">
         <a class="btn-store" href="{{ $androidUrl }}">

@@ -4,18 +4,20 @@ Required by `CheckQueueDeploymentCommand` (`php artisan queue:deployment-check`)
 
 ## Driver
 
-`QUEUE_CONNECTION=database` — jobs stored in the `jobs` table (MySQL).
+Production uses `QUEUE_CONNECTION=redis` and Redis-backed workers.
+
+Local Docker currently uses `QUEUE_CONNECTION=database` for the simpler local stack.
 
 ## Queues
 
 | Queue | Jobs |
 |---|---|
-| `default` | `RecalculateProfileStatsJob`, `SoftDeleteUserProfileJob`, `ResetPasswordNotification` |
+| `default` | `BroadcastAppNotificationJob`, `SendExpoPushChunkJob`, `RecalculateProfileStatsJob`, `SoftDeleteUserProfileJob`, `ResetPasswordNotification` |
 
 ## Worker Command
 
 ```bash
-php artisan queue:work database \
+php artisan queue:work redis \
   --queue=default \
   --sleep=3 \
   --timeout=60 \
@@ -34,10 +36,17 @@ The `worker` compose service runs the command above. `CONTAINER_ROLE=worker` ski
 Set the worker service command exactly to:
 
 ```bash
-php artisan queue:work database --queue=default --sleep=3 --timeout=60 --memory=256 --max-jobs=1000 --max-time=3600 --tries=3
+php artisan queue:work redis --queue=default --sleep=3 --timeout=60 --memory=256 --max-jobs=1000 --max-time=3600 --tries=3
 ```
 
 The worker service starts the worker. `queue:restart` only tells already-running workers to reload after deploy.
+
+## Notification Delivery Notes
+
+- Expo push jobs are sent by `SendExpoPushChunkJob`.
+- Admin broadcasts are queued by `BroadcastAppNotificationJob`.
+- The app container should not process these jobs inline in production.
+- If push delivery logs are needed for successful sends too, set `LOG_LEVEL=info` in production. With `LOG_LEVEL=warning`, failures still log, but successful send summaries are suppressed.
 
 ## Failed Jobs
 

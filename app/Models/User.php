@@ -96,6 +96,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(UserFavorite::class);
     }
 
+    public function pushTokens(): HasMany
+    {
+        return $this->hasMany(PushToken::class);
+    }
+
     public function favoriteProfiles(): BelongsToMany
     {
         return $this->belongsToMany(Profile::class, 'user_favorites')->withTimestamps(false)->orderByPivot('created_at', 'desc');

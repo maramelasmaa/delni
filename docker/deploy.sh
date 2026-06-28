@@ -5,10 +5,14 @@ set -e
 #
 # Runs in a SINGLE container before the app container(s) start serving traffic:
 #   - docker compose: the one-shot `migrate` service (app depends on its completion)
-#   - Coolify: set this as the "Pre-deployment Command" (`delni-deploy`)
+#   - Coolify: optionally set this as the "Pre-deployment Command" (`delni-deploy`)
 #
 # Migrations intentionally run here — NOT on every app boot — so that rolling
 # deploys never have two app containers migrating the schema concurrently.
+#
+# Pick ONE release path in production. Do not enable both the compose `migrate`
+# service and a Coolify pre-deployment command at the same time, or deploy-time
+# tasks will run twice.
 #
 # Safe to re-run: migrations are tracked, the role seeder is guarded, and
 # delni:ensure-super-admin is idempotent.

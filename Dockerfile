@@ -14,6 +14,7 @@ WORKDIR /var/www/html
 
 RUN apk add --no-cache \
         bash \
+        ca-certificates \
         curl \
         curl-dev \
         freetype-dev \

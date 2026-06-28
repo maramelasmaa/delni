@@ -106,7 +106,7 @@ class CheckQueueDeploymentCommand extends Command
             'php artisan queue:restart',
             'php artisan queue:failed',
             'php artisan queue:retry all',
-            'Supervisor',
+            'worker',
         ];
 
         foreach ($required as $needle) {
