@@ -10,6 +10,10 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserNotSuspended;
 use Illuminate\Support\Facades\Route;
 
+// No favicon anywhere: return an empty 204 so no icon is served and browsers stop
+// requesting /favicon.ico on every page (covers all links, local and production).
+Route::get('favicon.ico', fn () => response()->noContent());
+
 Route::get('/icon/{icon}', IconController::class)->name('icon.show');
 Route::get('/', WelcomePageController::class)->name('welcome');
 
