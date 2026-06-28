@@ -8,6 +8,7 @@ use App\Enums\ReviewStatus;
 use App\Models\Review;
 use App\Models\User;
 use App\Notifications\ReviewFlagDecisionNotification;
+use App\Notifications\ReviewModerationDecisionNotification;
 use Illuminate\Support\Facades\DB;
 
 class ReviewModerationService
@@ -34,7 +35,7 @@ class ReviewModerationService
             'moderated_by' => $this->getAdminId(),
             'moderated_at' => now(),
             'moderation_note' => $note,
-        ]);
+        ], decision: 'approved');
     }
 
     /**
@@ -49,7 +50,7 @@ class ReviewModerationService
             'moderated_by' => $this->getAdminId(),
             'moderated_at' => now(),
             'moderation_note' => $note,
-        ]);
+        ], decision: 'rejected');
     }
 
     /**
@@ -189,14 +190,26 @@ class ReviewModerationService
     }
 
     /** @param array<string, mixed> $attributes */
-    private function updateLockedReview(Review $review, array $attributes): void
+    private function updateLockedReview(Review $review, array $attributes, ?string $decision = null): void
     {
-        DB::transaction(function () use ($review, $attributes): void {
-            Review::withTrashed()
+        DB::transaction(function () use ($review, $attributes, $decision): void {
+            $lockedReview = Review::withTrashed()
+                ->with(['profile.user', 'user'])
                 ->whereKey($review->id)
                 ->lockForUpdate()
-                ->firstOrFail()
-                ->update($attributes);
+                ->firstOrFail();
+
+            $lockedReview->update($attributes);
+
+            if (($decision !== null) && ($lockedReview->user instanceof User)) {
+                DB::afterCommit(function () use ($lockedReview, $decision, $attributes): void {
+                    $lockedReview->user->notify(new ReviewModerationDecisionNotification(
+                        $lockedReview->fresh(['profile.user']),
+                        $decision,
+                        $attributes['moderation_note'] ?? null,
+                    ));
+                });
+            }
         }, attempts: 5);
     }
 }
