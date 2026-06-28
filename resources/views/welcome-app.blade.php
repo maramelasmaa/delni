@@ -5,19 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>دلني</title>
     <style>
-        :root {
-            --bg: #0F172A;
-            --border: rgba(255, 255, 255, 0.08);
-            --text-primary: #FFFFFF;
-            --text-secondary: #94A3B8;
-        }
-
         * { box-sizing: border-box; }
         body {
             margin: 0;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: var(--bg);
-            color: var(--text-primary);
+            background: #0f172a;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -27,13 +20,13 @@
 
         .welcome-container {
             text-align: center;
-            max-width: 420px;
+            max-width: 360px;
             width: 100%;
         }
 
         h1 {
             margin: 0 0 28px;
-            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-size: clamp(2.75rem, 9vw, 4.25rem);
             font-weight: 800;
             letter-spacing: 0.08em;
             text-transform: lowercase;
@@ -41,29 +34,23 @@
 
         .actions {
             display: flex;
+            flex-direction: column;
             justify-content: center;
-            flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
         }
 
         .btn-store {
             display: inline-flex;
             align-items: center;
             gap: 12px;
-            background: #1E293B;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 10px 20px;
+            justify-content: center;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 18px;
             color: white;
             text-decoration: none;
-            text-align: right;
-            min-width: 165px;
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        .btn-store:hover {
-            background: #2D3748;
-            transform: translateY(-2px);
+            text-align: center;
         }
 
         .store-icon {
@@ -78,7 +65,7 @@
 
         .top-t {
             font-size: 0.7rem;
-            color: var(--text-secondary);
+            color: #94a3b8;
         }
 
         .main-t {
