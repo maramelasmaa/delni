@@ -31,7 +31,13 @@ class BroadcastAppNotificationJob implements ShouldQueue
 
     public function handle(AdminBroadcastNotificationService $service): void
     {
+        Log::info('BroadcastAppNotificationJob started processing', [
+            'triggered_by_user_id' => $this->triggeredByUserId,
+        ]);
+
         $service->broadcast($this->payload, $this->triggeredByUserId);
+
+        Log::info('BroadcastAppNotificationJob completed successfully');
     }
 
     public function failed(?Throwable $exception): void
