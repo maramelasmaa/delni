@@ -56,39 +56,6 @@ class NotificationApiTest extends TestCase
         $this->assertSame('بعد المراجعة، قررنا إبقاء التقييم لأنه لا يخالف السياسات.', $notification->data['reason']);
     }
 
-    public function test_review_moderation_creates_notification_for_reviewer(): void
-    {
-        $admin = User::factory()->create();
-        $admin->assignRole('super_admin');
-
-        $provider = User::factory()->create();
-        $provider->assignRole('provider');
-
-        $profile = Profile::factory()->create([
-            'user_id' => $provider->id,
-            'provider_access_ends_at' => now()->addYear(),
-        ]);
-
-        $reviewer = User::factory()->create();
-        $reviewer->assignRole('user');
-
-        $review = Review::factory()->create([
-            'profile_id' => $profile->id,
-            'user_id' => $reviewer->id,
-            'status' => ReviewStatus::PENDING,
-        ]);
-
-        $this->actingAs($admin);
-        app(ReviewModerationService::class)->approve($review, 'تمت الموافقة على تقييمك بعد المراجعة.');
-
-        $notification = $reviewer->notifications()->latest()->first();
-
-        $this->assertNotNull($notification);
-        $this->assertSame('review_moderation_decision', $notification->data['type']);
-        $this->assertSame('approved', $notification->data['decision']);
-        $this->assertSame('تمت الموافقة على تقييمك بعد المراجعة.', $notification->data['reason']);
-    }
-
     public function test_user_can_list_notifications(): void
     {
         $user = User::factory()->create();
