@@ -63,7 +63,7 @@ RUN composer install \
         --no-dev \
         --no-interaction \
         --no-progress \
-        --prefer-dist \
+        --prefer-install=auto \
         --optimize-autoloader \
         --no-scripts
 
