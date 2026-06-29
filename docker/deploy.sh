@@ -14,7 +14,7 @@ set -e
 # service and a Coolify pre-deployment command at the same time, or deploy-time
 # tasks will run twice.
 #
-# Safe to re-run: migrations are tracked, the role seeder is guarded, and
+# Safe to re-run: migrations are tracked, seeders use upserts/firstOrCreate, and
 # delni:ensure-super-admin is idempotent.
 
 # Wait for MySQL to accept TCP connections. On a fresh data volume the mysql image
@@ -50,5 +50,8 @@ fi
 
 # Sync bundled SVG icons onto the icons volume + upsert their rows (idempotent).
 php artisan db:seed --class=IconSeeder --force --no-interaction
+
+# Keep Apple App Review demo access/content present on the deployed backend.
+php artisan db:seed --class=AppReviewDemoSeeder --force --no-interaction
 
 php artisan delni:ensure-super-admin --no-interaction

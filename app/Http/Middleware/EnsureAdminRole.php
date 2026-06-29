@@ -14,7 +14,7 @@ class EnsureAdminRole
     {
         $user = $request->user();
 
-        if ($user === null || ! $user->hasRole('super_admin')) {
+        if ($user === null || ! $user->hasAnyRole(['super_admin', 'app_review_moderator'])) {
             abort(403, 'Unauthorized access to admin resources.');
         }
 

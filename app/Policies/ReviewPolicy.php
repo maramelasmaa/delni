@@ -24,7 +24,7 @@ class ReviewPolicy
             return null;
         }
 
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasAnyRole(['super_admin', 'app_review_moderator'])) {
             return true;
         }
 

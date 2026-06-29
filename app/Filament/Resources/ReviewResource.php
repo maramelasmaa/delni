@@ -243,7 +243,15 @@ class ReviewResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->withTrashed()->with(['user', 'profile', 'flaggedBy']);
+        $query = parent::getEloquentQuery()->withTrashed()->with(['user', 'profile', 'flaggedBy']);
+
+        if (auth()->user()?->hasRole('app_review_moderator') === true
+            && auth()->user()?->hasRole('super_admin') !== true
+        ) {
+            $query->whereHas('profile', fn (Builder $profileQuery) => $profileQuery->where('slug', 'apple-review-demo-provider'));
+        }
+
+        return $query;
     }
 
     public static function getRelations(): array
