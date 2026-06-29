@@ -149,11 +149,11 @@ class ProfileResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('category.localized_name')
                     ->label(__('filament.fields.category'))
-                    ->state(fn ($record) => $record->category->localized_name)
+                    ->state(fn ($record) => $record->category?->localized_name ?? '—')
                     ->sortable('category.name'),
                 Tables\Columns\TextColumn::make('city.localized_name')
                     ->label(__('filament.fields.city'))
-                    ->state(fn ($record) => $record->city->localized_name)
+                    ->state(fn ($record) => $record->city?->localized_name ?? '—')
                     ->sortable('city.name'),
                 Tables\Columns\TextColumn::make('stats.rating_avg')
                     ->label(__('filament.fields.rating_avg_short'))

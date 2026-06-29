@@ -113,7 +113,7 @@ class SubcategoryResource extends Resource
                 Tables\Columns\TextColumn::make('id')->label(__('filament.fields.id'))->sortable(),
                 Tables\Columns\TextColumn::make('category.localized_name')
                     ->label(__('filament.fields.category'))
-                    ->state(fn ($record) => $record->category->localized_name)
+                    ->state(fn ($record) => $record->category?->localized_name ?? '—')
                     ->sortable('category.name')
                     ->searchable('category.name'),
                 Tables\Columns\TextColumn::make('localized_name')
