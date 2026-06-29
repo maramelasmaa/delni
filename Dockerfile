@@ -56,14 +56,16 @@ RUN apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS \
     && apk del .phpize-deps
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-ENV COMPOSER_PROCESS_TIMEOUT=1200
+ENV COMPOSER_PROCESS_TIMEOUT=1200 \
+    COMPOSER_MEMORY_LIMIT=-1 \
+    COMPOSER_MAX_PARALLEL_HTTP=1
 
 COPY composer.json composer.lock ./
 RUN composer install \
         --no-dev \
         --no-interaction \
         --no-progress \
-        --prefer-install=auto \
+        --prefer-dist \
         --optimize-autoloader \
         --no-scripts
 
