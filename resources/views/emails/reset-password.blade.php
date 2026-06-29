@@ -68,27 +68,22 @@
                                 <strong style="color:#1E40AF;">60 دقيقة</strong> فقط.
                             </p>
 
-                            {{-- CTA Button — table-based for Outlook --}}
+                            {{-- CTA Button - table-based for broad email client support --}}
                             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                                 <tr>
                                     <td align="center" style="padding-bottom:32px;">
-                                        <!--[if mso]>
-                                        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-                                            href="{{ $url }}"
-                                            style="height:52px;v-text-anchor:middle;width:260px;"
-                                            arcsize="35%" stroke="f" fillcolor="#1E40AF">
-                                        <w:anchorlock/>
-                                        <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:700;">
-                                            إعادة تعيين كلمة المرور
-                                        </center>
-                                        </v:roundrect><![endif]-->
-                                        <!--[if !mso]><!-->
-                                        <a href="{{ $url }}"
-                                           class="btn-cta"
-                                           style="background-color:#1E40AF;border-radius:18px;color:#ffffff;display:inline-block;font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:16px;font-weight:700;line-height:1;padding:16px 48px;text-decoration:none;direction:rtl;mso-hide:all;">
-                                            إعادة تعيين كلمة المرور
-                                        </a>
-                                        <!--<![endif]-->
+                                        <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                                            <tr>
+                                                <td bgcolor="#1E40AF" style="border-radius:18px;text-align:center;">
+                                                    <a href="{{ $url }}"
+                                                       target="_blank"
+                                                       class="btn-cta"
+                                                       style="background-color:#1E40AF;border-radius:18px;color:#ffffff;display:block;font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:16px;font-weight:700;line-height:20px;padding:16px 48px;text-decoration:none;direction:rtl;">
+                                                        إعادة تعيين كلمة المرور
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                 </tr>
                             </table>

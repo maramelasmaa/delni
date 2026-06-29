@@ -39,6 +39,21 @@ class ResetPasswordWebTest extends TestCase
         $this->assertTrue(Hash::check('NewPass123', $user->fresh()->password));
     }
 
+    public function test_it_resets_the_password_when_email_is_locked_in_the_link(): void
+    {
+        $user = User::factory()->create(['email' => 'user@example.com']);
+        $token = Password::createToken($user);
+
+        $this->post(route('password.reset.update', ['token' => $token, 'email' => 'user@example.com']), [
+            'password' => 'NewPass123',
+            'password_confirmation' => 'NewPass123',
+        ])
+            ->assertOk()
+            ->assertSee(__('auth.reset_password_success_title'));
+
+        $this->assertTrue(Hash::check('NewPass123', $user->fresh()->password));
+    }
+
     public function test_it_rejects_an_invalid_token_and_keeps_the_old_password(): void
     {
         $user = User::factory()->create([

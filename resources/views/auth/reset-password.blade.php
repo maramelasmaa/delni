@@ -12,6 +12,11 @@
 @endsection
 
 @section('content')
+    @php
+        $resetToken = $token ?? old('token');
+        $resetEmail = $email ?? old('email');
+    @endphp
+
     @if($success ?? false)
         <div class="flex flex-col items-center gap-6 text-center">
             <div class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/20">
@@ -46,19 +51,19 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('password.reset.update') }}" class="flex flex-col gap-5" novalidate>
+        <form method="POST" action="{{ route('password.reset.update', ['token' => $resetToken, 'email' => $resetEmail]) }}" class="flex flex-col gap-5" novalidate>
             @csrf
 
-            <input type="hidden" name="token" value="{{ $token ?? old('token') }}">
+            <input type="hidden" name="token" value="{{ $resetToken }}">
+            <input type="hidden" name="email" value="{{ $resetEmail }}">
 
             <div>
                 <label for="email" class="mb-1.5 block text-xs font-bold text-[#475569] dark:text-[#A8B4C8]">{{ __('auth.email') }}</label>
                 <input
                     type="email"
                     id="email"
-                    name="email"
-                    class="w-full cursor-not-allowed rounded-2xl border border-[#E8EEF8] bg-[#F1F5F9] px-4 py-3 font-semibold text-[#475569] select-none focus:outline-none dark:border-[#243149] dark:bg-[#1B2740] dark:text-[#A8B4C8]"
-                    value="{{ $email ?? old('email') }}"
+                    class="w-full cursor-not-allowed rounded-2xl border border-[#E8EEF8] bg-[#F1F5F9] px-4 py-3 font-semibold text-[#0F172A] select-none focus:outline-none dark:border-[#243149] dark:bg-[#1B2740] dark:text-[#F1F5F9]"
+                    value="{{ $resetEmail }}"
                     readonly
                     tabindex="-1"
                     aria-readonly="true"

@@ -30,6 +30,11 @@ class ResetPasswordWebController extends Controller
 
     public function store(Request $request): View|RedirectResponse
     {
+        $request->merge([
+            'token' => $request->query('token', $request->input('token')),
+            'email' => $request->query('email', $request->input('email')),
+        ]);
+
         $validated = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'string', 'email'],
