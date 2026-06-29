@@ -37,11 +37,17 @@ class ProviderCardResource extends JsonResource
         } else {
             $currentUser = auth('sanctum')->user();
             if ($currentUser) {
-                static $favoritesCache = null;
+                // Memoize the favorite id set on the *request* (a fresh instance per
+                // request under both PHP-FPM and Octane) — NOT a function-level static,
+                // which would leak one user's favorites to another inside a long-lived
+                // Octane worker. See laravel/framework discussion #47958.
+                $cacheKey = '__favorite_profile_ids_'.$currentUser->id;
+                $favoritesCache = $request->attributes->get($cacheKey);
                 if ($favoritesCache === null) {
                     $favoritesCache = $currentUser->favoriteProfiles()->pluck('profiles.id')->all();
+                    $request->attributes->set($cacheKey, $favoritesCache);
                 }
-                $isFavorited = in_array($this->id, $favoritesCache);
+                $isFavorited = in_array($this->id, $favoritesCache, true);
             }
         }
 

@@ -382,7 +382,11 @@ class PublicFrontendService
                 'credentials',
                 'portfolioItems' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order'),
                 'portfolioItems.images' => fn ($query) => $query->orderBy('sort_order'),
-                'approvedReviews' => fn ($query) => $query->orderByDesc('created_at'),
+                // Only embed the first page of reviews in the detail payload — the full
+                // list is served by the dedicated paginated GET /providers/{slug}/reviews
+                // endpoint. Loading every approved review here is unbounded memory + payload
+                // for popular providers.
+                'approvedReviews' => fn ($query) => $query->orderByDesc('created_at')->limit(10),
                 'approvedReviews.user',
             ]);
 
@@ -499,6 +503,12 @@ class PublicFrontendService
             page: max($request->integer('page', 1), 1)
         )->withQueryString();
 
+        // Always eager-load a lean user (id+name only) — the base query uses
+        // ->without('user'), but ProviderCardResource falls back to $this->user->name
+        // when business_name is empty, which would otherwise lazy-load one users row
+        // per card (N+1). Selecting just id,name keeps the payload minimal.
+        $relations = array_values(array_unique([...$relations, 'user:id,name']));
+
         $profiles->getCollection()->loadMissing($relations);
 
         return $profiles;
@@ -528,7 +538,7 @@ class PublicFrontendService
      */
     private function loadHomepageProviderRelations(EloquentCollection $profiles, mixed $categoryMap): EloquentCollection
     {
-        $profiles->loadMissing(['stats', 'city', 'subcategories']);
+        $profiles->loadMissing(['stats', 'city', 'subcategories', 'user:id,name']);
         $profiles->each(fn (Profile $profile) => $profile->setRelation('category', $categoryMap->get($profile->category_id)));
 
         return $profiles;

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
@@ -41,8 +42,36 @@ class ProviderType extends Model
         return $this->name;
     }
 
+    protected static function booted(): void
+    {
+        // Provider types change rarely (admin only) but options() is called on every
+        // list endpoint. Bust the cache whenever a row is written or removed.
+        static::saved(fn () => self::flushOptionsCache());
+        static::deleted(fn () => self::flushOptionsCache());
+    }
+
+    public static function flushOptionsCache(): void
+    {
+        foreach (['ar', 'en'] as $locale) {
+            Cache::forget("provider_types.options.1.{$locale}");
+            Cache::forget("provider_types.options.0.{$locale}");
+        }
+    }
+
     /** @return array<string, string> */
     public static function options(bool $activeOnly = true): array
+    {
+        // Cached (stale-while-revalidate) — this is called on home/search/category/
+        // subcategory/top-rated. Without caching it ran a Schema::hasTable() metadata
+        // query + a select on every list request. Keyed by locale because
+        // localized_name depends on app()->getLocale().
+        $key = sprintf('provider_types.options.%d.%s', (int) $activeOnly, app()->getLocale());
+
+        return Cache::flexible($key, [300, 900], fn (): array => self::resolveOptions($activeOnly));
+    }
+
+    /** @return array<string, string> */
+    private static function resolveOptions(bool $activeOnly): array
     {
         try {
             if (! Schema::hasTable('provider_types')) {

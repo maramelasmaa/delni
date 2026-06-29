@@ -32,6 +32,25 @@ class HomeController extends BaseApiController
                 ->first();
         }
 
+        // The homepage runs ~12 queries and is identical for every anonymous visitor
+        // of a city. Cache the fully-resolved payload (stale-while-revalidate) for guests
+        // only. Authenticated requests bypass the cache because the payload embeds per-user
+        // is_favorited via ProviderCardResource — a shared cache would leak one user's
+        // favorites to another.
+        $currentUser = $request->user() ?? auth('sanctum')->user();
+
+        if ($currentUser === null) {
+            $citySlug = $activeCity?->slug ?? 'global';
+
+            $payload = Cache::flexible(
+                "api.home.v1.{$citySlug}",
+                [60, 180],
+                fn (): array => (new HomeResource($this->frontendService->homepage($activeCity)['data']))->resolve()
+            );
+
+            return $this->success($payload);
+        }
+
         $payload = $this->frontendService->homepage($activeCity);
 
         return $this->success(new HomeResource($payload['data']));
