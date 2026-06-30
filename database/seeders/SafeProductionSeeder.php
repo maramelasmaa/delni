@@ -12,6 +12,7 @@ class SafeProductionSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             ProviderTypesSeeder::class,
             IconSeeder::class,
+            ServiceTaxonomySeeder::class,
         ]);
     }
 }

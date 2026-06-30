@@ -111,16 +111,24 @@ class SubcategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label(__('filament.fields.id'))->sortable(),
-                Tables\Columns\TextColumn::make('category.localized_name')
+                Tables\Columns\TextColumn::make('category.name')
                     ->label(__('filament.fields.category'))
                     ->state(fn ($record) => $record->category?->localized_name ?? '—')
-                    ->sortable('category.name')
-                    ->searchable('category.name'),
+                    // Column name is the REAL relationship path (category.name) so Filament
+                    // auto-joins for sort/search. Was make('category.localized_name') with
+                    // sortable('category.name'): the string coerced to `true`, sorting by the
+                    // localized_name ACCESSOR → "Unknown column 'localized_name'" SQL error.
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('localized_name')
                     ->state(fn ($record) => $record->localized_name)
                     ->label(__('filament.fields.name'))
+                    // localized_name is an accessor (not a DB column). searchable('name')
+                    // already targets the real column; sort must pass an ARRAY of real
+                    // columns — sortable('name') coerced the string to `true` and sorted by
+                    // the accessor, throwing "Unknown column 'localized_name'".
                     ->searchable('name')
-                    ->sortable('name'),
+                    ->sortable(['name']),
                 Tables\Columns\TextColumn::make('slug')->label(__('filament.fields.slug'))->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('icon.name')
                     ->label(__('filament.fields.icon'))

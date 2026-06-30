@@ -329,11 +329,16 @@ class ProfileResource extends Resource
                 Tables\Columns\TextColumn::make('provider_type.localized_name')
                     ->label('نوع النشاط')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('category.localized_name')
+                // Real relationship paths (category.name / city.name) so Filament auto-joins
+                // for sort; localized display preserved via state(). Were *.localized_name
+                // with bare sortable() → sorted the accessor → "Unknown column" SQL error.
+                Tables\Columns\TextColumn::make('category.name')
                     ->label('التصنيف الرئيسي')
+                    ->state(fn ($record) => $record->category?->localized_name ?? '—')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('city.localized_name')
+                Tables\Columns\TextColumn::make('city.name')
                     ->label('المدينة')
+                    ->state(fn ($record) => $record->city?->localized_name ?? '—')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('phone')
                     ->label('الهاتف')

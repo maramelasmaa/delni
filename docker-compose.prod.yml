@@ -44,6 +44,7 @@ x-laravel-env: &laravel-env
   SUPER_ADMIN_NAME: ${SUPER_ADMIN_NAME:?Set SUPER_ADMIN_NAME}
   SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:?Set SUPER_ADMIN_EMAIL}
   SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD:?Set SUPER_ADMIN_PASSWORD}
+  SEED_DEMO_PROVIDERS: ${SEED_DEMO_PROVIDERS:-false}
 
 services:
   # One-shot release container: runs schema migrations + idempotent seeding once,

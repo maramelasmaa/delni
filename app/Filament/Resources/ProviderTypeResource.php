@@ -91,7 +91,9 @@ class ProviderTypeResource extends Resource
                     ->state(fn (ProviderType $record): string => $record->localized_name)
                     ->label(__('filament.fields.name'))
                     ->searchable(['name', 'name_ar'])
-                    ->sortable('name'),
+                    // localized_name is an accessor; sort must pass an ARRAY of real columns
+                    // (sortable('name') coerced to `true` → sorted the accessor → SQL error).
+                    ->sortable(['name']),
                 Tables\Columns\TextColumn::make('code')
                     ->label('الكود')
                     ->searchable()

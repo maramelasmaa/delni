@@ -79,8 +79,9 @@ class MarketplacePlacementResource extends Resource
                     ->label(__('filament.fields.provider'))
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('category.localized_name')
+                Tables\Columns\TextColumn::make('category.name')
                     ->label(__('filament.fields.category'))
+                    ->state(fn ($record) => $record->category?->localized_name ?? '—')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('stats.is_homepage_featured')
                     ->label('الرئيسية')

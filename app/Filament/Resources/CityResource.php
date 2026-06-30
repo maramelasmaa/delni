@@ -96,7 +96,9 @@ class CityResource extends Resource
                     ->state(fn ($record) => $record->localized_name)
                     ->label(__('filament.fields.name'))
                     ->searchable('name')
-                    ->sortable('name'),
+                    // localized_name is an accessor; sort must pass an ARRAY of real columns
+                    // (sortable('name') coerced to `true` → sorted the accessor → SQL error).
+                    ->sortable(['name']),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('filament.fields.active'))
                     ->boolean()

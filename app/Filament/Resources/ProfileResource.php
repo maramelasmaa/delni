@@ -147,14 +147,17 @@ class ProfileResource extends Resource
                 Tables\Columns\TextColumn::make('provider_type.localized_name')
                     ->label(__('filament.fields.provider_type'))
                     ->sortable(),
-                Tables\Columns\TextColumn::make('category.localized_name')
+                // Column names use the REAL relationship path so Filament auto-joins for sort.
+                // Were make('category.localized_name')->sortable('category.name'): the string
+                // coerced to `true` and sorted by the localized_name accessor → SQL error.
+                Tables\Columns\TextColumn::make('category.name')
                     ->label(__('filament.fields.category'))
                     ->state(fn ($record) => $record->category?->localized_name ?? '—')
-                    ->sortable('category.name'),
-                Tables\Columns\TextColumn::make('city.localized_name')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('city.name')
                     ->label(__('filament.fields.city'))
                     ->state(fn ($record) => $record->city?->localized_name ?? '—')
-                    ->sortable('city.name'),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('stats.rating_avg')
                     ->label(__('filament.fields.rating_avg_short'))
                     ->sortable(),

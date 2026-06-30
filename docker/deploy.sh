@@ -51,7 +51,12 @@ fi
 # Sync bundled SVG icons onto the icons volume + upsert their rows (idempotent).
 php artisan db:seed --class=IconSeeder --force --no-interaction
 
-# Keep Apple App Review demo access/content present on the deployed backend.
-php artisan db:seed --class=AppReviewDemoSeeder --force --no-interaction
+if [ "${SEED_DEMO_PROVIDERS:-false}" = "true" ]; then
+    if php -r 'require "vendor/autoload.php"; exit(class_exists("Database\\Seeders\\DemoProvidersSeeder") ? 0 : 1);'; then
+        php artisan db:seed --class=DemoProvidersSeeder --force --no-interaction
+    else
+        echo "SEED_DEMO_PROVIDERS=true, but DemoProvidersSeeder is not present. Skipping demo provider seed." >&2
+    fi
+fi
 
 php artisan delni:ensure-super-admin --no-interaction
