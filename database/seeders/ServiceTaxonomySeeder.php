@@ -218,7 +218,7 @@ class ServiceTaxonomySeeder extends Seeder
         $icons = Icon::query()->pluck('id', 'slug');
 
         foreach ($this->categories as $categoryIndex => $categoryData) {
-            $category = Category::query()->updateOrCreate(
+            $category = Category::withTrashed()->updateOrCreate(
                 ['slug' => $categoryData['slug']],
                 [
                     'name' => $categoryData['name'],
@@ -229,8 +229,12 @@ class ServiceTaxonomySeeder extends Seeder
                 ],
             );
 
+            if ($category->trashed()) {
+                $category->restore();
+            }
+
             foreach ($categoryData['subcategories'] as $subcategoryIndex => $subcategoryData) {
-                Subcategory::query()->updateOrCreate(
+                $subcategory = Subcategory::withTrashed()->updateOrCreate(
                     ['slug' => $subcategoryData['slug']],
                     [
                         'category_id' => $category->id,
@@ -242,6 +246,10 @@ class ServiceTaxonomySeeder extends Seeder
                         'is_active' => true,
                     ],
                 );
+
+                if ($subcategory->trashed()) {
+                    $subcategory->restore();
+                }
             }
         }
     }
